@@ -1,0 +1,35 @@
+<section class="upload-section">
+  <h2 class="upload-title">Cargar Base de Datos</h2>
+
+  <div class="upload-area" [class.has-file]="fileName">
+    <label class="upload-label" for="fileInput">
+      <div class="upload-icon">📂</div>
+      <span class="upload-text">{{ fileName || 'Selecciona un archivo .xlsx o .csv' }}</span>
+      <span class="upload-hint">Haz clic para explorar</span>
+    </label>
+    <input
+      id="fileInput"
+      type="file"
+      accept=".xlsx,.xls,.csv"
+      (change)="onFileSelected($event)"
+      hidden
+    />
+  </div>
+
+  <ng-container *ngIf="columnOptions$ | async as cols">
+    <div class="column-selector" *ngIf="cols.length > 0">
+      <label for="columnSelect">Columna con nombres de responsables:</label>
+      <select id="columnSelect" [value]="selectedColumn" (change)="onColumnChange($any($event.target).value)">
+        <option value="" disabled>Selecciona una columna</option>
+        <option *ngFor="let col of cols" [value]="col">{{ col }}</option>
+      </select>
+    </div>
+  </ng-container>
+
+  <div class="upload-actions" *ngIf="fileName">
+    <button class="btn btn-primary" (click)="onLoad()" [disabled]="!selectedColumn">
+      Cargar responsables
+    </button>
+    <button class="btn btn-secondary" (click)="onClear()">Limpiar</button>
+  </div>
+</section>

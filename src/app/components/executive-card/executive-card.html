@@ -1,0 +1,27 @@
+<article class="card" (click)="onCardClick()">
+  <div class="card-avatar">
+    <img *ngIf="executive.imageUrl" [src]="executive.imageUrl" [alt]="executive.name" class="card-img" />
+    <div *ngIf="!executive.imageUrl" class="card-initials">{{ getInitials() }}</div>
+    <label class="card-img-upload" title="Cambiar foto" (click)="$event.stopPropagation()">
+      <span>+</span>
+      <input type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+    </label>
+  </div>
+
+  <div class="card-body">
+    <h3 class="card-name">{{ executive.name }}</h3>
+    <span *ngIf="executive.squad" class="card-squad">{{ executive.squad }}</span>
+  </div>
+
+  <div class="card-stats">
+    <div class="stat">
+      <span class="stat-value">{{ executive.clientCount }}</span>
+      <span class="stat-label">Clientes</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-value active">{{ executive.activeCount }}</span>
+      <span class="stat-label">Activos</span>
+    </div>
+  </div>
+</article>

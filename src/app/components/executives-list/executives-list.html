@@ -1,0 +1,27 @@
+<ng-container *ngIf="executives$ | async as executives">
+  <section class="list-section">
+    <div *ngIf="executives.length === 0" class="list-empty">
+      <div class="empty-icon">👥</div>
+      <p>Carga un archivo para ver los ejecutivos aquí.</p>
+    </div>
+
+    <div *ngIf="executives.length > 0" class="list-header">
+      <h2>Responsables <span class="badge">{{ executives.length }}</span></h2>
+    </div>
+
+    <div class="cards-grid">
+      <app-executive-card
+        *ngFor="let exec of executives; let i = index"
+        [executive]="exec"
+        [index]="i"
+        (imageChanged)="onImageChanged($event)"
+        (cardClicked)="openModal($event)"
+      ></app-executive-card>
+    </div>
+  </section>
+</ng-container>
+
+<app-client-modal
+  [executive]="selectedExecutive"
+  (closed)="closeModal()"
+></app-client-modal>

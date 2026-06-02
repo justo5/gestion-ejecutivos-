@@ -1,0 +1,36 @@
+<div class="modal-backdrop" *ngIf="executive" (click)="onBackdropClick($event)">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <h2 class="modal-title">{{ executive.name }}</h2>
+        <span *ngIf="executive.squad" class="modal-squad">{{ executive.squad }}</span>
+      </div>
+      <div class="modal-stats">
+        <span class="modal-stat">
+          <strong>{{ executive.clientCount }}</strong> clientes
+        </span>
+        <span class="modal-stat active">
+          <strong>{{ executive.activeCount }}</strong> activos
+        </span>
+      </div>
+      <button class="modal-close" (click)="close()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="table-wrapper">
+        <table class="clients-table">
+          <thead>
+            <tr>
+              <th *ngFor="let col of columns">{{ col }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let client of executive.clients">
+              <td *ngFor="let col of columns">{{ client[col] ?? '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
