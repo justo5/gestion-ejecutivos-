@@ -1,0 +1,7 @@
+services:
+  gestion-juniors:
+    build: .
+    container_name: gestion-juniors
+    restart: unless-stopped
+    ports:
+      - "8090:80"
