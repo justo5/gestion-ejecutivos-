@@ -40,7 +40,7 @@ export class ExecutivesService {
         const result = new Map<string, string>();
         rows.forEach(row => {
           const keys = Object.keys(row);
-          const nameKey = keys.find(k => /responsable|nombre|name/i.test(k)) ?? keys[0];
+          const nameKey = keys.find(k => /ejecutivo|responsable|nombre|name/i.test(k)) ?? keys[0];
           const urlKey = keys.find(k => /url|imagen|image|foto|photo/i.test(k)) ?? keys[1];
           const name = String(row[nameKey] ?? '').trim().toLowerCase();
           const url = String(row[urlKey] ?? '').trim();
@@ -76,7 +76,7 @@ export class ExecutivesService {
 
         const headers = Object.keys(rows[0]);
         const nameCol =
-          headers.find(h => /responsable|ejecutivo|nombre|name|asesor/i.test(h)) ?? headers[0];
+          headers.find(h => /ejecutivo|responsable|asesor/i.test(h)) ?? headers[0];
         const squadCol = headers.find(h => /squad/i.test(h));
         const estadoCol = headers.find(h => /estado|status/i.test(h));
 

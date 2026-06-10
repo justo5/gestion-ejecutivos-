@@ -18,7 +18,7 @@
 
   <ng-container *ngIf="columnOptions$ | async as cols">
     <div class="column-selector" *ngIf="cols.length > 0">
-      <label for="columnSelect">Columna con nombres de responsables:</label>
+      <label for="columnSelect">Columna con nombres de ejecutivos:</label>
       <select id="columnSelect" [value]="selectedColumn" (change)="onColumnChange($any($event.target).value)">
         <option value="" disabled>Selecciona una columna</option>
         <option *ngFor="let col of cols" [value]="col">{{ col }}</option>
@@ -28,7 +28,7 @@
 
   <div class="upload-actions" *ngIf="fileName">
     <button class="btn btn-primary" (click)="onLoad()" [disabled]="!selectedColumn">
-      Cargar responsables
+      Cargar ejecutivos
     </button>
     <button class="btn btn-secondary" (click)="onClear()">Limpiar</button>
   </div>

@@ -1,6 +1,9 @@
 <div class="modal-backdrop" *ngIf="executive" (click)="onBackdropClick($event)">
   <div class="modal-panel">
     <div class="modal-header">
+      <button *ngIf="selectedClient" class="back-btn" (click)="clearSelection()" aria-label="Volver">
+        &#8592; Volver
+      </button>
       <div class="modal-header-info">
         <h2 class="modal-title">{{ executive.name }}</h2>
         <span *ngIf="executive.squad" class="modal-squad">{{ executive.squad }}</span>
@@ -17,20 +20,33 @@
     </div>
 
     <div class="modal-body">
-      <div class="table-wrapper">
-        <table class="clients-table">
-          <thead>
-            <tr>
-              <th *ngFor="let col of columns">{{ col }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let client of executive.clients">
-              <td *ngFor="let col of columns">{{ client[col] ?? '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
+
+      <!-- Grid de tarjetas -->
+      <div *ngIf="!selectedClient" class="clients-grid">
+        <div
+          class="client-card"
+          *ngFor="let client of executive.clients"
+          (click)="selectClient(client)"
+          [class.is-active]="isActive(client)"
+        >
+          <span class="client-card-name">{{ getBusinessName(client) }}</span>
+          <span *ngIf="statusKey" class="client-card-status" [class.active]="isActive(client)">
+            {{ client[statusKey] ?? '—' }}
+          </span>
+        </div>
       </div>
+
+      <!-- Detalle del cliente seleccionado -->
+      <div *ngIf="selectedClient" class="client-detail">
+        <h3 class="detail-title">{{ getBusinessName(selectedClient) }}</h3>
+        <div class="detail-grid">
+          <div class="detail-field" *ngFor="let key of clientKeys">
+            <span class="detail-label">{{ key }}</span>
+            <span class="detail-value">{{ selectedClient[key] ?? '—' }}</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

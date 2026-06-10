@@ -1,0 +1,43 @@
+<ng-container *ngIf="dailyExecutives$ | async as dailyExecs">
+  <section class="daily-section" *ngIf="dailyExecs.length > 0">
+    <div class="daily-header">
+      <div class="daily-title">
+        <span class="daily-icon">📅</span>
+        <h2>Cobros de hoy <span class="badge">{{ todayLabel }}</span></h2>
+      </div>
+      <span class="total-badge">{{ dailyExecs.length }} ejecutivo{{ dailyExecs.length !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <div class="daily-grid">
+      <div
+        class="daily-card"
+        *ngFor="let exec of dailyExecs"
+        [class.expanded]="isExpanded(exec.name)"
+        (click)="toggle(exec.name)"
+      >
+        <div class="daily-card-header">
+          <div class="daily-avatar">
+            <img *ngIf="exec.imageUrl" [src]="exec.imageUrl" [alt]="exec.name" />
+            <div *ngIf="!exec.imageUrl" class="daily-initials">{{ getInitials(exec.name) }}</div>
+          </div>
+          <div class="daily-info">
+            <span class="daily-name">{{ exec.name }}</span>
+            <span *ngIf="exec.squad" class="daily-squad">{{ exec.squad }}</span>
+          </div>
+          <div class="daily-count">
+            <span class="count-value">{{ exec.todayClients.length }}</span>
+            <span class="count-label">cobro{{ exec.todayClients.length !== 1 ? 's' : '' }}</span>
+          </div>
+          <span class="chevron" [class.open]="isExpanded(exec.name)">&#8250;</span>
+        </div>
+
+        <div class="daily-clients" *ngIf="isExpanded(exec.name)" (click)="$event.stopPropagation()">
+          <div class="client-row" *ngFor="let client of exec.todayClients">
+            <span class="client-dot"></span>
+            <span class="client-name">{{ client[exec.businessNameKey] ?? '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</ng-container>
