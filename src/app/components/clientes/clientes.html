@@ -1,0 +1,84 @@
+<section class="clientes-page">
+  <div class="clientes-header">
+    <h2>Clientes</h2>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Buscar cliente o ejecutivo..."
+      (input)="onSearch($any($event.target).value)"
+    />
+  </div>
+
+  <div class="add-client" *ngIf="canAddClients">
+    <button type="button" class="add-client-toggle" (click)="toggleForm()">
+      + Agregar cliente
+    </button>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="showForm" (click)="onBackdropClick($event)">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3 class="modal-title">Agregar cliente</h3>
+        <button type="button" class="modal-close" (click)="toggleForm()" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <form class="add-client-form" (ngSubmit)="submitNewClient()">
+        <label class="form-field" *ngIf="isAdmin">
+          <span class="form-label">Ejecutivo</span>
+          <select class="executive-select" [(ngModel)]="newClient.executiveId" name="executiveId">
+            <option value="">Sin asignar</option>
+            <option *ngFor="let exec of executives" [value]="exec.id">{{ exec.name }}</option>
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Nombre del cliente</span>
+          <input type="text" class="form-input" [(ngModel)]="newClient.name" name="name" />
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Día de contacto</span>
+          <input type="number" class="form-input" [(ngModel)]="newClient.contactDay" name="contactDay" />
+        </label>
+
+        <label class="form-checkbox">
+          <input type="checkbox" [(ngModel)]="newClient.active" name="active" />
+          Activo
+        </label>
+
+        <div class="modal-actions">
+          <span class="form-success" *ngIf="formSuccess">{{ formSuccess }}</span>
+          <span class="form-error" *ngIf="formError">{{ formError }}</span>
+          <button type="submit" class="form-submit" [disabled]="submitting">
+            {{ submitting ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <ng-container *ngIf="filteredRows$ | async as rows">
+    <table class="clientes-table" *ngIf="rows.length > 0">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Ejecutivo</th>
+          <th>Squad</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of rows">
+          <td>{{ row.clientName }}</td>
+          <td>{{ row.executiveName }}</td>
+          <td>{{ row.squad || '—' }}</td>
+          <td>
+            <span class="status-badge" [class.active]="row.active">{{ row.active ? 'Activo' : 'Inactivo' }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="empty-msg" *ngIf="rows.length === 0">No se encontraron clientes.</p>
+  </ng-container>
+</section>

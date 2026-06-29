@@ -1,0 +1,46 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <section class="balances-page">
+    <h2>Balances</h2>
+
+    <div class="totals-grid">
+      <div class="total-card">
+        <span class="total-label">Ejecutivos</span>
+        <span class="total-value">{{ vm.executives.length }}</span>
+      </div>
+      <div class="total-card">
+        <span class="total-label">Clientes</span>
+        <span class="total-value">{{ vm.totalClientes }}</span>
+      </div>
+      <div class="total-card highlight">
+        <span class="total-label">Total cobrado</span>
+        <span class="total-value">{{ vm.totalCobrado | number:'1.0-2' }}</span>
+      </div>
+      <div class="total-card pending">
+        <span class="total-label">Total pendiente</span>
+        <span class="total-value">{{ vm.totalPendiente | number:'1.0-2' }}</span>
+      </div>
+    </div>
+
+    <div class="balance-list" *ngIf="vm.executives.length > 0">
+      <div class="balance-row" *ngFor="let exec of vm.executives">
+        <div class="balance-info">
+          <span class="balance-name">{{ exec.name }}</span>
+          <span *ngIf="exec.squad" class="balance-squad">{{ exec.squad }}</span>
+          <span class="balance-clients">{{ exec.clientCount }} cliente{{ exec.clientCount !== 1 ? 's' : '' }}</span>
+        </div>
+        <div class="balance-bar-wrap">
+          <div class="balance-bar">
+            <div class="bar-cobrado" [style.width.%]="barWidth(exec.cobrado, vm.maxMonto)"></div>
+            <div class="bar-pendiente" [style.width.%]="barWidth(exec.pendiente, vm.maxMonto)"></div>
+          </div>
+          <div class="balance-amounts">
+            <span class="amount-cobrado">{{ exec.cobrado | number:'1.0-2' }}</span>
+            <span class="amount-pendiente" *ngIf="exec.pendiente > 0">+{{ exec.pendiente | number:'1.0-2' }} pend.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="empty-msg" *ngIf="vm.executives.length === 0">No hay ejecutivos cargados todavía.</p>
+  </section>
+</ng-container>

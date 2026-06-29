@@ -27,22 +27,22 @@
           class="client-card"
           *ngFor="let client of executive.clients"
           (click)="selectClient(client)"
-          [class.is-active]="isActive(client)"
+          [class.is-active]="client.active"
         >
-          <span class="client-card-name">{{ getBusinessName(client) }}</span>
-          <span *ngIf="statusKey" class="client-card-status" [class.active]="isActive(client)">
-            {{ client[statusKey] ?? '—' }}
+          <span class="client-card-name">{{ client.name }}</span>
+          <span class="client-card-status" [class.active]="client.active">
+            {{ client.active ? 'Activo' : 'Inactivo' }}
           </span>
         </div>
       </div>
 
       <!-- Detalle del cliente seleccionado -->
       <div *ngIf="selectedClient" class="client-detail">
-        <h3 class="detail-title">{{ getBusinessName(selectedClient) }}</h3>
+        <h3 class="detail-title">{{ selectedClient.name }}</h3>
         <div class="detail-grid">
-          <div class="detail-field" *ngFor="let key of clientKeys">
+          <div class="detail-field" *ngFor="let key of clientDataKeys">
             <span class="detail-label">{{ key }}</span>
-            <span class="detail-value">{{ selectedClient[key] ?? '—' }}</span>
+            <span class="detail-value">{{ selectedClient.data[key] ?? '—' }}</span>
           </div>
         </div>
       </div>

@@ -1,9 +1,11 @@
 <div class="app-wrapper">
-  <header class="app-header">
-    <h1 class="app-logo">Gestión Juniors</h1>
-  </header>
+  <ng-container *ngIf="isAuthenticated">
+    <header class="app-header">
+      <h1 class="app-logo">Gestión Juniors</h1>
+      <app-header-menu [isAdmin]="isAdmin" (select)="onMenuSelect($event)"></app-header-menu>
+    </header>
+  </ng-container>
   <main class="app-main">
-    <app-daily-collections></app-daily-collections>
-    <app-executives-list></app-executives-list>
+    <router-outlet></router-outlet>
   </main>
 </div>

@@ -34,7 +34,7 @@
         <div class="daily-clients" *ngIf="isExpanded(exec.name)" (click)="$event.stopPropagation()">
           <div class="client-row" *ngFor="let client of exec.todayClients">
             <span class="client-dot"></span>
-            <span class="client-name">{{ client[exec.businessNameKey] ?? '—' }}</span>
+            <span class="client-name">{{ client.name }}</span>
           </div>
         </div>
       </div>

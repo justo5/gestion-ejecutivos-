@@ -1,0 +1,26 @@
+<section class="perfil-page">
+  <h2>Perfil</h2>
+
+  <div class="perfil-card" *ngIf="profile">
+    <div class="perfil-avatar">{{ getInitials() }}</div>
+
+    <div class="perfil-field">
+      <span>Nombre</span>
+      <p>{{ profile.name }}</p>
+    </div>
+
+    <div class="perfil-field">
+      <span>Email</span>
+      <p>{{ profile.email }}</p>
+    </div>
+
+    <div class="perfil-field">
+      <span>Rol</span>
+      <p>{{ roleLabel() }}</p>
+    </div>
+
+    <div class="perfil-actions">
+      <button type="button" class="save-btn" (click)="logout()">Cerrar sesión</button>
+    </div>
+  </div>
+</section>

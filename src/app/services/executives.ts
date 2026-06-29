@@ -1,23 +1,51 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as XLSX from 'xlsx';
-import { BehaviorSubject, forkJoin, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
+import { CollectedBy } from './cobros';
+
+const IMAGES_SHEET_URL =
+  'https://docs.google.com/spreadsheets/d/1DgsNhUycGp_-sZBioKlBOP9gZ-RZ_Efwxz-T7nc0f0A/export?format=csv';
+
+export interface CobroInfo {
+  planId: number | null;
+  collectedBy: CollectedBy | null;
+  paid: boolean;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  active: boolean;
+  contactDay: number | null;
+  data: Record<string, unknown>;
+  cobro: CobroInfo | null;
+}
 
 export interface Executive {
+  id: string;
   name: string;
   imageUrl: string;
   squad: string;
   clientCount: number;
   activeCount: number;
-  clients: any[];
+  clients: Client[];
 }
 
-const SHEET_CSV_URL =
-  'https://docs.google.com/spreadsheets/d/1_MJf38cfLyzz7PyVYfK8Y8EntrpQ8wCGaNXvGYxddeI/export?format=csv';
+interface ImportClientPayload {
+  name: string;
+  active: boolean;
+  contactDay: number | null;
+  data: Record<string, unknown>;
+}
 
-const IMAGES_SHEET_URL =
-  'https://docs.google.com/spreadsheets/d/1DgsNhUycGp_-sZBioKlBOP9gZ-RZ_Efwxz-T7nc0f0A/export?format=csv';
+interface ImportExecutivePayload {
+  name: string;
+  imageUrl?: string;
+  squad?: string;
+  clients: ImportClientPayload[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -30,6 +58,12 @@ export class ExecutivesService {
   columnOptions$ = this.columnOptionsSubject.asObservable();
 
   constructor(private zone: NgZone, private http: HttpClient) {}
+
+  refresh(): void {
+    this.http.get<Executive[]>('/api/executives').subscribe((executives) => {
+      this.executivesSubject.next(executives);
+    });
+  }
 
   private loadImagesMap() {
     return this.http.get(IMAGES_SHEET_URL, { responseType: 'text' }).pipe(
@@ -63,53 +97,52 @@ export class ExecutivesService {
     return '';
   }
 
-  loadFromGoogleSheets(): void {
-    forkJoin({
-      csv: this.http.get(SHEET_CSV_URL, { responseType: 'text' }),
-      images: this.loadImagesMap(),
-    }).subscribe(({ csv, images }) => {
-      this.zone.run(() => {
-        const workbook = XLSX.read(csv, { type: 'string' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows: any[] = XLSX.utils.sheet_to_json(sheet);
-        if (rows.length === 0) return;
+  private rowsToClients(rows: any[]): ImportClientPayload[] {
+    if (rows.length === 0) return [];
+    const headers = Object.keys(rows[0]);
+    const estadoCol = headers.find(h => /estado|status/i.test(h));
+    const diaCol = headers.find(h => /^dia$|^d[íi]a$/i.test(h.trim()));
+    const businessNameCol =
+      headers.find(h => /fan\s*page/i.test(h)) ??
+      headers.find(h => /negocio|empresa|business|razón|razon|nombre|cliente/i.test(h)) ??
+      headers[0];
 
-        const headers = Object.keys(rows[0]);
-        const nameCol =
-          headers.find(h => /ejecutivo|responsable|asesor/i.test(h)) ?? headers[0];
-        const squadCol = headers.find(h => /squad/i.test(h));
-        const estadoCol = headers.find(h => /estado|status/i.test(h));
-
-        const grouped = new Map<string, any[]>();
-        rows.forEach(row => {
-          const name = String(row[nameCol] ?? '').trim();
-          if (!name) return;
-          if (!grouped.has(name)) grouped.set(name, []);
-          grouped.get(name)!.push(row);
-        });
-
-        const executives: Executive[] = [];
-        grouped.forEach((groupRows, name) => {
-          const squads = squadCol
-            ? [...new Set(groupRows.map(r => String(r[squadCol] ?? '').trim()).filter(Boolean))]
-            : [];
-          const activeCount = estadoCol
-            ? groupRows.filter(r => /activo|active/i.test(String(r[estadoCol]))).length
-            : groupRows.length;
-
-          executives.push({
-            name,
-            imageUrl: this.resolveImage(name, images),
-            squad: squads.join(' / '),
-            clientCount: groupRows.length,
-            activeCount,
-            clients: groupRows,
-          });
-        });
-
-        this.executivesSubject.next(executives);
-      });
+    return rows.map((row, idx) => {
+      const rawName = String(row[businessNameCol] ?? '').trim();
+      const active = estadoCol ? /activo|active/i.test(String(row[estadoCol] ?? '')) : false;
+      const contactDay = diaCol ? (parseInt(String(row[diaCol] ?? ''), 10) || null) : null;
+      return {
+        name: rawName || `Cliente ${idx + 1}`,
+        active,
+        contactDay,
+        data: row,
+      };
     });
+  }
+
+  private groupRows(rows: any[], nameColumn: string): ImportExecutivePayload[] {
+    if (rows.length === 0) return [];
+    const headers = Object.keys(rows[0]);
+    const squadCol = headers.find(h => /squad/i.test(h));
+
+    const grouped = new Map<string, any[]>();
+    rows.forEach(row => {
+      const name = String(row[nameColumn] ?? '').trim();
+      if (!name) return;
+      if (!grouped.has(name)) grouped.set(name, []);
+      grouped.get(name)!.push(row);
+    });
+
+    const executives: ImportExecutivePayload[] = [];
+    grouped.forEach((groupRows, name) => {
+      const squads = squadCol
+        ? [...new Set(groupRows.map(r => String(r[squadCol] ?? '').trim()).filter(Boolean))]
+        : [];
+
+      executives.push({ name, squad: squads.join(' / '), clients: this.rowsToClients(groupRows) });
+    });
+
+    return executives;
   }
 
   parseFile(file: File): void {
@@ -128,64 +161,43 @@ export class ExecutivesService {
     reader.readAsArrayBuffer(file);
   }
 
-  extractExecutives(file: File, nameColumn: string): void {
+  importFromFile(file: File, nameColumn: string): void {
     const reader = new FileReader();
     reader.onload = (e: ProgressEvent<FileReader>) => {
       const data = new Uint8Array(e.target!.result as ArrayBuffer);
       const workbook = XLSX.read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows: any[] = XLSX.utils.sheet_to_json(sheet);
-
-      const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
-      const squadCol = headers.find(h => /squad/i.test(h));
-      const estadoCol = headers.find(h => /estado|status/i.test(h));
-
-      const grouped = new Map<string, any[]>();
-      rows.forEach(row => {
-        const name = String(row[nameColumn] ?? '').trim();
-        if (!name) return;
-        if (!grouped.has(name)) grouped.set(name, []);
-        grouped.get(name)!.push(row);
-      });
-
-      const executives: Executive[] = [];
-      grouped.forEach((groupRows, name) => {
-        const squads = squadCol
-          ? [...new Set(groupRows.map(r => String(r[squadCol] ?? '').trim()).filter(Boolean))]
-          : [];
-        const activeCount = estadoCol
-          ? groupRows.filter(r => /activo|active/i.test(String(r[estadoCol]))).length
-          : groupRows.length;
-
-        executives.push({
-          name,
-          imageUrl: '',
-          squad: squads.join(' / '),
-          clientCount: groupRows.length,
-          activeCount,
-          clients: groupRows,
-        });
-      });
+      const executives = this.groupRows(rows, nameColumn);
 
       this.loadImagesMap().subscribe(images => {
-        this.zone.run(() => {
-          this.executivesSubject.next(
-            executives.map(exec => ({ ...exec, imageUrl: this.resolveImage(exec.name, images) }))
-          );
+        const withImages = executives.map(exec => ({
+          ...exec,
+          imageUrl: this.resolveImage(exec.name, images),
+        }));
+        this.http.post('/api/executives/import', { executives: withImages }).subscribe(() => {
+          this.zone.run(() => this.refresh());
         });
       });
     };
     reader.readAsArrayBuffer(file);
   }
 
-  updateImage(index: number, imageUrl: string): void {
-    const current = [...this.executivesSubject.value];
-    current[index] = { ...current[index], imageUrl };
-    this.executivesSubject.next(current);
+  createClient(payload: { name: string; active: boolean; contactDay: number | null }, executiveId?: string): Observable<Client> {
+    const body = executiveId ? { ...payload, executiveId } : payload;
+    return this.http.post<Client>('/api/clients', body).pipe(tap(() => this.refresh()));
+  }
+
+  updateImage(executiveId: string, imageUrl: string): void {
+    this.http.patch(`/api/executives/${executiveId}/image`, { imageUrl }).subscribe(() => {
+      const current = this.executivesSubject.value.map(exec =>
+        exec.id === executiveId ? { ...exec, imageUrl } : exec
+      );
+      this.executivesSubject.next(current);
+    });
   }
 
   clear(): void {
-    this.executivesSubject.next([]);
     this.columnOptionsSubject.next([]);
   }
 }

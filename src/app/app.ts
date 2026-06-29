@@ -1,5 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { ExecutivesService } from './services/executives';
+import { Component, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { HeaderMenuAction } from './components/header-menu/header-menu';
+import { AuthService } from './services/auth';
 
 @Component({
   selector: 'app-root',
@@ -7,12 +9,30 @@ import { ExecutivesService } from './services/executives';
   standalone: false,
   styleUrl: './app.scss'
 })
-export class App implements OnInit {
+export class App {
   protected readonly title = signal('gestion-juniors');
 
-  constructor(private executivesService: ExecutivesService) {}
+  constructor(private auth: AuthService, private router: Router) {}
 
-  ngOnInit(): void {
-    this.executivesService.loadFromGoogleSheets();
+  get isAuthenticated(): boolean {
+    return this.auth.isAuthenticated();
+  }
+
+  get isAdmin(): boolean {
+    return this.auth.isAdmin();
+  }
+
+  private static readonly ROUTES: Record<HeaderMenuAction, string> = {
+    ejecutivos: '/ejecutivos',
+    'cobros-hoy': '/cobros-hoy',
+    cobros: '/cobros',
+    balances: '/balances',
+    clientes: '/clientes',
+    configuracion: '/config',
+    perfil: '/perfil',
+  };
+
+  onMenuSelect(action: HeaderMenuAction): void {
+    this.router.navigate([App.ROUTES[action]]);
   }
 }

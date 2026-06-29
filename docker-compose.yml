@@ -5,3 +5,9 @@ services:
     restart: unless-stopped
     ports:
       - "8090:80"
+    networks:
+      - gestion-ejecutivos-net
+
+networks:
+  gestion-ejecutivos-net:
+    external: true

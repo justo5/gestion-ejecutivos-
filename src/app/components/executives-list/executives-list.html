@@ -11,9 +11,8 @@
 
     <div class="cards-grid">
       <app-executive-card
-        *ngFor="let exec of executives; let i = index"
+        *ngFor="let exec of executives"
         [executive]="exec"
-        [index]="i"
         (imageChanged)="onImageChanged($event)"
         (cardClicked)="openModal($event)"
       ></app-executive-card>

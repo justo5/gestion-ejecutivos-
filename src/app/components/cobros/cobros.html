@@ -1,0 +1,66 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <section class="cobros-page">
+    <h2>Resumen de cobros</h2>
+
+    <div class="totals-grid">
+      <div class="total-card">
+        <span class="total-label">Cobrado por ejecutivos</span>
+        <span class="total-value">{{ vm.totals.ejecutivos | number:'1.0-2' }}</span>
+      </div>
+      <div class="total-card">
+        <span class="total-label">Cobrado por agencia</span>
+        <span class="total-value">{{ vm.totals.agencia | number:'1.0-2' }}</span>
+      </div>
+      <div class="total-card highlight">
+        <span class="total-label">Total cobrado</span>
+        <span class="total-value">{{ vm.totals.total | number:'1.0-2' }}</span>
+      </div>
+      <div class="total-card pending">
+        <span class="total-label">Pendiente</span>
+        <span class="total-value">{{ vm.totals.pendiente | number:'1.0-2' }}</span>
+      </div>
+    </div>
+
+    <table class="cobros-table" *ngIf="vm.rows.length > 0">
+      <thead>
+        <tr>
+          <th>Ejecutivo</th>
+          <th>Cliente</th>
+          <th>Plan</th>
+          <th>Monto</th>
+          <th>Cobrado por</th>
+          <th>Cobrado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of vm.rows" [class.is-paid]="row.paid">
+          <td>{{ row.executiveName }}</td>
+          <td>{{ row.clientName }}</td>
+          <td>
+            <select [ngModel]="row.planId" (ngModelChange)="onPlanChange(row, $event)">
+              <option [ngValue]="null">—</option>
+              <option *ngFor="let plan of vm.plans" [ngValue]="plan.id">{{ plan.name }}</option>
+            </select>
+          </td>
+          <td class="monto-cell">{{ montoFor(row, vm.plans) | number:'1.0-2' }}</td>
+          <td>
+            <select [ngModel]="row.collectedBy" (ngModelChange)="onCollectedByChange(row, $event)">
+              <option [ngValue]="null">—</option>
+              <option value="ejecutivo">Ejecutivo</option>
+              <option value="agencia">Agencia</option>
+            </select>
+          </td>
+          <td class="paid-cell">
+            <input
+              type="checkbox"
+              [ngModel]="row.paid"
+              (ngModelChange)="onPaidChange(row, $event)"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="empty-msg" *ngIf="vm.rows.length === 0">No hay clientes cargados todavía.</p>
+  </section>
+</ng-container>

@@ -1,0 +1,20 @@
+<section class="config-page">
+  <h2>Configuración de planes</h2>
+  <p class="config-hint">Definí el precio de cada uno de los 3 planes. Se usan en el resumen de cobros para calcular el monto a cobrar.</p>
+
+  <div class="plan-row" *ngFor="let plan of plans">
+    <label class="plan-field">
+      <span>Nombre</span>
+      <input type="text" [(ngModel)]="plan.name" />
+    </label>
+    <label class="plan-field">
+      <span>Precio</span>
+      <input type="number" min="0" step="0.01" [(ngModel)]="plan.price" />
+    </label>
+  </div>
+
+  <div class="config-actions">
+    <button type="button" class="save-btn" (click)="save()">Guardar</button>
+    <span class="saved-msg" *ngIf="saved">Guardado ✓</span>
+  </div>
+</section>

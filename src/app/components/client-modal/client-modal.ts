@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { Executive } from '../../services/executives';
+import { Client, Executive } from '../../services/executives';
 
 @Component({
   selector: 'app-client-modal',
@@ -11,42 +11,18 @@ export class ClientModal implements OnChanges {
   @Input() executive: Executive | null = null;
   @Output() closed = new EventEmitter<void>();
 
-  columns: string[] = [];
-  businessNameKey = '';
-  statusKey = '';
-  selectedClient: any | null = null;
-  clientKeys: string[] = [];
+  selectedClient: Client | null = null;
 
   ngOnChanges(): void {
     this.selectedClient = null;
-    if (this.executive?.clients?.length) {
-      const allKeys = new Set<string>();
-      this.executive.clients.forEach(c => Object.keys(c).forEach(k => allKeys.add(k)));
-      this.columns = [...allKeys];
-      this.businessNameKey =
-        this.columns.find(k => /fan\s*page/i.test(k)) ??
-        this.columns.find(k => /negocio|empresa|business|razón|razon|nombre|cliente/i.test(k)) ??
-        this.columns[0];
-      this.statusKey = this.columns.find(k => /estado|status/i.test(k)) ?? '';
-    } else {
-      this.columns = [];
-      this.businessNameKey = '';
-      this.statusKey = '';
-    }
   }
 
-  getBusinessName(client: any): string {
-    return client[this.businessNameKey] ?? '—';
+  get clientDataKeys(): string[] {
+    return this.selectedClient ? Object.keys(this.selectedClient.data) : [];
   }
 
-  isActive(client: any): boolean {
-    if (!this.statusKey) return false;
-    return /activo|active/i.test(String(client[this.statusKey] ?? ''));
-  }
-
-  selectClient(client: any): void {
+  selectClient(client: Client): void {
     this.selectedClient = client;
-    this.clientKeys = Object.keys(client);
   }
 
   clearSelection(): void {
@@ -54,6 +30,7 @@ export class ClientModal implements OnChanges {
   }
 
   close(): void {
+    this.selectedClient = null;
     this.closed.emit();
   }
 

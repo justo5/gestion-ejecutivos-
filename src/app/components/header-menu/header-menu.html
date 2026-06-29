@@ -1,0 +1,26 @@
+<div class="header-menu">
+  <button
+    type="button"
+    class="hamburger"
+    [class.is-open]="open"
+    [attr.aria-expanded]="open"
+    aria-label="Abrir menú"
+    aria-haspopup="true"
+    (click)="toggle()">
+    <span class="hamburger-bar"></span>
+    <span class="hamburger-bar"></span>
+    <span class="hamburger-bar"></span>
+  </button>
+
+  <nav class="menu-dropdown" *ngIf="open" role="menu">
+    <button
+      *ngFor="let item of items"
+      type="button"
+      role="menuitem"
+      class="menu-item"
+      (click)="onItemClick(item.action)">
+      <span class="menu-icon" [attr.data-icon]="item.icon"></span>
+      <span class="menu-label">{{ item.label }}</span>
+    </button>
+  </nav>
+</div>

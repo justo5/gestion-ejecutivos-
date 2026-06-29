@@ -1,14 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ExecutivesService } from '../../services/executives';
+import { Client, ExecutivesService } from '../../services/executives';
 
 export interface DailyExecutive {
   name: string;
   imageUrl: string;
   squad: string;
-  todayClients: any[];
-  businessNameKey: string;
+  todayClients: Client[];
 }
 
 @Component({
@@ -31,37 +30,15 @@ export class DailyCollections implements OnInit {
       map(executives =>
         executives
           .map(exec => {
-            const clients = exec.clients;
-            if (!clients.length) return null;
-
-            const allKeys = new Set<string>();
-            clients.forEach(c => Object.keys(c).forEach(k => allKeys.add(k)));
-            const headers = [...allKeys];
-            const diaKey = headers.find(h => /^dia$|^d[íi]a$/i.test(h.trim())) ?? '';
-            const businessNameKey =
-              headers.find(k => /negocio|empresa|business|razón|razon|nombre|cliente/i.test(k)) ??
-              headers[0];
-
-            if (!diaKey) return null;
-
-            const todayClients = clients.filter(c => {
-              const val = parseInt(String(c[diaKey] ?? ''), 10);
-              return val === this.today;
-            });
-
+            const todayClients = exec.clients.filter(c => c.contactDay === this.today);
             if (!todayClients.length) return null;
-
-            return {
-              name: exec.name,
-              imageUrl: exec.imageUrl,
-              squad: exec.squad,
-              todayClients,
-              businessNameKey,
-            } as DailyExecutive;
+            return { name: exec.name, imageUrl: exec.imageUrl, squad: exec.squad, todayClients } as DailyExecutive;
           })
           .filter((e): e is DailyExecutive => e !== null)
       )
     );
+
+    this.executivesService.refresh();
   }
 
   getInitials(name: string): string {

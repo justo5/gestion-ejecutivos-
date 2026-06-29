@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Executive, ExecutivesService } from '../../services/executives';
 
@@ -8,7 +8,7 @@ import { Executive, ExecutivesService } from '../../services/executives';
   templateUrl: './executives-list.html',
   styleUrl: './executives-list.scss',
 })
-export class ExecutivesList {
+export class ExecutivesList implements OnInit {
   executives$: Observable<Executive[]>;
   selectedExecutive: Executive | null = null;
 
@@ -16,8 +16,12 @@ export class ExecutivesList {
     this.executives$ = this.executivesService.executives$;
   }
 
-  onImageChanged(event: { index: number; url: string }): void {
-    this.executivesService.updateImage(event.index, event.url);
+  ngOnInit(): void {
+    this.executivesService.refresh();
+  }
+
+  onImageChanged(event: { id: string; url: string }): void {
+    this.executivesService.updateImage(event.id, event.url);
   }
 
   openModal(executive: Executive): void {

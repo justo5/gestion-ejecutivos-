@@ -9,8 +9,7 @@ import { Executive } from '../../services/executives';
 })
 export class ExecutiveCard {
   @Input() executive!: Executive;
-  @Input() index!: number;
-  @Output() imageChanged = new EventEmitter<{ index: number; url: string }>();
+  @Output() imageChanged = new EventEmitter<{ id: string; url: string }>();
   @Output() cardClicked = new EventEmitter<Executive>();
 
   onCardClick(): void {
@@ -23,7 +22,7 @@ export class ExecutiveCard {
     const file = input.files[0];
     const reader = new FileReader();
     reader.onload = () => {
-      this.imageChanged.emit({ index: this.index, url: reader.result as string });
+      this.imageChanged.emit({ id: this.executive.id, url: reader.result as string });
     };
     reader.readAsDataURL(file);
   }
