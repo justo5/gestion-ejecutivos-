@@ -1,12 +1,8 @@
 <section class="clientes-page">
   <div class="clientes-header">
     <h2>Clientes</h2>
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Buscar cliente o ejecutivo..."
-      (input)="onSearch($any($event.target).value)"
-    />
+    <input type="text" class="search-input" placeholder="Buscar cliente o ejecutivo..."
+      (input)="onSearch($any($event.target).value)" />
   </div>
 
   <div class="add-client" *ngIf="canAddClients">
@@ -37,6 +33,44 @@
         </label>
 
         <label class="form-field">
+          <span class="form-label">Cuenta publicitaria</span>
+          <input type="text" class="form-input" [(ngModel)]="newClient.adAccount" name="adAccount" />
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Fan page</span>
+          <input type="text" class="form-input" [(ngModel)]="newClient.fanpage" name="fanpage" />
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Plan</span>
+          <select class="form-input" [(ngModel)]="newClient.plan" name="plan">
+            <option value="">Sin plan</option>
+            <option *ngFor="let plan of plans" [value]="plan.name">{{ plan.name }}</option>
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">País</span>
+          <input type="text" class="form-input" [(ngModel)]="newClient.country" name="country" />
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">USD</span>
+          <input type="text" class="form-input" [(ngModel)]="newClient.usd" name="usd" />
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">ARS</span>
+          <input type="text" class="form-input" [(ngModel)]="newClient.ars" name="ars" />
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Quién cobra</span>
+          <input type="text" class="form-input" [(ngModel)]="newClient.collectedBy" name="collectedBy" />
+        </label>
+
+        <label class="form-field">
           <span class="form-label">Día de contacto</span>
           <input type="number" class="form-input" [(ngModel)]="newClient.contactDay" name="contactDay" />
         </label>
@@ -58,27 +92,49 @@
   </div>
 
   <ng-container *ngIf="filteredRows$ | async as rows">
-    <table class="clientes-table" *ngIf="rows.length > 0">
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Ejecutivo</th>
-          <th>Squad</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of rows">
-          <td>{{ row.clientName }}</td>
-          <td>{{ row.executiveName }}</td>
-          <td>{{ row.squad || '—' }}</td>
-          <td>
-            <span class="status-badge" [class.active]="row.active">{{ row.active ? 'Activo' : 'Inactivo' }}</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="clients-grid" *ngIf="rows.length > 0">
+      <article class="client-card" *ngFor="let row of rows" [class.is-active]="row.client.active"
+        (click)="selectItem(row)">
+        <span class="client-card-name">{{ cardName(row.client) }}</span>
+
+        <div class="client-card-meta" *ngIf="isAdmin">
+          <span class="client-card-exec">{{ row.executiveName }}</span>
+          <span class="client-card-squad" *ngIf="row.squad">{{ row.squad }}</span>
+        </div>
+
+        <span class="client-card-status" [class.active]="row.client.active">
+          {{ row.client.active ? 'Activo' : 'Inactivo' }}
+        </span>
+      </article>
+    </div>
 
     <p class="empty-msg" *ngIf="rows.length === 0">No se encontraron clientes.</p>
   </ng-container>
+
+  <!-- Detalle del cliente -->
+  <div class="detail-backdrop" *ngIf="selectedItem" (click)="onDetailBackdropClick($event)">
+    <div class="detail-panel">
+      <div class="detail-header">
+        <div class="detail-header-info">
+          <h3 class="detail-title">{{ selectedItem.client.name }}</h3>
+          <span class="detail-status" [class.active]="selectedItem.client.active">
+            {{ selectedItem.client.active ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+        <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div class="detail-body">
+        <table class="detail-table" *ngIf="selectedFields.length > 0">
+          <tbody>
+            <tr *ngFor="let field of selectedFields">
+              <th class="detail-th">{{ field.label }}</th>
+              <td class="detail-td">{{ field.value ?? '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="empty-msg" *ngIf="selectedFields.length === 0">Sin datos adicionales.</p>
+      </div>
+    </div>
+  </div>
 </section>

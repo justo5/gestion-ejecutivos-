@@ -17,11 +17,31 @@ export interface CobroInfo {
 export interface Client {
   id: string;
   name: string;
+  fanpage: string | null;
+  adAccount: string | null;
+  plan: string | null;
+  country: string | null;
+  usd: string | null;
+  ars: string | null;
+  collectedBy: string | null;
   active: boolean;
   contactDay: number | null;
   data: Record<string, unknown>;
   cobro: CobroInfo | null;
 }
+
+// Campos estáticos del cliente que se muestran en el modal de detalle, en el
+// orden en que se renderizan. Cada uno mapea a una columna tipada de la tabla.
+export const CLIENT_DETAIL_FIELDS: { key: keyof Client; label: string }[] = [
+  { key: 'adAccount', label: 'Cuenta publicitaria' },
+  { key: 'fanpage', label: 'Fan page' },
+  { key: 'plan', label: 'Plan' },
+  { key: 'country', label: 'País' },
+  { key: 'usd', label: 'USD' },
+  { key: 'ars', label: 'ARS' },
+  { key: 'collectedBy', label: 'Quién cobra' },
+  { key: 'contactDay', label: 'Día de contacto' },
+];
 
 export interface Executive {
   id: string;
@@ -35,6 +55,13 @@ export interface Executive {
 
 interface ImportClientPayload {
   name: string;
+  fanpage: string | null;
+  adAccount: string | null;
+  plan: string | null;
+  country: string | null;
+  usd: string | null;
+  ars: string | null;
+  collectedBy: string | null;
   active: boolean;
   contactDay: number | null;
   data: Record<string, unknown>;
@@ -102,10 +129,23 @@ export class ExecutivesService {
     const headers = Object.keys(rows[0]);
     const estadoCol = headers.find(h => /estado|status/i.test(h));
     const diaCol = headers.find(h => /^dia$|^d[íi]a$/i.test(h.trim()));
+    const fanpageCol = headers.find(h => /fan\s*page/i.test(h));
+    const adAccountCol = headers.find(h => /cuenta\s*public|ad\s*account/i.test(h));
+    const planCol = headers.find(h => /plan|observaci[óo]n/i.test(h));
+    const countryCol = headers.find(h => /pa[íi]s|country/i.test(h));
+    const usdCol = headers.find(h => /usd|d[óo]lar/i.test(h));
+    const arsCol = headers.find(h => /ars|peso/i.test(h));
+    const collectedByCol = headers.find(h => /qui[ée]n\s*cobra|cobra/i.test(h));
     const businessNameCol =
-      headers.find(h => /fan\s*page/i.test(h)) ??
       headers.find(h => /negocio|empresa|business|razón|razon|nombre|cliente/i.test(h)) ??
+      fanpageCol ??
       headers[0];
+
+    const text = (row: any, col: string | undefined): string | null => {
+      if (!col) return null;
+      const value = String(row[col] ?? '').trim();
+      return value || null;
+    };
 
     return rows.map((row, idx) => {
       const rawName = String(row[businessNameCol] ?? '').trim();
@@ -113,6 +153,13 @@ export class ExecutivesService {
       const contactDay = diaCol ? (parseInt(String(row[diaCol] ?? ''), 10) || null) : null;
       return {
         name: rawName || `Cliente ${idx + 1}`,
+        fanpage: text(row, fanpageCol),
+        adAccount: text(row, adAccountCol),
+        plan: text(row, planCol),
+        country: text(row, countryCol),
+        usd: text(row, usdCol),
+        ars: text(row, arsCol),
+        collectedBy: text(row, collectedByCol),
         active,
         contactDay,
         data: row,
@@ -183,7 +230,21 @@ export class ExecutivesService {
     reader.readAsArrayBuffer(file);
   }
 
-  createClient(payload: { name: string; active: boolean; contactDay: number | null }, executiveId?: string): Observable<Client> {
+  createClient(
+    payload: {
+      name: string;
+      fanpage: string | null;
+      adAccount: string | null;
+      plan: string | null;
+      country: string | null;
+      usd: string | null;
+      ars: string | null;
+      collectedBy: string | null;
+      active: boolean;
+      contactDay: number | null;
+    },
+    executiveId?: string,
+  ): Observable<Client> {
     const body = executiveId ? { ...payload, executiveId } : payload;
     return this.http.post<Client>('/api/clients', body).pipe(tap(() => this.refresh()));
   }

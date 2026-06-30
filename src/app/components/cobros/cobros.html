@@ -28,7 +28,6 @@
           <th>Cliente</th>
           <th>Plan</th>
           <th>Monto</th>
-          <th>Cobrado por</th>
           <th>Cobrado</th>
         </tr>
       </thead>
@@ -36,20 +35,8 @@
         <tr *ngFor="let row of vm.rows" [class.is-paid]="row.paid">
           <td>{{ row.executiveName }}</td>
           <td>{{ row.clientName }}</td>
-          <td>
-            <select [ngModel]="row.planId" (ngModelChange)="onPlanChange(row, $event)">
-              <option [ngValue]="null">—</option>
-              <option *ngFor="let plan of vm.plans" [ngValue]="plan.id">{{ plan.name }}</option>
-            </select>
-          </td>
+          <td>{{ row.plan || '—' }}</td>
           <td class="monto-cell">{{ montoFor(row, vm.plans) | number:'1.0-2' }}</td>
-          <td>
-            <select [ngModel]="row.collectedBy" (ngModelChange)="onCollectedByChange(row, $event)">
-              <option [ngValue]="null">—</option>
-              <option value="ejecutivo">Ejecutivo</option>
-              <option value="agencia">Agencia</option>
-            </select>
-          </td>
           <td class="paid-cell">
             <input
               type="checkbox"

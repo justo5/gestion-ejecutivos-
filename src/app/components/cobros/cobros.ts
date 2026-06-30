@@ -4,12 +4,13 @@ import { map } from 'rxjs/operators';
 import { Executive, ExecutivesService } from '../../services/executives';
 import { ConfigService, PlanConfig } from '../../services/config';
 import { CobrosService, CollectedBy } from '../../services/cobros';
+import { AuthService } from '../../services/auth';
 
 export interface CobroRow {
   clientId: string;
   executiveName: string;
   clientName: string;
-  planId: number | null;
+  plan: string | null;
   collectedBy: CollectedBy | null;
   paid: boolean;
 }
@@ -39,7 +40,8 @@ export class Cobros implements OnInit {
   constructor(
     private executivesService: ExecutivesService,
     private configService: ConfigService,
-    private cobrosService: CobrosService
+    private cobrosService: CobrosService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -61,7 +63,7 @@ export class Cobros implements OnInit {
           clientId: client.id,
           executiveName: exec.name,
           clientName: client.name,
-          planId: client.cobro?.planId ?? null,
+          plan: client.plan ?? null,
           collectedBy: client.cobro?.collectedBy ?? null,
           paid: client.cobro?.paid ?? false,
         });
@@ -71,17 +73,16 @@ export class Cobros implements OnInit {
   }
 
   private buildTotals(rows: CobroRow[], plans: PlanConfig[]): CobrosTotals {
-    const priceOf = (planId: number | null) => plans.find(p => p.id === planId)?.price ?? 0;
     let ejecutivos = 0;
     let agencia = 0;
     let pendiente = 0;
 
     rows.forEach(row => {
-      const monto = priceOf(row.planId);
+      const monto = this.montoFor(row, plans);
       if (row.paid) {
         if (row.collectedBy === 'ejecutivo') ejecutivos += monto;
         else if (row.collectedBy === 'agencia') agencia += monto;
-      } else if (row.planId) {
+      } else if (monto > 0) {
         pendiente += monto;
       }
     });
@@ -90,22 +91,32 @@ export class Cobros implements OnInit {
   }
 
   montoFor(row: CobroRow, plans: PlanConfig[]): number {
-    return plans.find(p => p.id === row.planId)?.price ?? 0;
-  }
-
-  onPlanChange(row: CobroRow, value: string): void {
-    this.cobrosService
-      .updateRecord(row.clientId, { planId: value ? Number(value) : null })
-      .subscribe(() => this.executivesService.refresh());
-  }
-
-  onCollectedByChange(row: CobroRow, value: string): void {
-    this.cobrosService
-      .updateRecord(row.clientId, { collectedBy: value ? (value as CollectedBy) : null })
-      .subscribe(() => this.executivesService.refresh());
+    const plan = (row.plan ?? '').trim().toLowerCase();
+    if (!plan) return 0;
+    return plans.find(p => p.name.trim().toLowerCase() === plan)?.price ?? 0;
   }
 
   onPaidChange(row: CobroRow, paid: boolean): void {
-    this.cobrosService.updateRecord(row.clientId, { paid }).subscribe(() => this.executivesService.refresh());
+    const collectedBy: CollectedBy | null = paid
+      ? this.authService.isAdmin()
+        ? 'agencia'
+        : 'ejecutivo'
+      : null;
+
+    // Guardamos el estado previo y actualizamos la fila de forma optimista para
+    // que el tilde no desaparezca mientras se confirma con el backend.
+    const prevPaid = row.paid;
+    const prevCollectedBy = row.collectedBy;
+    row.paid = paid;
+    row.collectedBy = collectedBy;
+
+    this.cobrosService.updateRecord(row.clientId, { paid, collectedBy }).subscribe({
+      next: () => this.executivesService.refresh(),
+      error: () => {
+        // Si falla, revertimos al estado anterior.
+        row.paid = prevPaid;
+        row.collectedBy = prevCollectedBy;
+      },
+    });
   }
 }

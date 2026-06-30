@@ -39,12 +39,15 @@
       <!-- Detalle del cliente seleccionado -->
       <div *ngIf="selectedClient" class="client-detail">
         <h3 class="detail-title">{{ selectedClient.name }}</h3>
-        <div class="detail-grid">
-          <div class="detail-field" *ngFor="let key of clientDataKeys">
-            <span class="detail-label">{{ key }}</span>
-            <span class="detail-value">{{ selectedClient.data[key] ?? '—' }}</span>
-          </div>
-        </div>
+        <table class="detail-table" *ngIf="clientFields.length > 0">
+          <tbody>
+            <tr *ngFor="let field of clientFields">
+              <th class="detail-th">{{ field.label }}</th>
+              <td class="detail-td">{{ field.value ?? '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="clientFields.length === 0" class="empty-msg">Sin datos adicionales.</p>
       </div>
 
     </div>

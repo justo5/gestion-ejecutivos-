@@ -1,3 +1,67 @@
 <section class="page">
-  <app-executives-list></app-executives-list>
+  <!-- Vista admin: lista de todos los ejecutivos -->
+  <app-executives-list *ngIf="isAdmin"></app-executives-list>
+
+  <!-- Vista ejecutivo: sus propios clientes -->
+  <ng-container *ngIf="!isAdmin">
+    <ng-container *ngIf="executive$ | async as executive; else noExecutive">
+      <div class="clients-header">
+        <div class="clients-header-info">
+          <h2>Mis clientes</h2>
+          <span *ngIf="executive.squad" class="clients-squad">{{ executive.squad }}</span>
+        </div>
+        <div class="clients-stats">
+          <span class="clients-stat"><strong>{{ executive.clientCount }}</strong> clientes</span>
+          <span class="clients-stat active"><strong>{{ executive.activeCount }}</strong> activos</span>
+        </div>
+      </div>
+
+      <div class="clients-grid" *ngIf="executive.clients.length > 0; else noClients">
+        <article
+          class="client-card"
+          *ngFor="let client of executive.clients"
+          [class.is-active]="client.active"
+          (click)="selectClient(client)"
+        >
+          <span class="client-card-name">{{ client.name }}</span>
+          <span class="client-card-status" [class.active]="client.active">
+            {{ client.active ? 'Activo' : 'Inactivo' }}
+          </span>
+        </article>
+      </div>
+
+      <ng-template #noClients>
+        <p class="empty-msg">Todavía no tenés clientes asignados.</p>
+      </ng-template>
+    </ng-container>
+
+    <ng-template #noExecutive>
+      <p class="empty-msg">No encontramos un ejecutivo asociado a tu cuenta.</p>
+    </ng-template>
+  </ng-container>
+
+  <!-- Detalle del cliente -->
+  <div class="detail-backdrop" *ngIf="selectedClient" (click)="onDetailBackdropClick($event)">
+    <div class="detail-panel">
+      <div class="detail-header">
+        <div class="detail-header-info">
+          <h3 class="detail-title">{{ selectedClient.name }}</h3>
+          <span class="detail-status" [class.active]="selectedClient.active">
+            {{ selectedClient.active ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+        <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div class="detail-body">
+        <div class="detail-grid" *ngIf="selectedFields.length > 0">
+          <div class="detail-field" *ngFor="let field of selectedFields">
+            <span class="detail-label">{{ field.label }}</span>
+            <span class="detail-value">{{ field.value ?? '—' }}</span>
+          </div>
+        </div>
+        <p class="empty-msg" *ngIf="selectedFields.length === 0">Sin datos adicionales.</p>
+      </div>
+    </div>
+  </div>
 </section>

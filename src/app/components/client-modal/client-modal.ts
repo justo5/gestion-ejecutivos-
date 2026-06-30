@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { Client, Executive } from '../../services/executives';
+import { CLIENT_DETAIL_FIELDS, Client, Executive } from '../../services/executives';
 
 @Component({
   selector: 'app-client-modal',
@@ -17,8 +17,30 @@ export class ClientModal implements OnChanges {
     this.selectedClient = null;
   }
 
-  get clientDataKeys(): string[] {
-    return this.selectedClient ? Object.keys(this.selectedClient.data) : [];
+  get clientFields(): { label: string; value: unknown }[] {
+    if (!this.selectedClient) return [];
+    const client = this.selectedClient;
+
+    // Campos tipados destacados, en su orden definido.
+    const typed = CLIENT_DETAIL_FIELDS.map(field => ({
+      label: field.label,
+      value: client[field.key],
+    }));
+
+    // Resto de columnas crudas del archivo importado (data) que no estén ya cubiertas.
+    const known = new Set(
+      CLIENT_DETAIL_FIELDS.map(field => String(field.label).toLowerCase()),
+    );
+    const raw = Object.entries(client.data ?? {})
+      .filter(([label]) => !known.has(String(label).toLowerCase()))
+      .map(([label, value]) => ({ label, value }));
+
+    return [...typed, ...raw].filter(
+      field =>
+        field.value !== null &&
+        field.value !== undefined &&
+        String(field.value).trim() !== '',
+    );
   }
 
   selectClient(client: Client): void {

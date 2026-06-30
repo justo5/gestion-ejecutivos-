@@ -38,7 +38,8 @@ export class HeaderMenu {
   ];
 
   get items(): MenuItem[] {
-    return this.isAdmin ? this.allItems : this.allItems.filter(i => i.action !== 'configuracion');
+    if (this.isAdmin) return this.allItems;
+    return this.allItems.filter(i => i.action !== 'configuracion' && i.action !== 'ejecutivos');
   }
 
   constructor(private host: ElementRef<HTMLElement>) {}
