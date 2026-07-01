@@ -10,8 +10,9 @@ const IMAGES_SHEET_URL =
 
 export interface CobroInfo {
   planId: number | null;
-  collectedBy: CollectedBy | null;
-  paid: boolean;
+  collectedBy?: CollectedBy | null;
+  collectedByMonth?: Record<string, CollectedBy>;
+  paidMonths: string[];
 }
 
 export interface Client {
@@ -25,7 +26,7 @@ export interface Client {
   ars: string | null;
   collectedBy: string | null;
   active: boolean;
-  contactDay: number | null;
+  contactDay: string | null;
   data: Record<string, unknown>;
   cobro: CobroInfo | null;
 }
@@ -63,7 +64,7 @@ interface ImportClientPayload {
   ars: string | null;
   collectedBy: string | null;
   active: boolean;
-  contactDay: number | null;
+  contactDay: string | null;
   data: Record<string, unknown>;
 }
 
@@ -150,7 +151,22 @@ export class ExecutivesService {
     return rows.map((row, idx) => {
       const rawName = String(row[businessNameCol] ?? '').trim();
       const active = estadoCol ? /activo|active/i.test(String(row[estadoCol] ?? '')) : false;
-      const contactDay = diaCol ? (parseInt(String(row[diaCol] ?? ''), 10) || null) : null;
+      const diaRaw = diaCol ? String(row[diaCol] ?? '').trim() : '';
+      let contactDay: string | null = null;
+      if (diaRaw) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(diaRaw)) {
+          contactDay = diaRaw;
+        } else {
+          const dayNum = parseInt(diaRaw, 10);
+          if (dayNum >= 1 && dayNum <= 31) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(dayNum).padStart(2, '0');
+            contactDay = `${y}-${m}-${d}`;
+          }
+        }
+      }
       return {
         name: rawName || `Cliente ${idx + 1}`,
         fanpage: text(row, fanpageCol),
@@ -241,12 +257,30 @@ export class ExecutivesService {
       ars: string | null;
       collectedBy: string | null;
       active: boolean;
-      contactDay: number | null;
+      contactDay: string | null;
     },
     executiveId?: string,
   ): Observable<Client> {
     const body = executiveId ? { ...payload, executiveId } : payload;
     return this.http.post<Client>('/api/clients', body).pipe(tap(() => this.refresh()));
+  }
+
+  updateClient(
+    clientId: string,
+    payload: {
+      name: string;
+      fanpage: string | null;
+      adAccount: string | null;
+      plan: string | null;
+      country: string | null;
+      usd: string | null;
+      ars: string | null;
+      collectedBy: string | null;
+      active: boolean;
+      contactDay: string | null;
+    },
+  ): Observable<Client> {
+    return this.http.patch<Client>(`/api/clients/${clientId}`, payload).pipe(tap(() => this.refresh()));
   }
 
   updateImage(executiveId: string, imageUrl: string): void {

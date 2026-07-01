@@ -1,18 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Executive, ExecutivesService } from '../../services/executives';
-import { ConfigService, PlanConfig } from '../../services/config';
+import { ExecutivesService } from '../../services/executives';
+import { ConfigService } from '../../services/config';
 import { CobrosService, CollectedBy } from '../../services/cobros';
 import { AuthService } from '../../services/auth';
 
-export interface CobroRow {
+export interface HistorialEntry {
   clientId: string;
   executiveName: string;
   clientName: string;
+  fanpage: string | null;
   plan: string | null;
+  usd: string | null;
+  ars: string | null;
+  dayNum: number;
   collectedBy: CollectedBy | null;
+  collectedByMonth: Record<string, CollectedBy>;
   paid: boolean;
+  paidMonths: string[];
+  monto: number;
+}
+
+export interface HistorialGroup {
+  dayNum: number;
+  entries: HistorialEntry[];
 }
 
 export interface CobrosTotals {
@@ -22,10 +34,16 @@ export interface CobrosTotals {
   total: number;
 }
 
-export interface CobrosViewModel {
-  rows: CobroRow[];
-  plans: PlanConfig[];
+export interface CobrosHistorialViewModel {
+  groups: HistorialGroup[];
+  upcomingGroups: HistorialGroup[];
   totals: CobrosTotals;
+  monthLabel: string;
+  canGoNext: boolean;
+  isCurrentMonth: boolean;
+  isAdmin: boolean;
+  executiveOptions: { id: string; name: string }[];
+  selectedExecutiveId: string;
 }
 
 @Component({
@@ -35,7 +53,9 @@ export interface CobrosViewModel {
   styleUrl: './cobros.scss',
 })
 export class Cobros implements OnInit {
-  vm$!: Observable<CobrosViewModel>;
+  private selectedDate$ = new BehaviorSubject<Date>(new Date());
+  private selectedExecutiveId$ = new BehaviorSubject<string>('');
+  vm$!: Observable<CobrosHistorialViewModel>;
 
   constructor(
     private executivesService: ExecutivesService,
@@ -45,77 +65,271 @@ export class Cobros implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const rows$ = this.executivesService.executives$.pipe(map(executives => this.buildRows(executives)));
+    this.vm$ = combineLatest([
+      this.executivesService.executives$,
+      this.configService.plans$,
+      this.selectedDate$,
+      this.selectedExecutiveId$,
+    ]).pipe(
+      map(([executives, plans, selectedDate, selectedExecutiveId]) => {
+        const isAdmin = this.authService.isAdmin();
+        const now = new Date();
+        const isCurrentMonth =
+          selectedDate.getMonth() === now.getMonth() &&
+          selectedDate.getFullYear() === now.getFullYear();
 
-    this.vm$ = combineLatest([rows$, this.configService.plans$]).pipe(
-      map(([rows, plans]) => ({ rows, plans, totals: this.buildTotals(rows, plans) }))
+        const monthLabel = selectedDate.toLocaleDateString('es-AR', {
+          month: 'long',
+          year: 'numeric',
+        });
+
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        const canGoNext = selectedMonthStart < currentMonthStart;
+
+        const executiveOptions = executives.map(e => ({ id: e.id, name: e.name }));
+        const selectedYearMonth = this.formatYearMonth(selectedDate);
+        const entriesMap = new Map<number, HistorialEntry[]>();
+
+        const filteredExecutives = isAdmin && selectedExecutiveId
+          ? executives.filter(e => e.id === selectedExecutiveId)
+          : executives;
+
+        for (const exec of filteredExecutives) {
+          for (const client of exec.clients) {
+            if (client.contactDay === null) continue;
+
+            const contactDate = new Date(client.contactDay + 'T00:00:00');
+            const dayNum = contactDate.getDate();
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
+
+            if (!isCurrentMonth) {
+              const selYear = selectedDate.getFullYear();
+              const selMonth = selectedDate.getMonth();
+              if (
+                contactDate.getFullYear() > selYear ||
+                (contactDate.getFullYear() === selYear && contactDate.getMonth() > selMonth)
+              ) continue;
+            }
+
+            const usdNum = parseFloat(String(client.usd ?? '').replace(',', '.'));
+            const planName = (client.plan ?? '').trim().toLowerCase();
+            const planConfig = plans.find(p => p.name.trim().toLowerCase() === planName);
+            const monto = !isNaN(usdNum) ? usdNum : (planConfig?.price ?? 0);
+
+            const rawCobro = client.cobro;
+            const collectedByMonth: Record<string, CollectedBy> = { ...(rawCobro?.collectedByMonth ?? {}) };
+            if (rawCobro?.collectedBy && !rawCobro.collectedByMonth) {
+              for (const m of rawCobro.paidMonths ?? []) {
+                collectedByMonth[m] = rawCobro.collectedBy;
+              }
+            }
+
+            const entry: HistorialEntry = {
+              clientId: client.id,
+              executiveName: exec.name,
+              clientName: client.name,
+              fanpage: client.fanpage,
+              plan: client.plan,
+              usd: client.usd,
+              ars: client.ars,
+              dayNum,
+              collectedBy: collectedByMonth[selectedYearMonth] ?? null,
+              collectedByMonth,
+              paid: (rawCobro?.paidMonths ?? []).includes(selectedYearMonth),
+              paidMonths: rawCobro?.paidMonths ?? [],
+              monto,
+            };
+
+            if (!entriesMap.has(dayNum)) entriesMap.set(dayNum, []);
+            entriesMap.get(dayNum)!.push(entry);
+          }
+        }
+
+        const todayDay = now.getDate();
+        const allGroups: HistorialGroup[] = Array.from(entriesMap.entries())
+          .sort(([a], [b]) => a - b)
+          .map(([dayNum, entries]) => ({ dayNum, entries }));
+
+        const groups = isCurrentMonth
+          ? allGroups.filter(g => g.dayNum <= todayDay)
+          : allGroups;
+
+        const upcomingGroups = isCurrentMonth
+          ? allGroups.filter(g => g.dayNum > todayDay)
+          : [];
+
+        const totals = this.buildTotals(allGroups);
+
+        return { groups, upcomingGroups, totals, monthLabel, canGoNext, isCurrentMonth, isAdmin, executiveOptions, selectedExecutiveId };
+      })
     );
 
     this.executivesService.refresh();
     this.configService.refresh();
   }
 
-  private buildRows(executives: Executive[]): CobroRow[] {
-    const rows: CobroRow[] = [];
-    executives.forEach(exec => {
-      exec.clients.forEach(client => {
-        rows.push({
-          clientId: client.id,
-          executiveName: exec.name,
-          clientName: client.name,
-          plan: client.plan ?? null,
-          collectedBy: client.cobro?.collectedBy ?? null,
-          paid: client.cobro?.paid ?? false,
-        });
-      });
-    });
-    return rows;
-  }
-
-  private buildTotals(rows: CobroRow[], plans: PlanConfig[]): CobrosTotals {
+  private buildTotals(groups: HistorialGroup[]): CobrosTotals {
     let ejecutivos = 0;
     let agencia = 0;
     let pendiente = 0;
 
-    rows.forEach(row => {
-      const monto = this.montoFor(row, plans);
-      if (row.paid) {
-        if (row.collectedBy === 'ejecutivo') ejecutivos += monto;
-        else if (row.collectedBy === 'agencia') agencia += monto;
-      } else if (monto > 0) {
-        pendiente += monto;
+    for (const group of groups) {
+      for (const entry of group.entries) {
+        if (entry.paid) {
+          if (entry.collectedBy === 'ejecutivo') ejecutivos += entry.monto;
+          else if (entry.collectedBy === 'agencia') agencia += entry.monto;
+        } else if (entry.monto > 0) {
+          pendiente += entry.monto;
+        }
       }
-    });
+    }
 
     return { ejecutivos, agencia, pendiente, total: ejecutivos + agencia };
   }
 
-  montoFor(row: CobroRow, plans: PlanConfig[]): number {
-    const plan = (row.plan ?? '').trim().toLowerCase();
-    if (!plan) return 0;
-    return plans.find(p => p.name.trim().toLowerCase() === plan)?.price ?? 0;
+  onExecutiveFilter(executiveId: string): void {
+    this.selectedExecutiveId$.next(executiveId);
   }
 
-  onPaidChange(row: CobroRow, paid: boolean): void {
-    const collectedBy: CollectedBy | null = paid
-      ? this.authService.isAdmin()
-        ? 'agencia'
-        : 'ejecutivo'
-      : null;
+  prevMonth(): void {
+    const d = this.selectedDate$.value;
+    this.selectedDate$.next(new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  }
 
-    // Guardamos el estado previo y actualizamos la fila de forma optimista para
-    // que el tilde no desaparezca mientras se confirma con el backend.
-    const prevPaid = row.paid;
-    const prevCollectedBy = row.collectedBy;
-    row.paid = paid;
-    row.collectedBy = collectedBy;
+  nextMonth(): void {
+    const d = this.selectedDate$.value;
+    const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const now = new Date();
+    if (next <= new Date(now.getFullYear(), now.getMonth(), 1)) {
+      this.selectedDate$.next(next);
+    }
+  }
 
-    this.cobrosService.updateRecord(row.clientId, { paid, collectedBy }).subscribe({
+  downloadCsv(vm: CobrosHistorialViewModel): void {
+    const allEntries: Array<{ dayNum: number; entry: HistorialEntry }> = [];
+    for (const group of [...vm.groups, ...vm.upcomingGroups]) {
+      for (const entry of group.entries) {
+        allEntries.push({ dayNum: group.dayNum, entry });
+      }
+    }
+
+    let totalEjecutivos = 0;
+    let totalAgencia = 0;
+    for (const { entry } of allEntries) {
+      if (entry.paid) {
+        if (entry.collectedBy === 'ejecutivo') totalEjecutivos += entry.monto;
+        else if (entry.collectedBy === 'agencia') totalAgencia += entry.monto;
+      }
+    }
+
+    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'USD', 'ARS', 'Monto', 'Cobrado por', 'Estado', 'A favor de'];
+    const rows = allEntries.map(({ dayNum, entry }) => {
+      let aFavorDe = '';
+      if (entry.paid) {
+        if (entry.collectedBy === 'ejecutivo') aFavorDe = 'Ejecutivo';
+        else if (entry.collectedBy === 'agencia') aFavorDe = 'Agencia';
+      }
+      return [
+        dayNum,
+        entry.clientName,
+        entry.fanpage ?? '',
+        entry.executiveName,
+        entry.plan ?? '',
+        entry.usd ?? '',
+        entry.ars ?? '',
+        entry.monto,
+        entry.collectedBy ?? '',
+        entry.paid ? 'Pagado' : 'Pendiente',
+        aFavorDe,
+      ];
+    });
+
+    const totalCobrado = totalEjecutivos + totalAgencia;
+    const correspondeACadaUno = totalCobrado / 2;
+    const netoDiff = (totalEjecutivos - totalAgencia) / 2;
+    let deudaLabel: string;
+    let deudaMonto: number;
+    if (netoDiff > 0) {
+      deudaLabel = 'Ejecutivo le debe a Agencia';
+      deudaMonto = netoDiff;
+    } else if (netoDiff < 0) {
+      deudaLabel = 'Agencia le debe a Ejecutivo';
+      deudaMonto = Math.abs(netoDiff);
+    } else {
+      deudaLabel = 'Sin diferencia (están empatados)';
+      deudaMonto = 0;
+    }
+
+    const COL_COUNT = headers.length;
+    const empty = (n: number) => Array(n).fill('');
+    const summaryRows = [
+      empty(COL_COUNT),
+      ['RESUMEN (distribución 50% / 50%)', ...empty(COL_COUNT - 1)],
+      ['Total cobrado', ...empty(COL_COUNT - 3), totalCobrado, '', ''],
+      ['Corresponde a cada uno (50%)', ...empty(COL_COUNT - 3), correspondeACadaUno, '', ''],
+      ['Cobrado por ejecutivos', ...empty(COL_COUNT - 3), totalEjecutivos, '', ''],
+      ['Cobrado por agencia', ...empty(COL_COUNT - 3), totalAgencia, '', ''],
+      [deudaLabel, ...empty(COL_COUNT - 3), deudaMonto, '', ''],
+    ];
+
+    const csv = [headers, ...rows, ...summaryRows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cobros-${vm.monthLabel}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  canTogglePaid(entry: HistorialEntry): boolean {
+    if (!entry.paid) return true;
+    const isAdmin = this.authService.isAdmin();
+    if (entry.collectedBy === 'ejecutivo' && isAdmin) return false;
+    if (entry.collectedBy === 'agencia' && !isAdmin) return false;
+    return true;
+  }
+
+  private formatYearMonth(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
+
+  onPaidChange(entry: HistorialEntry, paid: boolean): void {
+    if (!this.canTogglePaid(entry)) return;
+
+    const currentMonth = this.formatYearMonth(this.selectedDate$.value);
+    const newPaidMonths = paid
+      ? [...new Set([...entry.paidMonths, currentMonth])]
+      : entry.paidMonths.filter(m => m !== currentMonth);
+
+    const collectedByForMonth: CollectedBy = this.authService.isAdmin() ? 'agencia' : 'ejecutivo';
+    const newCollectedByMonth = paid
+      ? { ...entry.collectedByMonth, [currentMonth]: collectedByForMonth }
+      : Object.fromEntries(Object.entries(entry.collectedByMonth).filter(([k]) => k !== currentMonth));
+
+    const prevPaid = entry.paid;
+    const prevPaidMonths = entry.paidMonths;
+    const prevCollectedBy = entry.collectedBy;
+    const prevCollectedByMonth = entry.collectedByMonth;
+
+    entry.paid = paid;
+    entry.paidMonths = newPaidMonths;
+    entry.collectedBy = paid ? collectedByForMonth : null;
+    entry.collectedByMonth = newCollectedByMonth;
+
+    this.cobrosService.updateRecord(entry.clientId, { paidMonths: newPaidMonths, collectedByMonth: newCollectedByMonth }).subscribe({
       next: () => this.executivesService.refresh(),
       error: () => {
-        // Si falla, revertimos al estado anterior.
-        row.paid = prevPaid;
-        row.collectedBy = prevCollectedBy;
+        entry.paid = prevPaid;
+        entry.paidMonths = prevPaidMonths;
+        entry.collectedBy = prevCollectedBy;
+        entry.collectedByMonth = prevCollectedByMonth;
       },
     });
   }

@@ -1,53 +1,136 @@
 <ng-container *ngIf="vm$ | async as vm">
-  <section class="cobros-page">
-    <h2>Resumen de cobros</h2>
+  <div class="historial-page">
 
+    <!-- Header -->
+    <div class="page-header">
+      <h2 class="page-title">Cobros</h2>
+      <div class="month-nav">
+        <button class="nav-btn" (click)="prevMonth()">&#8249;</button>
+        <span class="month-label">{{ vm.monthLabel }}</span>
+        <button class="nav-btn" (click)="nextMonth()" [disabled]="!vm.canGoNext">&#8250;</button>
+      </div>
+      <button class="csv-btn" (click)="downloadCsv(vm)">&#8595; Exportar CSV</button>
+    </div>
+
+    <div *ngIf="vm.isAdmin" class="filters-row">
+      <select class="exec-filter"
+              [value]="vm.selectedExecutiveId"
+              (change)="onExecutiveFilter($any($event.target).value)">
+        <option value="">Todos los ejecutivos</option>
+        <option *ngFor="let exec of vm.executiveOptions" [value]="exec.id">{{ exec.name }}</option>
+      </select>
+    </div>
+
+    <!-- Totales -->
     <div class="totals-grid">
       <div class="total-card">
-        <span class="total-label">Cobrado por ejecutivos</span>
-        <span class="total-value">{{ vm.totals.ejecutivos | number:'1.0-2' }}</span>
+        <span class="total-label">Ejecutivos</span>
+        <span class="total-value">${{ vm.totals.ejecutivos | number:'1.0-0' }}</span>
       </div>
       <div class="total-card">
-        <span class="total-label">Cobrado por agencia</span>
-        <span class="total-value">{{ vm.totals.agencia | number:'1.0-2' }}</span>
-      </div>
-      <div class="total-card highlight">
-        <span class="total-label">Total cobrado</span>
-        <span class="total-value">{{ vm.totals.total | number:'1.0-2' }}</span>
+        <span class="total-label">Agencia</span>
+        <span class="total-value">${{ vm.totals.agencia | number:'1.0-0' }}</span>
       </div>
       <div class="total-card pending">
         <span class="total-label">Pendiente</span>
-        <span class="total-value">{{ vm.totals.pendiente | number:'1.0-2' }}</span>
+        <span class="total-value">${{ vm.totals.pendiente | number:'1.0-0' }}</span>
+      </div>
+      <div class="total-card highlight">
+        <span class="total-label">Total cobrado</span>
+        <span class="total-value">${{ vm.totals.total | number:'1.0-0' }}</span>
       </div>
     </div>
 
-    <table class="cobros-table" *ngIf="vm.rows.length > 0">
-      <thead>
-        <tr>
-          <th>Ejecutivo</th>
-          <th>Cliente</th>
-          <th>Plan</th>
-          <th>Monto</th>
-          <th>Cobrado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of vm.rows" [class.is-paid]="row.paid">
-          <td>{{ row.executiveName }}</td>
-          <td>{{ row.clientName }}</td>
-          <td>{{ row.plan || '—' }}</td>
-          <td class="monto-cell">{{ montoFor(row, vm.plans) | number:'1.0-2' }}</td>
-          <td class="paid-cell">
-            <input
-              type="checkbox"
-              [ngModel]="row.paid"
-              (ngModelChange)="onPaidChange(row, $event)"
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Tabla -->
+    <div class="table-wrapper">
+      <table class="cobros-table">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Cliente</th>
+            <th>Fanpage</th>
+            <th>Ejecutivo</th>
+            <th>Plan</th>
+            <th>Monto</th>
+            <th>Cobrado por</th>
+            <th>Estado</th>
+            <th>Pagado</th>
+          </tr>
+        </thead>
+        <tbody>
 
-    <p class="empty-msg" *ngIf="vm.rows.length === 0">No hay clientes cargados todavía.</p>
-  </section>
+          <!-- Cobros del mes -->
+          <ng-container *ngFor="let group of vm.groups">
+            <tr *ngFor="let entry of group.entries"
+                [class.row-paid]="entry.paid">
+              <td class="col-day">{{ group.dayNum }}</td>
+              <td>{{ entry.clientName }}</td>
+              <td>{{ entry.fanpage || '-' }}</td>
+              <td>{{ entry.executiveName }}</td>
+              <td>{{ entry.plan || '-' }}</td>
+              <td class="col-amount">${{ entry.monto | number:'1.0-0' }}</td>
+              <td>
+                <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
+                <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
+                <span *ngIf="!entry.collectedBy" class="text-muted">-</span>
+              </td>
+              <td>
+                <span [class]="entry.paid ? 'badge badge-paid' : 'badge badge-pending'">
+                  {{ entry.paid ? 'Pagado' : 'Pendiente' }}
+                </span>
+              </td>
+              <td class="col-check">
+                <input type="checkbox" class="entry-check"
+                  [checked]="entry.paid"
+                  [disabled]="!canTogglePaid(entry)"
+                  (change)="onPaidChange(entry, $any($event.target).checked)" />
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Divisor próximos cobros -->
+          <ng-container *ngIf="vm.upcomingGroups.length > 0">
+            <tr class="divider-row">
+              <td colspan="9">
+                <span class="upcoming-label">Próximos cobros</span>
+              </td>
+            </tr>
+            <ng-container *ngFor="let group of vm.upcomingGroups">
+              <tr *ngFor="let entry of group.entries"
+                  class="row-upcoming"
+                  [class.row-paid]="entry.paid">
+                <td class="col-day">{{ group.dayNum }}</td>
+                <td>{{ entry.clientName }}</td>
+                <td>{{ entry.fanpage || '-' }}</td>
+                <td>{{ entry.executiveName }}</td>
+                <td>{{ entry.plan || '-' }}</td>
+                <td class="col-amount">${{ entry.monto | number:'1.0-0' }}</td>
+                <td>
+                  <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
+                  <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
+                  <span *ngIf="!entry.collectedBy" class="text-muted">-</span>
+                </td>
+                <td>
+                  <span class="badge badge-upcoming">Próximo</span>
+                </td>
+                <td class="col-check">
+                  <input type="checkbox" class="entry-check"
+                    [checked]="entry.paid"
+                    [disabled]="!canTogglePaid(entry)"
+                    (change)="onPaidChange(entry, $any($event.target).checked)" />
+                </td>
+              </tr>
+            </ng-container>
+          </ng-container>
+
+          <!-- Estado vacío -->
+          <tr *ngIf="vm.groups.length === 0 && vm.upcomingGroups.length === 0">
+            <td colspan="9" class="empty-msg">Sin cobros para este mes</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
 </ng-container>

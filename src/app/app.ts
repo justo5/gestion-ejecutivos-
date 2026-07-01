@@ -24,9 +24,7 @@ export class App {
 
   private static readonly ROUTES: Record<HeaderMenuAction, string> = {
     ejecutivos: '/ejecutivos',
-    'cobros-hoy': '/cobros-hoy',
     cobros: '/cobros',
-    balances: '/balances',
     clientes: '/clientes',
     configuracion: '/config',
     perfil: '/perfil',

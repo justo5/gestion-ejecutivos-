@@ -1,113 +1,122 @@
-.daily-section {
+.collections-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 28px;
 }
 
-.daily-header {
+// ── Navegación de mes ───────────────────────────────────────────
+.month-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
+  gap: 12px;
 }
 
-.daily-title {
+.nav-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  color: var(--text);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  transition: background 0.15s;
 
-  h2 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  &:hover:not(:disabled) {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 }
 
-.daily-icon {
-  font-size: 1.4rem;
+.month-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: capitalize;
 }
 
-.badge {
-  display: inline-flex;
+// ── Grupos ───────────────────────────────────────────────────────
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-header {
+  display: flex;
   align-items: center;
-  background: var(--primary-light);
-  color: var(--primary);
-  font-size: 0.78rem;
+  gap: 10px;
+}
+
+.group-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.today-dot     { background: #16a34a; }
+.overdue-dot   { background: #dc2626; }
+.scheduled-dot { background: var(--primary); }
+
+.group-title {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.group-count {
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 10px;
   border-radius: 999px;
 }
 
-.total-badge {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
+.today-count     { background: #dcfce7; color: #16a34a; }
+.overdue-count   { background: #fee2e2; color: #dc2626; }
+.scheduled-count { background: var(--primary-light); color: var(--primary); }
 
-.daily-grid {
+// ── Lista y tarjetas ─────────────────────────────────────────────
+.cobros-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.daily-card {
+.cobro-card {
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  overflow: hidden;
-  cursor: pointer;
+  border-left: 4px solid #16a34a;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
   transition: box-shadow 0.2s, transform 0.2s;
-  border-left: 4px solid var(--primary);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
   }
 
-  &.expanded {
-    border-left-color: #16a34a;
-  }
+  &.overdue   { border-left-color: #dc2626; }
+  &.scheduled { border-left-color: var(--primary); }
+  &.paid      { background: #f0fdf4; }
 }
 
-.daily-card-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-}
-
-.daily-avatar {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-
-  img {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--primary-light);
-  }
-}
-
-.daily-initials {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--primary-light);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.daily-info {
+.cobro-left {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -115,8 +124,31 @@
   gap: 3px;
 }
 
-.daily-name {
-  font-size: 0.98rem;
+.cobro-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cobro-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: 0.67rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.today-tag     { background: #dcfce7; color: #16a34a; }
+.overdue-tag   { background: #fee2e2; color: #dc2626; }
+.scheduled-tag { background: var(--primary-light); color: var(--primary); }
+.paid-tag      { background: #dcfce7; color: #16a34a; }
+
+.cobro-fanpage {
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
@@ -124,77 +156,43 @@
   text-overflow: ellipsis;
 }
 
-.daily-squad {
-  display: inline-block;
-  background: var(--primary-light);
-  color: var(--primary);
-  font-size: 0.70rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  width: fit-content;
-}
-
-.daily-count {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  background: var(--bg);
-  border-radius: 8px;
-  padding: 8px 14px;
-}
-
-.count-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #16a34a;
-  line-height: 1;
-}
-
-.count-label {
-  font-size: 0.65rem;
+.cobro-exec {
+  font-size: 0.78rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.chevron {
-  font-size: 1.4rem;
-  color: var(--text-muted);
-  transition: transform 0.2s;
-  transform: rotate(0deg);
-
-  &.open {
-    transform: rotate(90deg);
-  }
-}
-
-.daily-clients {
-  border-top: 1px solid var(--border);
-  padding: 12px 18px 14px;
+.cobro-right {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: var(--bg);
-}
-
-.client-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 0;
-}
-
-.client-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #16a34a;
+  flex-wrap: wrap;
+  gap: 5px;
   flex-shrink: 0;
 }
 
-.client-name {
+.meta-plan {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.meta-amount {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+// ── Estado vacío ─────────────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
   font-size: 0.9rem;
-  color: var(--text);
 }

@@ -1,43 +1,105 @@
-<ng-container *ngIf="dailyExecutives$ | async as dailyExecs">
-  <section class="daily-section" *ngIf="dailyExecs.length > 0">
-    <div class="daily-header">
-      <div class="daily-title">
-        <span class="daily-icon">📅</span>
-        <h2>Cobros de hoy <span class="badge">{{ todayLabel }}</span></h2>
-      </div>
-      <span class="total-badge">{{ dailyExecs.length }} ejecutivo{{ dailyExecs.length !== 1 ? 's' : '' }}</span>
+<ng-container *ngIf="collections$ | async as data">
+  <section class="collections-section">
+
+    <!-- Navegación de mes -->
+    <div class="month-nav">
+      <button class="nav-btn" (click)="prevMonth()">&#8249;</button>
+      <span class="month-label">{{ data.monthLabel }}</span>
+      <button class="nav-btn" (click)="nextMonth()" [disabled]="!data.canGoNext">&#8250;</button>
     </div>
 
-    <div class="daily-grid">
-      <div
-        class="daily-card"
-        *ngFor="let exec of dailyExecs"
-        [class.expanded]="isExpanded(exec.name)"
-        (click)="toggle(exec.name)"
-      >
-        <div class="daily-card-header">
-          <div class="daily-avatar">
-            <img *ngIf="exec.imageUrl" [src]="exec.imageUrl" [alt]="exec.name" />
-            <div *ngIf="!exec.imageUrl" class="daily-initials">{{ getInitials(exec.name) }}</div>
-          </div>
-          <div class="daily-info">
-            <span class="daily-name">{{ exec.name }}</span>
-            <span *ngIf="exec.squad" class="daily-squad">{{ exec.squad }}</span>
-          </div>
-          <div class="daily-count">
-            <span class="count-value">{{ exec.todayClients.length }}</span>
-            <span class="count-label">cobro{{ exec.todayClients.length !== 1 ? 's' : '' }}</span>
-          </div>
-          <span class="chevron" [class.open]="isExpanded(exec.name)">&#8250;</span>
-        </div>
+    <!-- Vista mes actual -->
+    <ng-container *ngIf="data.isCurrentMonth">
 
-        <div class="daily-clients" *ngIf="isExpanded(exec.name)" (click)="$event.stopPropagation()">
-          <div class="client-row" *ngFor="let client of exec.todayClients">
-            <span class="client-dot"></span>
-            <span class="client-name">{{ client.name }}</span>
+      <div class="group" *ngIf="data.today.length > 0">
+        <div class="group-header">
+          <span class="group-dot today-dot"></span>
+          <h2 class="group-title">Cobros de hoy</h2>
+          <span class="group-count today-count">{{ data.today.length }}</span>
+        </div>
+        <div class="cobros-list">
+          <div class="cobro-card" [class.paid]="cobro.paid" *ngFor="let cobro of data.today">
+            <div class="cobro-left">
+              <div class="cobro-tags">
+                <span class="cobro-tag today-tag">hoy</span>
+                <span class="cobro-tag paid-tag" *ngIf="cobro.paid">cobrado</span>
+              </div>
+              <span class="cobro-fanpage">{{ cobro.fanpage }}</span>
+              <span class="cobro-exec">{{ cobro.executiveName }}</span>
+            </div>
+            <div class="cobro-right" *ngIf="cobro.plan || cobro.usd || cobro.ars">
+              <span *ngIf="cobro.plan" class="meta-plan">{{ cobro.plan }}</span>
+              <span *ngIf="cobro.usd" class="meta-amount">USD {{ cobro.usd }}</span>
+              <span *ngIf="cobro.ars" class="meta-amount">ARS {{ cobro.ars }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <div class="group" *ngIf="data.overdue.length > 0">
+        <div class="group-header">
+          <span class="group-dot overdue-dot"></span>
+          <h2 class="group-title">Atrasados</h2>
+          <span class="group-count overdue-count">{{ data.overdue.length }}</span>
+        </div>
+        <div class="cobros-list">
+          <div class="cobro-card overdue" [class.paid]="cobro.paid" *ngFor="let cobro of data.overdue">
+            <div class="cobro-left">
+              <div class="cobro-tags">
+                <span class="cobro-tag overdue-tag">día {{ cobro.dayNum }}</span>
+                <span class="cobro-tag paid-tag" *ngIf="cobro.paid">cobrado</span>
+              </div>
+              <span class="cobro-fanpage">{{ cobro.fanpage }}</span>
+              <span class="cobro-exec">{{ cobro.executiveName }}</span>
+            </div>
+            <div class="cobro-right" *ngIf="cobro.plan || cobro.usd || cobro.ars">
+              <span *ngIf="cobro.plan" class="meta-plan">{{ cobro.plan }}</span>
+              <span *ngIf="cobro.usd" class="meta-amount">USD {{ cobro.usd }}</span>
+              <span *ngIf="cobro.ars" class="meta-amount">ARS {{ cobro.ars }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="data.today.length === 0 && data.overdue.length === 0">
+        No hay cobros pendientes por el momento.
+      </div>
+
+    </ng-container>
+
+    <!-- Vista meses anteriores -->
+    <ng-container *ngIf="!data.isCurrentMonth">
+
+      <div class="group" *ngIf="data.scheduled.length > 0">
+        <div class="group-header">
+          <span class="group-dot scheduled-dot"></span>
+          <h2 class="group-title">Cobros del mes</h2>
+          <span class="group-count scheduled-count">{{ data.scheduled.length }}</span>
+        </div>
+        <div class="cobros-list">
+          <div class="cobro-card scheduled" [class.paid]="cobro.paid" *ngFor="let cobro of data.scheduled">
+            <div class="cobro-left">
+              <div class="cobro-tags">
+                <span class="cobro-tag scheduled-tag">día {{ cobro.dayNum }}</span>
+                <span class="cobro-tag paid-tag" *ngIf="cobro.paid">cobrado</span>
+              </div>
+              <span class="cobro-fanpage">{{ cobro.fanpage }}</span>
+              <span class="cobro-exec">{{ cobro.executiveName }}</span>
+            </div>
+            <div class="cobro-right" *ngIf="cobro.plan || cobro.usd || cobro.ars">
+              <span *ngIf="cobro.plan" class="meta-plan">{{ cobro.plan }}</span>
+              <span *ngIf="cobro.usd" class="meta-amount">USD {{ cobro.usd }}</span>
+              <span *ngIf="cobro.ars" class="meta-amount">ARS {{ cobro.ars }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="data.scheduled.length === 0">
+        No hay cobros para este mes.
+      </div>
+
+    </ng-container>
+
   </section>
 </ng-container>

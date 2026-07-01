@@ -72,7 +72,7 @@
 
         <label class="form-field">
           <span class="form-label">Día de contacto</span>
-          <input type="number" class="form-input" [(ngModel)]="newClient.contactDay" name="contactDay" />
+          <input type="date" class="form-input" [(ngModel)]="newClient.contactDay" name="contactDay" />
         </label>
 
         <label class="form-checkbox">
@@ -121,10 +121,15 @@
             {{ selectedItem.client.active ? 'Activo' : 'Inactivo' }}
           </span>
         </div>
-        <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Cerrar">&times;</button>
+        <div class="detail-header-actions">
+          <button *ngIf="!editMode && canAddClients" type="button" class="edit-btn" (click)="startEdit()">Editar</button>
+          <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Cerrar">&times;</button>
+        </div>
       </div>
 
-      <div class="detail-body">
+      <!-- Vista de solo lectura -->
+      <div class="detail-body" *ngIf="!editMode">
+        <span class="form-success" *ngIf="editSuccess">{{ editSuccess }}</span>
         <table class="detail-table" *ngIf="selectedFields.length > 0">
           <tbody>
             <tr *ngFor="let field of selectedFields">
@@ -134,6 +139,72 @@
           </tbody>
         </table>
         <p class="empty-msg" *ngIf="selectedFields.length === 0">Sin datos adicionales.</p>
+      </div>
+
+      <!-- Formulario de edición -->
+      <div class="detail-body" *ngIf="editMode">
+        <form class="add-client-form" (ngSubmit)="submitEdit()">
+          <label class="form-field">
+            <span class="form-label">Nombre del cliente</span>
+            <input type="text" class="form-input" [(ngModel)]="editClient.name" name="name" />
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">Cuenta publicitaria</span>
+            <input type="text" class="form-input" [(ngModel)]="editClient.adAccount" name="adAccount" />
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">Fan page</span>
+            <input type="text" class="form-input" [(ngModel)]="editClient.fanpage" name="fanpage" />
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">Plan</span>
+            <select class="form-input" [(ngModel)]="editClient.plan" name="plan">
+              <option value="">Sin plan</option>
+              <option *ngFor="let plan of plans" [value]="plan.name">{{ plan.name }}</option>
+            </select>
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">País</span>
+            <input type="text" class="form-input" [(ngModel)]="editClient.country" name="country" />
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">USD</span>
+            <input type="text" class="form-input" [(ngModel)]="editClient.usd" name="usd" />
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">ARS</span>
+            <input type="text" class="form-input" [(ngModel)]="editClient.ars" name="ars" />
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">Quién cobra</span>
+            <input type="text" class="form-input" [(ngModel)]="editClient.collectedBy" name="collectedBy" />
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">Día de contacto</span>
+            <input type="date" class="form-input" [(ngModel)]="editClient.contactDay" name="contactDay" />
+          </label>
+
+          <label class="form-checkbox">
+            <input type="checkbox" [(ngModel)]="editClient.active" name="active" />
+            Activo
+          </label>
+
+          <div class="modal-actions">
+            <span class="form-error" *ngIf="editError">{{ editError }}</span>
+            <button type="button" class="cancel-btn" (click)="cancelEdit()" [disabled]="editSubmitting">Cancelar</button>
+            <button type="submit" class="form-submit" [disabled]="editSubmitting">
+              {{ editSubmitting ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

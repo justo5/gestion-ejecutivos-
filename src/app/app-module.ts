@@ -11,9 +11,7 @@ import { ClientModal } from './components/client-modal/client-modal';
 import { DailyCollections } from './components/daily-collections/daily-collections';
 import { HeaderMenu } from './components/header-menu/header-menu';
 import { EjecutivosPage } from './components/ejecutivos-page/ejecutivos-page';
-import { CobrosHoyPage } from './components/cobros-hoy-page/cobros-hoy-page';
 import { Cobros } from './components/cobros/cobros';
-import { Balances } from './components/balances/balances';
 import { Clientes } from './components/clientes/clientes';
 import { ConfigPage } from './components/config-page/config-page';
 import { Perfil } from './components/perfil/perfil';
@@ -29,9 +27,7 @@ import { authInterceptor } from './interceptors/auth-interceptor';
     DailyCollections,
     HeaderMenu,
     EjecutivosPage,
-    CobrosHoyPage,
     Cobros,
-    Balances,
     Clientes,
     ConfigPage,
     Perfil,

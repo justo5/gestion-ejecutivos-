@@ -1,14 +1,71 @@
-.cobros-page {
-  max-width: 1100px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+.historial-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
+// ── Header ────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+// ── Navegación de mes ─────────────────────────────────────────────
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.month-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: capitalize;
+  min-width: 150px;
+  text-align: center;
+}
+
+// ── Totales ───────────────────────────────────────────────────────
 .totals-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 12px;
 
   @media (max-width: 720px) {
     grid-template-columns: repeat(2, 1fr);
@@ -16,16 +73,16 @@
 }
 
 .total-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 4px;
 
   &.highlight {
-    background: #2563eb;
+    background: var(--primary);
     color: #fff;
   }
 
@@ -35,58 +92,199 @@
 }
 
 .total-label {
-  font-size: 0.8rem;
-  opacity: 0.8;
+  font-size: 0.75rem;
+  opacity: 0.75;
 }
 
 .total-value {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 700;
+}
+
+// ── Fila de filtros ───────────────────────────────────────────────
+.filters-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: -8px;
+}
+
+// ── Filtro ejecutivo ──────────────────────────────────────────────
+.exec-filter {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  color: var(--text);
+  cursor: pointer;
+  height: 32px;
+  min-width: 180px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+}
+
+// ── Botón CSV ─────────────────────────────────────────────────────
+.csv-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+}
+
+// ── Tabla ─────────────────────────────────────────────────────────
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  background: var(--surface);
 }
 
 .cobros-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  font-size: 0.82rem;
 
-  th,
-  td {
-    padding: 0.6rem 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    font-size: 0.9rem;
+  thead tr {
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
   }
 
   th {
-    background: #f8f9fb;
-    font-weight: 600;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-muted);
+    white-space: nowrap;
   }
 
-  tr.is-paid {
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover td {
+    background: var(--bg);
+  }
+
+  .row-paid td {
     background: #f0fdf4;
+    &:hover {
+      background: #dcfce7;
+    }
   }
 
-  select {
-    padding: 0.3rem 0.4rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+  .row-upcoming td {
+    background: #fffbeb;
+    &:hover {
+      background: #fef3c7;
+    }
   }
 }
 
-.monto-cell {
-  font-weight: 600;
+.col-day {
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
-.paid-cell input {
-  width: 18px;
-  height: 18px;
+.col-amount {
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.empty-msg {
-  color: #666;
+.col-check {
   text-align: center;
-  margin-top: 2rem;
+}
+
+.entry-check {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+// ── Badges ────────────────────────────────────────────────────────
+.badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.badge-paid {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-exec {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.badge-agency {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.badge-upcoming {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+// ── Divisor próximos cobros ───────────────────────────────────────
+.divider-row td {
+  background: #fef3c7 !important;
+  padding: 6px 12px;
+  text-align: center;
+  border-bottom: 1px solid #fbbf24;
+}
+
+.upcoming-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+// ── Estado vacío ──────────────────────────────────────────────────
+.empty-msg {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+  font-size: 0.9rem;
 }

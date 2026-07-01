@@ -2,9 +2,7 @@ import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from
 
 export type HeaderMenuAction =
   | 'ejecutivos'
-  | 'cobros-hoy'
   | 'cobros'
-  | 'balances'
   | 'clientes'
   | 'configuracion'
   | 'perfil';
@@ -29,9 +27,7 @@ export class HeaderMenu {
 
   private readonly allItems: MenuItem[] = [
     { label: 'Ejecutivos', action: 'ejecutivos', icon: 'users' },
-    { label: 'Cobros de Hoy', action: 'cobros-hoy', icon: 'cash' },
     { label: 'Resumen de Cobros', action: 'cobros', icon: 'receipt' },
-    { label: 'Balances', action: 'balances', icon: 'chart' },
     { label: 'Clientes', action: 'clientes', icon: 'user' },
     { label: 'Configuración', action: 'configuracion', icon: 'gear' },
     { label: 'Perfil', action: 'perfil', icon: 'profile' }

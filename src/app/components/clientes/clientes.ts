@@ -31,6 +31,23 @@ export class Clientes implements OnInit {
   plans: PlanConfig[] = [];
 
   selectedItem: ClientCardItem | null = null;
+  editMode = false;
+  editError = '';
+  editSuccess = '';
+  editSubmitting = false;
+
+  editClient = {
+    name: '',
+    fanpage: '',
+    adAccount: '',
+    plan: '',
+    country: '',
+    usd: '',
+    ars: '',
+    collectedBy: '',
+    active: true,
+    contactDay: '',
+  };
 
   newClient = {
     executiveId: '',
@@ -43,7 +60,7 @@ export class Clientes implements OnInit {
     ars: '',
     collectedBy: '',
     active: true,
-    contactDay: null as number | null,
+    contactDay: '',
   };
 
   constructor(
@@ -133,10 +150,79 @@ export class Clientes implements OnInit {
 
   selectItem(item: ClientCardItem): void {
     this.selectedItem = item;
+    this.editMode = false;
+    this.editError = '';
+    this.editSuccess = '';
+  }
+
+  startEdit(): void {
+    if (!this.selectedItem) return;
+    const c = this.selectedItem.client;
+    this.editClient = {
+      name: c.name ?? '',
+      fanpage: c.fanpage ?? '',
+      adAccount: c.adAccount ?? '',
+      plan: c.plan ?? '',
+      country: c.country ?? '',
+      usd: c.usd ?? '',
+      ars: c.ars ?? '',
+      collectedBy: c.collectedBy ?? '',
+      active: c.active,
+      contactDay: c.contactDay ?? '',
+    };
+    this.editMode = true;
+    this.editError = '';
+    this.editSuccess = '';
+  }
+
+  cancelEdit(): void {
+    this.editMode = false;
+    this.editError = '';
+    this.editSuccess = '';
+  }
+
+  submitEdit(): void {
+    if (!this.selectedItem) return;
+    this.editSubmitting = true;
+    this.editError = '';
+    this.editSuccess = '';
+
+    const trimmed = (value: string): string | null => {
+      const v = value.trim();
+      return v || null;
+    };
+
+    const payload = {
+      name: this.editClient.name.trim() || this.selectedItem.client.name,
+      fanpage: trimmed(this.editClient.fanpage),
+      adAccount: trimmed(this.editClient.adAccount),
+      plan: trimmed(this.editClient.plan),
+      country: trimmed(this.editClient.country),
+      usd: trimmed(this.editClient.usd),
+      ars: trimmed(this.editClient.ars),
+      collectedBy: trimmed(this.editClient.collectedBy),
+      active: this.editClient.active,
+      contactDay: this.editClient.contactDay || null,
+    };
+
+    this.executivesService.updateClient(this.selectedItem.client.id, payload).subscribe({
+      next: () => {
+        this.editSubmitting = false;
+        this.editSuccess = 'Cliente actualizado.';
+        this.editMode = false;
+      },
+      error: () => {
+        this.editSubmitting = false;
+        this.editError = 'No se pudo actualizar el cliente. Intentá de nuevo.';
+      },
+    });
   }
 
   closeDetail(): void {
     this.selectedItem = null;
+    this.editMode = false;
+    this.editError = '';
+    this.editSuccess = '';
   }
 
   onDetailBackdropClick(event: MouseEvent): void {
@@ -183,7 +269,7 @@ export class Clientes implements OnInit {
       ars: trimmed(this.newClient.ars),
       collectedBy: trimmed(this.newClient.collectedBy),
       active: this.newClient.active,
-      contactDay: this.newClient.contactDay,
+      contactDay: this.newClient.contactDay || null,
     };
     const executiveId = this.isAdmin ? this.newClient.executiveId : undefined;
 
@@ -202,7 +288,7 @@ export class Clientes implements OnInit {
           ars: '',
           collectedBy: '',
           active: true,
-          contactDay: null,
+          contactDay: '',
         };
       },
       error: () => {

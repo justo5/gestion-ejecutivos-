@@ -6,8 +6,8 @@ export type CollectedBy = 'ejecutivo' | 'agencia';
 
 export interface CobroRecord {
   planId: number | null;
-  collectedBy: CollectedBy | null;
-  paid: boolean;
+  collectedByMonth: Record<string, CollectedBy>;
+  paidMonths: string[];
 }
 
 @Injectable({
