@@ -44,6 +44,7 @@ export interface CobrosHistorialViewModel {
   isAdmin: boolean;
   executiveOptions: { id: string; name: string }[];
   selectedExecutiveId: string;
+  clientSearchTerm: string;
 }
 
 @Component({
@@ -55,6 +56,7 @@ export interface CobrosHistorialViewModel {
 export class Cobros implements OnInit {
   private selectedDate$ = new BehaviorSubject<Date>(new Date());
   private selectedExecutiveId$ = new BehaviorSubject<string>('');
+  private clientSearch$ = new BehaviorSubject<string>('');
   vm$!: Observable<CobrosHistorialViewModel>;
 
   constructor(
@@ -70,8 +72,9 @@ export class Cobros implements OnInit {
       this.configService.plans$,
       this.selectedDate$,
       this.selectedExecutiveId$,
+      this.clientSearch$,
     ]).pipe(
-      map(([executives, plans, selectedDate, selectedExecutiveId]) => {
+      map(([executives, plans, selectedDate, selectedExecutiveId, clientSearchTerm]) => {
         const isAdmin = this.authService.isAdmin();
         const now = new Date();
         const isCurrentMonth =
@@ -90,6 +93,7 @@ export class Cobros implements OnInit {
         const executiveOptions = executives.map(e => ({ id: e.id, name: e.name }));
         const selectedYearMonth = this.formatYearMonth(selectedDate);
         const entriesMap = new Map<number, HistorialEntry[]>();
+        const searchLower = clientSearchTerm.toLowerCase().trim();
 
         const filteredExecutives = isAdmin && selectedExecutiveId
           ? executives.filter(e => e.id === selectedExecutiveId)
@@ -98,6 +102,7 @@ export class Cobros implements OnInit {
         for (const exec of filteredExecutives) {
           for (const client of exec.clients) {
             if (client.contactDay === null) continue;
+            if (searchLower && !client.name.toLowerCase().includes(searchLower)) continue;
 
             const contactDate = new Date(client.contactDay + 'T00:00:00');
             const dayNum = contactDate.getDate();
@@ -161,7 +166,7 @@ export class Cobros implements OnInit {
 
         const totals = this.buildTotals(allGroups);
 
-        return { groups, upcomingGroups, totals, monthLabel, canGoNext, isCurrentMonth, isAdmin, executiveOptions, selectedExecutiveId };
+        return { groups, upcomingGroups, totals, monthLabel, canGoNext, isCurrentMonth, isAdmin, executiveOptions, selectedExecutiveId, clientSearchTerm };
       })
     );
 
@@ -190,6 +195,10 @@ export class Cobros implements OnInit {
 
   onExecutiveFilter(executiveId: string): void {
     this.selectedExecutiveId$.next(executiveId);
+  }
+
+  onClientSearch(term: string): void {
+    this.clientSearch$.next(term);
   }
 
   prevMonth(): void {

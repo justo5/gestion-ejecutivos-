@@ -127,6 +127,28 @@
   }
 }
 
+// ── Buscador de clientes ──────────────────────────────────────────
+.client-search {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  color: var(--text);
+  height: 32px;
+  min-width: 200px;
+  flex: 1;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+}
+
 // ── Botón CSV ─────────────────────────────────────────────────────
 .csv-btn {
   background: var(--primary);

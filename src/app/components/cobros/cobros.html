@@ -12,13 +12,20 @@
       <button class="csv-btn" (click)="downloadCsv(vm)">&#8595; Exportar CSV</button>
     </div>
 
-    <div *ngIf="vm.isAdmin" class="filters-row">
-      <select class="exec-filter"
-              [value]="vm.selectedExecutiveId"
+    <div class="filters-row">
+      <select *ngIf="vm.isAdmin"
+              class="exec-filter"
               (change)="onExecutiveFilter($any($event.target).value)">
-        <option value="">Todos los ejecutivos</option>
-        <option *ngFor="let exec of vm.executiveOptions" [value]="exec.id">{{ exec.name }}</option>
+        <option value="" [selected]="vm.selectedExecutiveId === ''">Todos los ejecutivos</option>
+        <option *ngFor="let exec of vm.executiveOptions"
+                [value]="exec.id"
+                [selected]="exec.id === vm.selectedExecutiveId">{{ exec.name }}</option>
       </select>
+      <input class="client-search"
+             type="text"
+             placeholder="Buscar cliente..."
+             [value]="vm.clientSearchTerm"
+             (input)="onClientSearch($any($event.target).value)" />
     </div>
 
     <!-- Totales -->

@@ -113,6 +113,11 @@
   color: var(--text-muted, #666);
 }
 
+.required-mark {
+  color: #b91c1c;
+  margin-left: 2px;
+}
+
 .executive-select,
 .form-input {
   padding: 0.55rem 0.75rem;

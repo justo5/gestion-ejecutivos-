@@ -250,6 +250,15 @@ export class Clientes implements OnInit {
   submitNewClient(): void {
     const name = this.newClient.name.trim();
 
+    if (!name) {
+      this.formError = 'El nombre del cliente es obligatorio.';
+      return;
+    }
+    if (!this.newClient.contactDay) {
+      this.formError = 'El día de contacto es obligatorio para que el cliente aparezca en Cobros.';
+      return;
+    }
+
     this.submitting = true;
     this.formError = '';
     this.formSuccess = '';

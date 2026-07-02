@@ -71,8 +71,8 @@
         </label>
 
         <label class="form-field">
-          <span class="form-label">Día de contacto</span>
-          <input type="date" class="form-input" [(ngModel)]="newClient.contactDay" name="contactDay" />
+          <span class="form-label">Día de contacto <span class="required-mark">*</span></span>
+          <input type="date" class="form-input" [(ngModel)]="newClient.contactDay" name="contactDay" required />
         </label>
 
         <label class="form-checkbox">
