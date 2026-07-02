@@ -6,12 +6,12 @@ import { Clientes } from './components/clientes/clientes';
 import { ConfigPage } from './components/config-page/config-page';
 import { Perfil } from './components/perfil/perfil';
 import { Login } from './components/login/login';
-import { authGuard, adminGuard } from './guards/auth-guard';
+import { authGuard, adminGuard, ejecutivosGuard } from './guards/auth-guard';
 
 const routes: Routes = [
   { path: 'login', component: Login },
   { path: '', redirectTo: 'ejecutivos', pathMatch: 'full' },
-  { path: 'ejecutivos', component: EjecutivosPage, canActivate: [authGuard] },
+  { path: 'ejecutivos', component: EjecutivosPage, canActivate: [ejecutivosGuard] },
   { path: 'cobros', component: Cobros, canActivate: [authGuard] },
   { path: 'clientes', component: Clientes, canActivate: [authGuard] },
   { path: 'config', component: ConfigPage, canActivate: [adminGuard] },

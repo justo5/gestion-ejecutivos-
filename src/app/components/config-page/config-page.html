@@ -1,20 +1,115 @@
 <section class="config-page">
-  <h2>Configuración de planes</h2>
-  <p class="config-hint">Definí el precio de cada uno de los 3 planes. Se usan en el resumen de cobros para calcular el monto a cobrar.</p>
+  <h2>Planes</h2>
+  <p class="config-hint">Creá, editá o eliminá los planes disponibles para los clientes.</p>
 
-  <div class="plan-row" *ngFor="let plan of plans">
-    <label class="plan-field">
-      <span>Nombre</span>
-      <input type="text" [(ngModel)]="plan.name" />
-    </label>
-    <label class="plan-field">
-      <span>Precio</span>
-      <input type="number" min="0" step="0.01" [(ngModel)]="plan.price" />
-    </label>
+  <ul class="plan-list" *ngIf="planRows.length > 0">
+    <li class="plan-item" *ngFor="let row of planRows">
+
+      <!-- Vista normal -->
+      <ng-container *ngIf="!row.editing && !row.confirmDelete">
+        <div class="plan-info">
+          <span class="plan-name">{{ row.data.name }}</span>
+          <span class="plan-price">$ {{ row.data.price | number:'1.2-2' }}</span>
+        </div>
+        <div class="plan-actions">
+          <button type="button" class="edit-btn" (click)="startEdit(row)">Editar</button>
+          <button type="button" class="remove-btn" (click)="askDelete(row)">×</button>
+        </div>
+      </ng-container>
+
+      <!-- Confirmación de eliminación -->
+      <ng-container *ngIf="row.confirmDelete">
+        <div class="plan-info">
+          <span class="plan-name">¿Eliminar <strong>{{ row.data.name }}</strong>?</span>
+        </div>
+        <div class="plan-actions">
+          <button type="button" class="remove-confirm-btn" (click)="confirmDeletePlan(row)" [disabled]="row.saving">
+            {{ row.saving ? 'Eliminando…' : 'Sí, eliminar' }}
+          </button>
+          <button type="button" class="cancel-btn" (click)="cancelDelete(row)" [disabled]="row.saving">Cancelar</button>
+        </div>
+      </ng-container>
+
+      <!-- Modo edición -->
+      <ng-container *ngIf="row.editing">
+        <div class="plan-edit-fields">
+          <input
+            type="text"
+            placeholder="Nombre"
+            [(ngModel)]="row.editName"
+          />
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Precio"
+            [(ngModel)]="row.editPrice"
+          />
+        </div>
+        <div class="plan-actions">
+          <button type="button" class="save-btn" (click)="saveEdit(row)" [disabled]="row.saving">
+            {{ row.saving ? 'Guardando…' : 'Guardar' }}
+          </button>
+          <button type="button" class="cancel-btn" (click)="cancelEdit(row)" [disabled]="row.saving">Cancelar</button>
+        </div>
+        <p class="row-error" *ngIf="row.error">{{ row.error }}</p>
+      </ng-container>
+
+    </li>
+  </ul>
+
+  <p class="config-hint" *ngIf="planRows.length === 0">Todavía no hay planes cargados.</p>
+
+  <!-- Formulario para agregar -->
+  <div class="plan-add">
+    <input
+      type="text"
+      class="plan-add-name"
+      placeholder="Nombre del plan…"
+      [(ngModel)]="newPlanName"
+      (keyup.enter)="addPlan()"
+    />
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      class="plan-add-price"
+      placeholder="Precio"
+      [(ngModel)]="newPlanPrice"
+      (keyup.enter)="addPlan()"
+    />
+    <button type="button" class="add-btn" (click)="addPlan()" [disabled]="addingPlan">
+      {{ addingPlan ? 'Agregando…' : 'Agregar' }}
+    </button>
+  </div>
+  <p class="row-error" *ngIf="addError">{{ addError }}</p>
+
+  <hr class="config-divider" />
+
+  <h2>Rubros de clientes</h2>
+  <p class="config-hint">Definí los rubros que aparecerán en el desplegable al crear o editar un cliente.</p>
+
+  <div class="rubro-add">
+    <input
+      type="text"
+      class="rubro-input"
+      placeholder="Nuevo rubro..."
+      [(ngModel)]="newRubro"
+      (keyup.enter)="addRubro()"
+    />
+    <button type="button" class="add-btn" (click)="addRubro()">Agregar</button>
   </div>
 
+  <ul class="rubro-list" *ngIf="rubros.length > 0">
+    <li class="rubro-item" *ngFor="let rubro of rubros; let i = index">
+      <span class="rubro-name">{{ rubro }}</span>
+      <button type="button" class="remove-btn" (click)="removeRubro(i)" aria-label="Quitar">×</button>
+    </li>
+  </ul>
+  <p class="config-hint" *ngIf="rubros.length === 0">Todavía no hay rubros cargados.</p>
+
   <div class="config-actions">
-    <button type="button" class="save-btn" (click)="save()">Guardar</button>
-    <span class="saved-msg" *ngIf="saved">Guardado ✓</span>
+    <button type="button" class="save-btn" (click)="saveRubros()">Guardar rubros</button>
+    <span class="saved-msg" *ngIf="rubrosSaved">Guardado ✓</span>
   </div>
 </section>

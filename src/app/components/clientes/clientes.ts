@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CLIENT_DETAIL_FIELDS, Client, Executive, ExecutivesService } from '../../services/executives';
 import { AuthService } from '../../services/auth';
-import { ConfigService, PlanConfig } from '../../services/config';
+import { ConfigService, PlanConfig, RubroConfig } from '../../services/config';
 
 export interface ClientCardItem {
   client: Client;
@@ -29,12 +29,17 @@ export class Clientes implements OnInit {
   submitting = false;
   executives: Executive[] = [];
   plans: PlanConfig[] = [];
+  rubros: RubroConfig[] = [];
 
   selectedItem: ClientCardItem | null = null;
   editMode = false;
   editError = '';
   editSuccess = '';
   editSubmitting = false;
+
+  showDeleteConfirm = false;
+  deleteSubmitting = false;
+  deleteError = '';
 
   editClient = {
     name: '',
@@ -45,6 +50,7 @@ export class Clientes implements OnInit {
     usd: '',
     ars: '',
     collectedBy: '',
+    rubro: '',
     active: true,
     contactDay: '',
   };
@@ -59,6 +65,7 @@ export class Clientes implements OnInit {
     usd: '',
     ars: '',
     collectedBy: '',
+    rubro: '',
     active: true,
     contactDay: '',
   };
@@ -94,6 +101,7 @@ export class Clientes implements OnInit {
     );
 
     this.configService.plans$.subscribe(plans => (this.plans = plans));
+    this.configService.rubros$.subscribe(rubros => (this.rubros = rubros));
 
     this.executivesService.refresh();
     this.configService.refresh();
@@ -167,6 +175,7 @@ export class Clientes implements OnInit {
       usd: c.usd ?? '',
       ars: c.ars ?? '',
       collectedBy: c.collectedBy ?? '',
+      rubro: c.rubro ?? '',
       active: c.active,
       contactDay: c.contactDay ?? '',
     };
@@ -201,6 +210,7 @@ export class Clientes implements OnInit {
       usd: trimmed(this.editClient.usd),
       ars: trimmed(this.editClient.ars),
       collectedBy: trimmed(this.editClient.collectedBy),
+      rubro: trimmed(this.editClient.rubro),
       active: this.editClient.active,
       contactDay: this.editClient.contactDay || null,
     };
@@ -218,11 +228,41 @@ export class Clientes implements OnInit {
     });
   }
 
+  openDeleteConfirm(): void {
+    this.showDeleteConfirm = true;
+    this.deleteError = '';
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm = false;
+    this.deleteError = '';
+  }
+
+  confirmDelete(): void {
+    if (!this.selectedItem) return;
+    this.deleteSubmitting = true;
+    this.deleteError = '';
+
+    this.executivesService.deleteClient(this.selectedItem.client.id).subscribe({
+      next: () => {
+        this.deleteSubmitting = false;
+        this.showDeleteConfirm = false;
+        this.closeDetail();
+      },
+      error: () => {
+        this.deleteSubmitting = false;
+        this.deleteError = 'No se pudo eliminar el cliente. Intentá de nuevo.';
+      },
+    });
+  }
+
   closeDetail(): void {
     this.selectedItem = null;
     this.editMode = false;
     this.editError = '';
     this.editSuccess = '';
+    this.showDeleteConfirm = false;
+    this.deleteError = '';
   }
 
   onDetailBackdropClick(event: MouseEvent): void {
@@ -277,6 +317,7 @@ export class Clientes implements OnInit {
       usd: trimmed(this.newClient.usd),
       ars: trimmed(this.newClient.ars),
       collectedBy: trimmed(this.newClient.collectedBy),
+      rubro: trimmed(this.newClient.rubro),
       active: this.newClient.active,
       contactDay: this.newClient.contactDay || null,
     };
@@ -296,6 +337,7 @@ export class Clientes implements OnInit {
           usd: '',
           ars: '',
           collectedBy: '',
+          rubro: '',
           active: true,
           contactDay: '',
         };

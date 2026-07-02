@@ -375,6 +375,53 @@
   }
 }
 
+.delete-btn {
+  padding: 0.4rem 0.85rem;
+  border: 1.5px solid #dc2626;
+  border-radius: 8px;
+  background: transparent;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #dc2626;
+    color: #fff;
+  }
+}
+
+.confirm-delete-panel {
+  max-width: 400px;
+}
+
+.confirm-delete-body {
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.delete-confirm-btn {
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #b91c1c;
+  }
+
+  &:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+}
+
 .cancel-btn {
   padding: 0.55rem 1rem;
   border: 1.5px solid var(--border);

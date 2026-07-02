@@ -7,6 +7,132 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+.plan-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.plan-item {
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fb;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.plan-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.plan-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.plan-price {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.plan-edit-fields {
+  display: flex;
+  gap: 0.5rem;
+
+  input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+
+    &:first-child { flex: 1; }
+    &:last-child { width: 110px; }
+  }
+}
+
+.plan-add {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.plan-add-name {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.plan-add-price {
+  width: 110px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.edit-btn {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #eff6ff; }
+}
+
+.remove-confirm-btn {
+  padding: 0.3rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: #b91c1c; }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.cancel-btn {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  background: #fff;
+  color: #555;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #f5f5f5; }
+}
+
+.row-error {
+  color: #dc2626;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
 .config-hint {
   color: #666;
   font-size: 0.9rem;
@@ -59,4 +185,76 @@
 .saved-msg {
   color: #16a34a;
   font-size: 0.85rem;
+}
+
+.config-divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 2rem 0 1.5rem;
+}
+
+.rubro-add {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.rubro-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.add-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #eff6ff;
+  }
+}
+
+.rubro-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rubro-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fb;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.rubro-name {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.remove-btn {
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+
+  &:hover {
+    color: #b91c1c;
+  }
 }

@@ -25,6 +25,7 @@ export interface Client {
   usd: string | null;
   ars: string | null;
   collectedBy: string | null;
+  rubro: string | null;
   active: boolean;
   contactDay: string | null;
   data: Record<string, unknown>;
@@ -41,6 +42,7 @@ export const CLIENT_DETAIL_FIELDS: { key: keyof Client; label: string }[] = [
   { key: 'usd', label: 'USD' },
   { key: 'ars', label: 'ARS' },
   { key: 'collectedBy', label: 'Quién cobra' },
+  { key: 'rubro', label: 'Rubro' },
   { key: 'contactDay', label: 'Día de contacto' },
 ];
 
@@ -256,6 +258,7 @@ export class ExecutivesService {
       usd: string | null;
       ars: string | null;
       collectedBy: string | null;
+      rubro: string | null;
       active: boolean;
       contactDay: string | null;
     },
@@ -276,11 +279,16 @@ export class ExecutivesService {
       usd: string | null;
       ars: string | null;
       collectedBy: string | null;
+      rubro: string | null;
       active: boolean;
       contactDay: string | null;
     },
   ): Observable<Client> {
     return this.http.patch<Client>(`/api/clients/${clientId}`, payload).pipe(tap(() => this.refresh()));
+  }
+
+  deleteClient(clientId: string): Observable<void> {
+    return this.http.delete<void>(`/api/clients/${clientId}`).pipe(tap(() => this.refresh()));
   }
 
   updateImage(executiveId: string, imageUrl: string): void {

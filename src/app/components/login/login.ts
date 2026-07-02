@@ -22,9 +22,10 @@ export class Login {
     this.error = '';
     this.loading = true;
     this.auth.login(this.email, this.password).subscribe({
-      next: () => {
+      next: (res) => {
         this.loading = false;
-        this.router.navigate(['/ejecutivos']);
+        const dest = res.user.role === 'admin' ? '/ejecutivos' : '/clientes';
+        this.router.navigate([dest]);
       },
       error: () => {
         this.loading = false;
