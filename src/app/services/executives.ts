@@ -19,11 +19,10 @@ export interface Client {
   id: string;
   name: string;
   fanpage: string | null;
-  adAccount: string | null;
   plan: string | null;
   country: string | null;
-  usd: string | null;
-  ars: string | null;
+  sexo: string | null;
+  edad: number | null;
   collectedBy: string | null;
   rubro: string | null;
   active: boolean;
@@ -35,12 +34,11 @@ export interface Client {
 // Campos estáticos del cliente que se muestran en el modal de detalle, en el
 // orden en que se renderizan. Cada uno mapea a una columna tipada de la tabla.
 export const CLIENT_DETAIL_FIELDS: { key: keyof Client; label: string }[] = [
-  { key: 'adAccount', label: 'Cuenta publicitaria' },
   { key: 'fanpage', label: 'Fan page' },
   { key: 'plan', label: 'Plan' },
   { key: 'country', label: 'País' },
-  { key: 'usd', label: 'USD' },
-  { key: 'ars', label: 'ARS' },
+  { key: 'sexo', label: 'Sexo' },
+  { key: 'edad', label: 'Edad' },
   { key: 'collectedBy', label: 'Quién cobra' },
   { key: 'rubro', label: 'Rubro' },
   { key: 'contactDay', label: 'Día de contacto' },
@@ -59,11 +57,10 @@ export interface Executive {
 interface ImportClientPayload {
   name: string;
   fanpage: string | null;
-  adAccount: string | null;
   plan: string | null;
   country: string | null;
-  usd: string | null;
-  ars: string | null;
+  sexo: string | null;
+  edad: number | null;
   collectedBy: string | null;
   active: boolean;
   contactDay: string | null;
@@ -133,11 +130,10 @@ export class ExecutivesService {
     const estadoCol = headers.find(h => /estado|status/i.test(h));
     const diaCol = headers.find(h => /^dia$|^d[íi]a$/i.test(h.trim()));
     const fanpageCol = headers.find(h => /fan\s*page/i.test(h));
-    const adAccountCol = headers.find(h => /cuenta\s*public|ad\s*account/i.test(h));
     const planCol = headers.find(h => /plan|observaci[óo]n/i.test(h));
     const countryCol = headers.find(h => /pa[íi]s|country/i.test(h));
-    const usdCol = headers.find(h => /usd|d[óo]lar/i.test(h));
-    const arsCol = headers.find(h => /ars|peso/i.test(h));
+    const sexoCol = headers.find(h => /sexo|g[ée]nero|gender/i.test(h));
+    const edadCol = headers.find(h => /edad|age/i.test(h));
     const collectedByCol = headers.find(h => /qui[ée]n\s*cobra|cobra/i.test(h));
     const businessNameCol =
       headers.find(h => /negocio|empresa|business|razón|razon|nombre|cliente/i.test(h)) ??
@@ -148,6 +144,12 @@ export class ExecutivesService {
       if (!col) return null;
       const value = String(row[col] ?? '').trim();
       return value || null;
+    };
+
+    const number = (row: any, col: string | undefined): number | null => {
+      if (!col) return null;
+      const value = parseInt(String(row[col] ?? '').trim(), 10);
+      return isNaN(value) ? null : value;
     };
 
     return rows.map((row, idx) => {
@@ -172,11 +174,10 @@ export class ExecutivesService {
       return {
         name: rawName || `Cliente ${idx + 1}`,
         fanpage: text(row, fanpageCol),
-        adAccount: text(row, adAccountCol),
         plan: text(row, planCol),
         country: text(row, countryCol),
-        usd: text(row, usdCol),
-        ars: text(row, arsCol),
+        sexo: text(row, sexoCol),
+        edad: number(row, edadCol),
         collectedBy: text(row, collectedByCol),
         active,
         contactDay,
@@ -252,11 +253,10 @@ export class ExecutivesService {
     payload: {
       name: string;
       fanpage: string | null;
-      adAccount: string | null;
       plan: string | null;
       country: string | null;
-      usd: string | null;
-      ars: string | null;
+      sexo: string | null;
+      edad: number | null;
       collectedBy: string | null;
       rubro: string | null;
       active: boolean;
@@ -273,11 +273,10 @@ export class ExecutivesService {
     payload: {
       name: string;
       fanpage: string | null;
-      adAccount: string | null;
       plan: string | null;
       country: string | null;
-      usd: string | null;
-      ars: string | null;
+      sexo: string | null;
+      edad: number | null;
       collectedBy: string | null;
       rubro: string | null;
       active: boolean;

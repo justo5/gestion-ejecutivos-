@@ -33,11 +33,6 @@
         </label>
 
         <label class="form-field">
-          <span class="form-label">Cuenta publicitaria</span>
-          <input type="text" class="form-input" [(ngModel)]="newClient.adAccount" name="adAccount" />
-        </label>
-
-        <label class="form-field">
           <span class="form-label">Fan page</span>
           <input type="text" class="form-input" [(ngModel)]="newClient.fanpage" name="fanpage" />
         </label>
@@ -56,18 +51,27 @@
         </label>
 
         <label class="form-field">
-          <span class="form-label">USD</span>
-          <input type="text" class="form-input" [(ngModel)]="newClient.usd" name="usd" />
+          <span class="form-label">Sexo</span>
+          <select class="form-input" [(ngModel)]="newClient.sexo" name="sexo">
+            <option value="">Sin especificar</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Femenino">Femenino</option>
+            <option value="Otro">Otro</option>
+          </select>
         </label>
 
         <label class="form-field">
-          <span class="form-label">ARS</span>
-          <input type="text" class="form-input" [(ngModel)]="newClient.ars" name="ars" />
+          <span class="form-label">Edad</span>
+          <input type="number" class="form-input" [(ngModel)]="newClient.edad" name="edad" min="0" />
         </label>
 
         <label class="form-field">
           <span class="form-label">Quién cobra</span>
-          <input type="text" class="form-input" [(ngModel)]="newClient.collectedBy" name="collectedBy" />
+          <select class="form-input" [(ngModel)]="newClient.collectedBy" name="collectedBy">
+            <option value="">Sin especificar</option>
+            <option value="Ejecutivo">Ejecutivo</option>
+            <option value="Agencia">Agencia</option>
+          </select>
         </label>
 
         <label class="form-field">
@@ -159,11 +163,6 @@
           </label>
 
           <label class="form-field">
-            <span class="form-label">Cuenta publicitaria</span>
-            <input type="text" class="form-input" [(ngModel)]="editClient.adAccount" name="adAccount" />
-          </label>
-
-          <label class="form-field">
             <span class="form-label">Fan page</span>
             <input type="text" class="form-input" [(ngModel)]="editClient.fanpage" name="fanpage" />
           </label>
@@ -182,18 +181,27 @@
           </label>
 
           <label class="form-field">
-            <span class="form-label">USD</span>
-            <input type="text" class="form-input" [(ngModel)]="editClient.usd" name="usd" />
+            <span class="form-label">Sexo</span>
+            <select class="form-input" [(ngModel)]="editClient.sexo" name="sexo">
+              <option value="">Sin especificar</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
           </label>
 
           <label class="form-field">
-            <span class="form-label">ARS</span>
-            <input type="text" class="form-input" [(ngModel)]="editClient.ars" name="ars" />
+            <span class="form-label">Edad</span>
+            <input type="number" class="form-input" [(ngModel)]="editClient.edad" name="edad" min="0" />
           </label>
 
           <label class="form-field">
             <span class="form-label">Quién cobra</span>
-            <input type="text" class="form-input" [(ngModel)]="editClient.collectedBy" name="collectedBy" />
+            <select class="form-input" [(ngModel)]="editClient.collectedBy" name="collectedBy">
+              <option value="">Sin especificar</option>
+              <option value="Ejecutivo">Ejecutivo</option>
+              <option value="Agencia">Agencia</option>
+            </select>
           </label>
 
           <label class="form-field">

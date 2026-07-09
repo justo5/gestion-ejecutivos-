@@ -12,11 +12,8 @@ export interface HistorialEntry {
   clientName: string;
   fanpage: string | null;
   plan: string | null;
-  usd: string | null;
-  ars: string | null;
   dayNum: number;
   collectedBy: CollectedBy | null;
-  collectedByMonth: Record<string, CollectedBy>;
   paid: boolean;
   paidMonths: string[];
   monto: number;
@@ -108,27 +105,20 @@ export class Cobros implements OnInit {
             const dayNum = contactDate.getDate();
             if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
 
-            if (!isCurrentMonth) {
-              const selYear = selectedDate.getFullYear();
-              const selMonth = selectedDate.getMonth();
-              if (
-                contactDate.getFullYear() > selYear ||
-                (contactDate.getFullYear() === selYear && contactDate.getMonth() > selMonth)
-              ) continue;
-            }
+            // Cobramos a mes vencido: si el cliente se activó (contactDay) en el
+            // mes seleccionado o después, todavía no corresponde cobrarle ese mes.
+            const selYear = selectedDate.getFullYear();
+            const selMonth = selectedDate.getMonth();
+            if (
+              contactDate.getFullYear() > selYear ||
+              (contactDate.getFullYear() === selYear && contactDate.getMonth() >= selMonth)
+            ) continue;
 
-            const usdNum = parseFloat(String(client.usd ?? '').replace(',', '.'));
             const planName = (client.plan ?? '').trim().toLowerCase();
             const planConfig = plans.find(p => p.name.trim().toLowerCase() === planName);
-            const monto = !isNaN(usdNum) ? usdNum : (planConfig?.price ?? 0);
+            const monto = planConfig?.price ?? 0;
 
             const rawCobro = client.cobro;
-            const collectedByMonth: Record<string, CollectedBy> = { ...(rawCobro?.collectedByMonth ?? {}) };
-            if (rawCobro?.collectedBy && !rawCobro.collectedByMonth) {
-              for (const m of rawCobro.paidMonths ?? []) {
-                collectedByMonth[m] = rawCobro.collectedBy;
-              }
-            }
 
             const entry: HistorialEntry = {
               clientId: client.id,
@@ -136,11 +126,8 @@ export class Cobros implements OnInit {
               clientName: client.name,
               fanpage: client.fanpage,
               plan: client.plan,
-              usd: client.usd,
-              ars: client.ars,
               dayNum,
-              collectedBy: collectedByMonth[selectedYearMonth] ?? null,
-              collectedByMonth,
+              collectedBy: this.normalizeCollectedBy(client.collectedBy),
               paid: (rawCobro?.paidMonths ?? []).includes(selectedYearMonth),
               paidMonths: rawCobro?.paidMonths ?? [],
               monto,
@@ -232,7 +219,7 @@ export class Cobros implements OnInit {
       }
     }
 
-    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'USD', 'ARS', 'Monto', 'Cobrado por', 'Estado', 'A favor de'];
+    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Cobrado por', 'Estado', 'A favor de'];
     const rows = allEntries.map(({ dayNum, entry }) => {
       let aFavorDe = '';
       if (entry.paid) {
@@ -245,8 +232,6 @@ export class Cobros implements OnInit {
         entry.fanpage ?? '',
         entry.executiveName,
         entry.plan ?? '',
-        entry.usd ?? '',
-        entry.ars ?? '',
         entry.monto,
         entry.collectedBy ?? '',
         entry.paid ? 'Pagado' : 'Pendiente',
@@ -309,6 +294,13 @@ export class Cobros implements OnInit {
     return `${y}-${m}`;
   }
 
+  private normalizeCollectedBy(value: string | null | undefined): CollectedBy | null {
+    const v = (value ?? '').trim().toLowerCase();
+    if (v.includes('agencia')) return 'agencia';
+    if (v.includes('ejecutivo')) return 'ejecutivo';
+    return null;
+  }
+
   onPaidChange(entry: HistorialEntry, paid: boolean): void {
     if (!this.canTogglePaid(entry)) return;
 
@@ -317,28 +309,17 @@ export class Cobros implements OnInit {
       ? [...new Set([...entry.paidMonths, currentMonth])]
       : entry.paidMonths.filter(m => m !== currentMonth);
 
-    const collectedByForMonth: CollectedBy = this.authService.isAdmin() ? 'agencia' : 'ejecutivo';
-    const newCollectedByMonth = paid
-      ? { ...entry.collectedByMonth, [currentMonth]: collectedByForMonth }
-      : Object.fromEntries(Object.entries(entry.collectedByMonth).filter(([k]) => k !== currentMonth));
-
     const prevPaid = entry.paid;
     const prevPaidMonths = entry.paidMonths;
-    const prevCollectedBy = entry.collectedBy;
-    const prevCollectedByMonth = entry.collectedByMonth;
 
     entry.paid = paid;
     entry.paidMonths = newPaidMonths;
-    entry.collectedBy = paid ? collectedByForMonth : null;
-    entry.collectedByMonth = newCollectedByMonth;
 
-    this.cobrosService.updateRecord(entry.clientId, { paidMonths: newPaidMonths, collectedByMonth: newCollectedByMonth }).subscribe({
+    this.cobrosService.updateRecord(entry.clientId, { paidMonths: newPaidMonths }).subscribe({
       next: () => this.executivesService.refresh(),
       error: () => {
         entry.paid = prevPaid;
         entry.paidMonths = prevPaidMonths;
-        entry.collectedBy = prevCollectedBy;
-        entry.collectedByMonth = prevCollectedByMonth;
       },
     });
   }

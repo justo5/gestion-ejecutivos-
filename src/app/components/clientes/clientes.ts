@@ -44,11 +44,10 @@ export class Clientes implements OnInit {
   editClient = {
     name: '',
     fanpage: '',
-    adAccount: '',
     plan: '',
     country: '',
-    usd: '',
-    ars: '',
+    sexo: '',
+    edad: '',
     collectedBy: '',
     rubro: '',
     active: true,
@@ -59,11 +58,10 @@ export class Clientes implements OnInit {
     executiveId: '',
     name: '',
     fanpage: '',
-    adAccount: '',
     plan: '',
     country: '',
-    usd: '',
-    ars: '',
+    sexo: '',
+    edad: '',
     collectedBy: '',
     rubro: '',
     active: true,
@@ -169,11 +167,10 @@ export class Clientes implements OnInit {
     this.editClient = {
       name: c.name ?? '',
       fanpage: c.fanpage ?? '',
-      adAccount: c.adAccount ?? '',
       plan: c.plan ?? '',
       country: c.country ?? '',
-      usd: c.usd ?? '',
-      ars: c.ars ?? '',
+      sexo: c.sexo ?? '',
+      edad: c.edad != null ? String(c.edad) : '',
       collectedBy: c.collectedBy ?? '',
       rubro: c.rubro ?? '',
       active: c.active,
@@ -200,15 +197,20 @@ export class Clientes implements OnInit {
       const v = value.trim();
       return v || null;
     };
+    const parsedNumber = (value: string): number | null => {
+      const v = value.trim();
+      if (!v) return null;
+      const n = Number(v);
+      return isNaN(n) ? null : n;
+    };
 
     const payload = {
       name: this.editClient.name.trim() || this.selectedItem.client.name,
       fanpage: trimmed(this.editClient.fanpage),
-      adAccount: trimmed(this.editClient.adAccount),
       plan: trimmed(this.editClient.plan),
       country: trimmed(this.editClient.country),
-      usd: trimmed(this.editClient.usd),
-      ars: trimmed(this.editClient.ars),
+      sexo: trimmed(this.editClient.sexo),
+      edad: parsedNumber(this.editClient.edad),
       collectedBy: trimmed(this.editClient.collectedBy),
       rubro: trimmed(this.editClient.rubro),
       active: this.editClient.active,
@@ -307,15 +309,20 @@ export class Clientes implements OnInit {
       const v = value.trim();
       return v || null;
     };
+    const parsedNumber = (value: string): number | null => {
+      const v = value.trim();
+      if (!v) return null;
+      const n = Number(v);
+      return isNaN(n) ? null : n;
+    };
 
     const payload = {
       name,
       fanpage: trimmed(this.newClient.fanpage),
-      adAccount: trimmed(this.newClient.adAccount),
       plan: trimmed(this.newClient.plan),
       country: trimmed(this.newClient.country),
-      usd: trimmed(this.newClient.usd),
-      ars: trimmed(this.newClient.ars),
+      sexo: trimmed(this.newClient.sexo),
+      edad: parsedNumber(this.newClient.edad),
       collectedBy: trimmed(this.newClient.collectedBy),
       rubro: trimmed(this.newClient.rubro),
       active: this.newClient.active,
@@ -331,11 +338,10 @@ export class Clientes implements OnInit {
           executiveId: '',
           name: '',
           fanpage: '',
-          adAccount: '',
           plan: '',
           country: '',
-          usd: '',
-          ars: '',
+          sexo: '',
+          edad: '',
           collectedBy: '',
           rubro: '',
           active: true,

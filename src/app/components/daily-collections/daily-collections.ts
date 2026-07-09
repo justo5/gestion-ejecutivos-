@@ -11,8 +11,6 @@ export interface PendingCobro {
   contactDay: string;
   dayNum: number;
   plan: string | null;
-  usd: string | null;
-  ars: string | null;
   paid: boolean;
 }
 
@@ -68,23 +66,19 @@ export class DailyCollections implements OnInit {
             if (client.contactDay === null) continue;
 
             // contactDay is a recurring day-of-month stored as YYYY-MM-DD.
-            // The stored year-month reflects when the client was created/imported.
-            // For the current month we only compare the day number (the stored month
-            // may lag behind if the data was last imported in a prior month).
-            // For past months we additionally gate on year-month so clients created
-            // after the selected month are not shown there.
+            // The stored year-month reflects when the client was activated.
+            // Cobramos a mes vencido: si el cliente se activó el mes seleccionado
+            // o después, todavía no corresponde cobrarle ese mes.
             const contactDate = new Date(client.contactDay + 'T00:00:00');
             const dayNum = contactDate.getDate();
             if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
 
-            if (!isCurrentMonth) {
-              const selYear = selectedDate.getFullYear();
-              const selMonth = selectedDate.getMonth();
-              if (
-                contactDate.getFullYear() > selYear ||
-                (contactDate.getFullYear() === selYear && contactDate.getMonth() > selMonth)
-              ) continue;
-            }
+            const selYear = selectedDate.getFullYear();
+            const selMonth = selectedDate.getMonth();
+            if (
+              contactDate.getFullYear() > selYear ||
+              (contactDate.getFullYear() === selYear && contactDate.getMonth() >= selMonth)
+            ) continue;
 
             const cobro: PendingCobro = {
               clientId: client.id,
@@ -94,8 +88,6 @@ export class DailyCollections implements OnInit {
               contactDay: client.contactDay,
               dayNum,
               plan: client.plan,
-              usd: client.usd,
-              ars: client.ars,
               paid: (client.cobro?.paidMonths ?? []).includes(selectedYearMonth),
             };
 
