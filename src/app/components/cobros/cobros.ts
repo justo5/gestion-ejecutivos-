@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ExecutivesService } from '../../services/executives';
@@ -44,17 +44,35 @@ export interface CobrosHistorialViewModel {
   clientSearchTerm: string;
 }
 
+// Cada cuánto se vuelve a pedir la data al servidor mientras la pantalla está
+// visible. Los cobros los marcan varias personas a la vez, así que sin esto la
+// tabla queda congelada con lo que había al entrar.
+const AUTO_REFRESH_MS = 30_000;
+
 @Component({
   selector: 'app-cobros',
   standalone: false,
   templateUrl: './cobros.html',
   styleUrl: './cobros.scss',
 })
-export class Cobros implements OnInit {
+export class Cobros implements OnInit, OnDestroy {
   private selectedDate$ = new BehaviorSubject<Date>(new Date());
   private selectedExecutiveId$ = new BehaviorSubject<string>('');
   private clientSearch$ = new BehaviorSubject<string>('');
   vm$!: Observable<CobrosHistorialViewModel>;
+
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
+  private pendingSaves = 0;
+  private readonly onVisibilityChange = () => {
+    // Al volver a la pestaña puede haber pasado mucho desde el último tick,
+    // así que refrescamos ya y arrancamos de nuevo el intervalo.
+    if (document.visibilityState === 'visible') {
+      this.refreshData();
+      this.startAutoRefresh();
+    } else {
+      this.stopAutoRefresh();
+    }
+  };
 
   constructor(
     private executivesService: ExecutivesService,
@@ -157,24 +175,57 @@ export class Cobros implements OnInit {
           ? allGroups.filter(g => g.dayNum > todayDay)
           : [];
 
-        const totals = this.buildTotals(allGroups);
+        const totals = this.buildTotals(groups);
 
         return { groups, upcomingGroups, totals, monthLabel, canGoNext, isCurrentMonth, isAdmin, executiveOptions, selectedExecutiveId, clientSearchTerm };
       })
     );
 
+    this.refreshData();
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+    window.addEventListener('focus', this.onVisibilityChange);
+    this.startAutoRefresh();
+  }
+
+  ngOnDestroy(): void {
+    this.stopAutoRefresh();
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    window.removeEventListener('focus', this.onVisibilityChange);
+  }
+
+  private refreshData(): void {
+    // Si hay un check recién tildado esperando respuesta, el GET todavía
+    // devolvería el estado viejo y le pisaría el cambio al usuario.
+    if (this.pendingSaves > 0) return;
     this.executivesService.refresh();
     this.configService.refresh();
+  }
+
+  private startAutoRefresh(): void {
+    this.stopAutoRefresh();
+    this.refreshTimer = setInterval(() => this.refreshData(), AUTO_REFRESH_MS);
+  }
+
+  private stopAutoRefresh(): void {
+    if (this.refreshTimer !== null) {
+      clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
   }
 
   private buildTotals(groups: HistorialGroup[]): CobrosTotals {
     let ejecutivos = 0;
     let agencia = 0;
     let pendiente = 0;
+    let total = 0;
 
     for (const group of groups) {
       for (const entry of group.entries) {
         if (entry.paid) {
+          // Sumamos siempre al total, incluso si "Quién cobra" quedó sin
+          // especificar: de lo contrario ese cobro desaparece de la tarjeta
+          // "Total cobrado" aunque el cliente sí esté marcado como pagado.
+          total += entry.monto;
           if (entry.collectedBy === 'ejecutivo') ejecutivos += entry.monto;
           else if (entry.collectedBy === 'agencia') agencia += entry.monto;
         } else if (entry.monto > 0) {
@@ -183,7 +234,7 @@ export class Cobros implements OnInit {
       }
     }
 
-    return { ejecutivos, agencia, pendiente, total: ejecutivos + agencia };
+    return { ejecutivos, agencia, pendiente, total };
   }
 
   onExecutiveFilter(executiveId: string): void {
@@ -329,9 +380,14 @@ export class Cobros implements OnInit {
     entry.paid = paid;
     entry.paidMonths = newPaidMonths;
 
+    this.pendingSaves++;
     this.cobrosService.updateRecord(entry.clientId, { paidMonths: newPaidMonths }).subscribe({
-      next: () => this.executivesService.refresh(),
+      next: () => {
+        this.pendingSaves--;
+        this.refreshData();
+      },
       error: () => {
+        this.pendingSaves--;
         entry.paid = prevPaid;
         entry.paidMonths = prevPaidMonths;
       },
