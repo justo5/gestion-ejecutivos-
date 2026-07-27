@@ -114,8 +114,14 @@ export class Cobros implements OnInit {
               (contactDate.getFullYear() === selYear && contactDate.getMonth() >= selMonth)
             ) continue;
 
-            const planName = (client.plan ?? '').trim().toLowerCase();
-            const planConfig = plans.find(p => p.name.trim().toLowerCase() === planName);
+            const planText = this.normalizePlanText(client.plan ?? '');
+            // El texto del cliente suele ser "<nombre del plan configurado> + sufijos"
+            // (precio, moneda, iva, etc.), así que matcheamos por prefijo en vez de
+            // igualdad exacta. Se prioriza el nombre más largo que matchee para no
+            // confundir "Plan ejecución" con "Plan ejecución + Bot".
+            const planConfig = plans
+              .filter(p => planText.startsWith(this.normalizePlanText(p.name)))
+              .sort((a, b) => b.name.length - a.name.length)[0];
             const monto = planConfig?.price ?? 0;
 
             const rawCobro = client.cobro;
@@ -292,6 +298,14 @@ export class Cobros implements OnInit {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     return `${y}-${m}`;
+  }
+
+  private normalizePlanText(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .trim()
+      .toLowerCase();
   }
 
   private normalizeCollectedBy(value: string | null | undefined): CollectedBy | null {
