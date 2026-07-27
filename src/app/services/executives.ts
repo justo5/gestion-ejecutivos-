@@ -92,6 +92,29 @@ export class ExecutivesService {
     });
   }
 
+  // Aplica el cambio de "pagado" sobre el store para que la vista (filas y
+  // totales) se recalcule en el acto, sin esperar el ida y vuelta al servidor.
+  // Devuelve los paidMonths que había, para poder revertir si el PATCH falla.
+  setClientPaidMonths(clientId: string, paidMonths: string[]): string[] {
+    let previous: string[] = [];
+    const executives = this.executivesSubject.value.map((exec) => {
+      if (!exec.clients.some((c) => c.id === clientId)) return exec;
+      return {
+        ...exec,
+        clients: exec.clients.map((client) => {
+          if (client.id !== clientId) return client;
+          previous = client.cobro?.paidMonths ?? [];
+          const cobro: CobroInfo = client.cobro
+            ? { ...client.cobro, paidMonths }
+            : { planId: null, paidMonths };
+          return { ...client, cobro };
+        }),
+      };
+    });
+    this.executivesSubject.next(executives);
+    return previous;
+  }
+
   private loadImagesMap() {
     return this.http.get(IMAGES_SHEET_URL, { responseType: 'text' }).pipe(
       map(csvText => {

@@ -26,8 +26,17 @@ export class ConfigService {
 
   constructor(private http: HttpClient) {}
 
+  // Las columnas `numeric` de Postgres viajan como string en el JSON. Si dejamos
+  // pasar el string, cualquier suma de montos concatena en vez de sumar y el
+  // pipe `number` explota, cortando el render a mitad de camino.
+  private normalizePlan(plan: PlanConfig): PlanConfig {
+    return { ...plan, price: Number(plan.price) || 0 };
+  }
+
   refresh(): void {
-    this.http.get<PlanConfig[]>('/api/plans').subscribe(plans => this.plansSubject.next(plans));
+    this.http
+      .get<PlanConfig[]>('/api/plans')
+      .subscribe(plans => this.plansSubject.next(plans.map(p => this.normalizePlan(p))));
     this.refreshRubros();
   }
 
@@ -46,7 +55,7 @@ export class ConfigService {
   createPlan(name: string, price: number) {
     return this.http
       .post<PlanConfig>('/api/plans', { name, price })
-      .pipe(tap(plan => this.plansSubject.next([...this.plansSubject.value, plan])));
+      .pipe(tap(plan => this.plansSubject.next([...this.plansSubject.value, this.normalizePlan(plan)])));
   }
 
   updatePlan(id: number, name: string, price: number) {
@@ -55,7 +64,7 @@ export class ConfigService {
       .pipe(
         tap(updated =>
           this.plansSubject.next(
-            this.plansSubject.value.map(p => (p.id === id ? updated : p)),
+            this.plansSubject.value.map(p => (p.id === id ? this.normalizePlan(updated) : p)),
           ),
         ),
       );
@@ -75,7 +84,9 @@ export class ConfigService {
     const requests = plans.map(p =>
       this.http.put(`/api/plans/${p.id}`, { name: p.name, price: p.price })
     );
-    return forkJoin(requests).pipe(tap(() => this.plansSubject.next(plans)));
+    return forkJoin(requests).pipe(
+      tap(() => this.plansSubject.next(plans.map(p => this.normalizePlan(p)))),
+    );
   }
 
   // Reemplaza toda la lista de rubros por los nombres provistos.

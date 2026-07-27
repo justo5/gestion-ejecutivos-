@@ -140,7 +140,10 @@ export class Cobros implements OnInit, OnDestroy {
             const planConfig = plans
               .filter(p => planText.startsWith(this.normalizePlanText(p.name)))
               .sort((a, b) => b.name.length - a.name.length)[0];
-            const monto = planConfig?.price ?? 0;
+            // Number() explícito: si el precio llega como string (columna
+            // `numeric`), los acumuladores de buildTotals concatenan en vez de
+            // sumar y el pipe `number` corta el render con un error.
+            const monto = Number(planConfig?.price ?? 0) || 0;
 
             const rawCobro = client.cobro;
 
@@ -389,11 +392,13 @@ export class Cobros implements OnInit, OnDestroy {
       ? [...new Set([...entry.paidMonths, currentMonth])]
       : entry.paidMonths.filter(m => m !== currentMonth);
 
-    const prevPaid = entry.paid;
-    const prevPaidMonths = entry.paidMonths;
-
-    entry.paid = paid;
-    entry.paidMonths = newPaidMonths;
+    // Escribimos el cambio en el store en vez de mutar la fila: los totales se
+    // calculan dentro del map() del vm, así que sólo se actualizan si el stream
+    // vuelve a emitir.
+    const prevPaidMonths = this.executivesService.setClientPaidMonths(
+      entry.clientId,
+      newPaidMonths,
+    );
 
     this.pendingSaves++;
     this.cobrosService.updateRecord(entry.clientId, { paidMonths: newPaidMonths }).subscribe({
@@ -403,8 +408,7 @@ export class Cobros implements OnInit, OnDestroy {
       },
       error: () => {
         this.pendingSaves--;
-        entry.paid = prevPaid;
-        entry.paidMonths = prevPaidMonths;
+        this.executivesService.setClientPaidMonths(entry.clientId, prevPaidMonths);
       },
     });
   }
