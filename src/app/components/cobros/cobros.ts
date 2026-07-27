@@ -201,6 +201,14 @@ export class Cobros implements OnInit, OnDestroy {
     this.configService.refresh();
   }
 
+  // Refresco disparado por el usuario (navegar de mes, filtrar, exportar).
+  // Además reinicia el intervalo para no encadenar dos fetch seguidos si el
+  // tick automático estaba por caer.
+  private refreshNow(): void {
+    this.refreshData();
+    this.startAutoRefresh();
+  }
+
   private startAutoRefresh(): void {
     this.stopAutoRefresh();
     this.refreshTimer = setInterval(() => this.refreshData(), AUTO_REFRESH_MS);
@@ -239,6 +247,7 @@ export class Cobros implements OnInit, OnDestroy {
 
   onExecutiveFilter(executiveId: string): void {
     this.selectedExecutiveId$.next(executiveId);
+    this.refreshNow();
   }
 
   onClientSearch(term: string): void {
@@ -248,6 +257,7 @@ export class Cobros implements OnInit, OnDestroy {
   prevMonth(): void {
     const d = this.selectedDate$.value;
     this.selectedDate$.next(new Date(d.getFullYear(), d.getMonth() - 1, 1));
+    this.refreshNow();
   }
 
   nextMonth(): void {
@@ -257,6 +267,7 @@ export class Cobros implements OnInit, OnDestroy {
     if (next <= new Date(now.getFullYear(), now.getMonth(), 1)) {
       this.selectedDate$.next(next);
     }
+    this.refreshNow();
   }
 
   downloadCsv(vm: CobrosHistorialViewModel): void {
@@ -335,6 +346,10 @@ export class Cobros implements OnInit, OnDestroy {
     a.download = `cobros-${vm.monthLabel}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+
+    // El CSV sale con lo que ya estaba en pantalla; el refresh es para que la
+    // tabla quede al día después de exportar.
+    this.refreshNow();
   }
 
   canTogglePaid(entry: HistorialEntry): boolean {
