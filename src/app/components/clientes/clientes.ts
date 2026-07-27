@@ -327,7 +327,7 @@ export class Clientes implements OnInit {
       return;
     }
     if (!this.newClient.contactDay) {
-      this.formError = 'El día de contacto es obligatorio para que el cliente aparezca en Cobros.';
+      this.formError = 'El día de inicio es obligatorio para que el cliente aparezca en Cobros.';
       return;
     }
     if (!this.newClient.collectedBy) {
