@@ -41,27 +41,50 @@ export class Clientes implements OnInit {
   deleteSubmitting = false;
   deleteError = '';
 
-  editClient = {
+  editClient: {
+    name: string;
+    fanpage: string;
+    plan: string;
+    country: string;
+    sexo: string;
+    edad: number | null;
+    collectedBy: string;
+    rubro: string;
+    active: boolean;
+    contactDay: string;
+  } = {
     name: '',
     fanpage: '',
     plan: '',
     country: '',
     sexo: '',
-    edad: '',
+    edad: null,
     collectedBy: '',
     rubro: '',
     active: true,
     contactDay: '',
   };
 
-  newClient = {
+  newClient: {
+    executiveId: string;
+    name: string;
+    fanpage: string;
+    plan: string;
+    country: string;
+    sexo: string;
+    edad: number | null;
+    collectedBy: string;
+    rubro: string;
+    active: boolean;
+    contactDay: string;
+  } = {
     executiveId: '',
     name: '',
     fanpage: '',
     plan: '',
     country: '',
     sexo: '',
-    edad: '',
+    edad: null,
     collectedBy: '',
     rubro: '',
     active: true,
@@ -170,7 +193,7 @@ export class Clientes implements OnInit {
       plan: c.plan ?? '',
       country: c.country ?? '',
       sexo: c.sexo ?? '',
-      edad: c.edad != null ? String(c.edad) : '',
+      edad: c.edad ?? null,
       collectedBy: c.collectedBy ?? '',
       rubro: c.rubro ?? '',
       active: c.active,
@@ -189,6 +212,10 @@ export class Clientes implements OnInit {
 
   submitEdit(): void {
     if (!this.selectedItem) return;
+    if (!this.editClient.collectedBy) {
+      this.editError = 'Quién cobra es obligatorio.';
+      return;
+    }
     this.editSubmitting = true;
     this.editError = '';
     this.editSuccess = '';
@@ -197,7 +224,10 @@ export class Clientes implements OnInit {
       const v = value.trim();
       return v || null;
     };
-    const parsedNumber = (value: string): number | null => {
+    const parsedNumber = (value: string | number | null): number | null => {
+      // El input es type="number": Angular entrega un number/null real, no un string.
+      if (value === null || value === undefined) return null;
+      if (typeof value === 'number') return isNaN(value) ? null : value;
       const v = value.trim();
       if (!v) return null;
       const n = Number(v);
@@ -300,6 +330,10 @@ export class Clientes implements OnInit {
       this.formError = 'El día de contacto es obligatorio para que el cliente aparezca en Cobros.';
       return;
     }
+    if (!this.newClient.collectedBy) {
+      this.formError = 'Quién cobra es obligatorio.';
+      return;
+    }
 
     this.submitting = true;
     this.formError = '';
@@ -309,7 +343,10 @@ export class Clientes implements OnInit {
       const v = value.trim();
       return v || null;
     };
-    const parsedNumber = (value: string): number | null => {
+    const parsedNumber = (value: string | number | null): number | null => {
+      // El input es type="number": Angular entrega un number/null real, no un string.
+      if (value === null || value === undefined) return null;
+      if (typeof value === 'number') return isNaN(value) ? null : value;
       const v = value.trim();
       if (!v) return null;
       const n = Number(v);
@@ -341,7 +378,7 @@ export class Clientes implements OnInit {
           plan: '',
           country: '',
           sexo: '',
-          edad: '',
+          edad: null,
           collectedBy: '',
           rubro: '',
           active: true,

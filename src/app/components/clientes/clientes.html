@@ -66,8 +66,8 @@
         </label>
 
         <label class="form-field">
-          <span class="form-label">Quién cobra</span>
-          <select class="form-input" [(ngModel)]="newClient.collectedBy" name="collectedBy">
+          <span class="form-label">Quién cobra <span class="required-mark">*</span></span>
+          <select class="form-input" [(ngModel)]="newClient.collectedBy" name="collectedBy" required>
             <option value="">Sin especificar</option>
             <option value="Ejecutivo">Ejecutivo</option>
             <option value="Agencia">Agencia</option>
@@ -196,8 +196,8 @@
           </label>
 
           <label class="form-field">
-            <span class="form-label">Quién cobra</span>
-            <select class="form-input" [(ngModel)]="editClient.collectedBy" name="collectedBy">
+            <span class="form-label">Quién cobra <span class="required-mark">*</span></span>
+            <select class="form-input" [(ngModel)]="editClient.collectedBy" name="collectedBy" required>
               <option value="">Sin especificar</option>
               <option value="Ejecutivo">Ejecutivo</option>
               <option value="Agencia">Agencia</option>

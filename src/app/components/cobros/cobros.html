@@ -87,7 +87,8 @@
                 </span>
               </td>
               <td class="col-check">
-                <input type="checkbox" class="entry-check"
+                <input *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'"
+                  type="checkbox" class="entry-check"
                   [checked]="entry.paid"
                   [disabled]="!canTogglePaid(entry)"
                   (change)="onPaidChange(entry, $any($event.target).checked)" />
@@ -121,7 +122,8 @@
                   <span class="badge badge-upcoming">Próximo</span>
                 </td>
                 <td class="col-check">
-                  <input type="checkbox" class="entry-check"
+                  <input *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'"
+                    type="checkbox" class="entry-check"
                     [checked]="entry.paid"
                     [disabled]="!canTogglePaid(entry)"
                     (change)="onPaidChange(entry, $any($event.target).checked)" />
