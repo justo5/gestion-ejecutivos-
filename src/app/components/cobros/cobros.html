@@ -46,6 +46,10 @@
         <span class="total-label">Total cobrado</span>
         <span class="total-value">${{ vm.totals.total | number:'1.0-0' }}</span>
       </div>
+      <div class="total-card debt">
+        <span class="total-label">{{ vm.totals.deudaLabel }}</span>
+        <span class="total-value">${{ vm.totals.deudaMonto | number:'1.0-0' }}</span>
+      </div>
     </div>
 
     <!-- Tabla -->

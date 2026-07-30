@@ -64,7 +64,7 @@
 // ── Totales ───────────────────────────────────────────────────────
 .totals-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 
   @media (max-width: 720px) {
@@ -88,6 +88,10 @@
 
   &.pending {
     background: #fef3c7;
+  }
+
+  &.debt {
+    background: #fee2e2;
   }
 }
 
