@@ -13,6 +13,7 @@ export interface CobroInfo {
   collectedBy?: CollectedBy | null;
   collectedByMonth?: Record<string, CollectedBy>;
   paidMonths: string[];
+  gastosByMonth?: Record<string, number>;
 }
 
 export interface Client {
@@ -107,6 +108,28 @@ export class ExecutivesService {
           const cobro: CobroInfo = client.cobro
             ? { ...client.cobro, paidMonths }
             : { planId: null, paidMonths };
+          return { ...client, cobro };
+        }),
+      };
+    });
+    this.executivesSubject.next(executives);
+    return previous;
+  }
+
+  // Igual que setClientPaidMonths pero para el gasto de un mes puntual.
+  // Devuelve el gastosByMonth previo para poder revertir si el PATCH falla.
+  setClientGastosByMonth(clientId: string, gastosByMonth: Record<string, number>): Record<string, number> {
+    let previous: Record<string, number> = {};
+    const executives = this.executivesSubject.value.map((exec) => {
+      if (!exec.clients.some((c) => c.id === clientId)) return exec;
+      return {
+        ...exec,
+        clients: exec.clients.map((client) => {
+          if (client.id !== clientId) return client;
+          previous = client.cobro?.gastosByMonth ?? {};
+          const cobro: CobroInfo = client.cobro
+            ? { ...client.cobro, gastosByMonth }
+            : { planId: null, paidMonths: [], gastosByMonth };
           return { ...client, cobro };
         }),
       };

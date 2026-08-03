@@ -240,6 +240,25 @@
   text-align: center;
 }
 
+.col-gastos {
+  white-space: nowrap;
+}
+
+.gastos-input {
+  width: 72px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  color: var(--text);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+}
+
 .entry-check {
   width: 16px;
   height: 16px;

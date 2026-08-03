@@ -8,6 +8,7 @@ export interface CobroRecord {
   planId: number | null;
   collectedByMonth: Record<string, CollectedBy>;
   paidMonths: string[];
+  gastosByMonth: Record<string, number>;
 }
 
 @Injectable({

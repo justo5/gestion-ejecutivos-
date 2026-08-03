@@ -59,6 +59,7 @@
             <th>Ejecutivo</th>
             <th>Plan</th>
             <th>Monto</th>
+            <th>Gastos</th>
             <th>Cobrado por</th>
             <th>Estado</th>
             <th>Pagado</th>
@@ -76,6 +77,11 @@
               <td>{{ entry.executiveName }}</td>
               <td>{{ entry.plan || '-' }}</td>
               <td class="col-amount">${{ entry.monto | number:'1.0-0' }}</td>
+              <td class="col-gastos">
+                <input type="number" min="0" step="0.01" class="gastos-input"
+                  [value]="entry.gastos"
+                  (change)="onGastosChange(entry, $any($event.target).value)" />
+              </td>
               <td>
                 <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
                 <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
@@ -99,7 +105,7 @@
           <!-- Divisor próximos cobros -->
           <ng-container *ngIf="vm.upcomingGroups.length > 0">
             <tr class="divider-row">
-              <td colspan="9">
+              <td colspan="10">
                 <span class="upcoming-label">Próximos cobros</span>
               </td>
             </tr>
@@ -134,7 +140,7 @@
 
           <!-- Estado vacío -->
           <tr *ngIf="vm.groups.length === 0 && vm.upcomingGroups.length === 0">
-            <td colspan="9" class="empty-msg">Sin cobros para este mes</td>
+            <td colspan="10" class="empty-msg">Sin cobros para este mes</td>
           </tr>
 
         </tbody>

@@ -17,6 +17,8 @@ export interface HistorialEntry {
   paid: boolean;
   paidMonths: string[];
   monto: number;
+  gastos: number;
+  gastosByMonth: Record<string, number>;
 }
 
 export interface HistorialGroup {
@@ -146,6 +148,7 @@ export class Cobros implements OnInit, OnDestroy {
             const monto = Number(planConfig?.price ?? 0) || 0;
 
             const rawCobro = client.cobro;
+            const gastosByMonth = rawCobro?.gastosByMonth ?? {};
 
             const entry: HistorialEntry = {
               clientId: client.id,
@@ -158,6 +161,8 @@ export class Cobros implements OnInit, OnDestroy {
               paid: (rawCobro?.paidMonths ?? []).includes(selectedYearMonth),
               paidMonths: rawCobro?.paidMonths ?? [],
               monto,
+              gastos: Number(gastosByMonth[selectedYearMonth] ?? 0) || 0,
+              gastosByMonth,
             };
 
             if (!entriesMap.has(dayNum)) entriesMap.set(dayNum, []);
@@ -236,9 +241,11 @@ export class Cobros implements OnInit, OnDestroy {
           // Sumamos siempre al total, incluso si "Quién cobra" quedó sin
           // especificar: de lo contrario ese cobro desaparece de la tarjeta
           // "Total cobrado" aunque el cliente sí esté marcado como pagado.
-          total += entry.monto;
-          if (entry.collectedBy === 'ejecutivo') ejecutivos += entry.monto;
-          else if (entry.collectedBy === 'agencia') agencia += entry.monto;
+          total += entry.monto - entry.gastos;
+          // El gasto se reparte 50/50 entre ejecutivo y agencia sin importar
+          // quién cobró el pago: ambos afrontan la mitad del gasto.
+          ejecutivos += (entry.collectedBy === 'ejecutivo' ? entry.monto : 0) - entry.gastos / 2;
+          agencia += (entry.collectedBy === 'agencia' ? entry.monto : 0) - entry.gastos / 2;
         } else if (entry.monto > 0) {
           pendiente += entry.monto;
         }
@@ -283,14 +290,20 @@ export class Cobros implements OnInit, OnDestroy {
 
     let totalEjecutivos = 0;
     let totalAgencia = 0;
+    let totalGastos = 0;
+    let totalCobradoBruto = 0;
     for (const { entry } of allEntries) {
       if (entry.paid) {
-        if (entry.collectedBy === 'ejecutivo') totalEjecutivos += entry.monto;
-        else if (entry.collectedBy === 'agencia') totalAgencia += entry.monto;
+        totalGastos += entry.gastos;
+        totalCobradoBruto += entry.monto;
+        // El gasto se reparte 50/50 entre ejecutivo y agencia sin importar
+        // quién cobró el pago (igual que en la tarjeta de totales).
+        totalEjecutivos += (entry.collectedBy === 'ejecutivo' ? entry.monto : 0) - entry.gastos / 2;
+        totalAgencia += (entry.collectedBy === 'agencia' ? entry.monto : 0) - entry.gastos / 2;
       }
     }
 
-    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Cobrado por', 'Estado', 'A favor de'];
+    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Gastos', 'Cobrado por', 'Estado', 'A favor de'];
     const rows = allEntries.map(({ dayNum, entry }) => {
       let aFavorDe = '';
       if (entry.paid) {
@@ -304,13 +317,14 @@ export class Cobros implements OnInit, OnDestroy {
         entry.executiveName,
         entry.plan ?? '',
         entry.monto,
+        entry.gastos,
         entry.collectedBy ?? '',
         entry.paid ? 'Pagado' : 'Pendiente',
         aFavorDe,
       ];
     });
 
-    const totalCobrado = totalEjecutivos + totalAgencia;
+    const totalCobrado = totalCobradoBruto - totalGastos;
     const correspondeACadaUno = totalCobrado / 2;
     const netoDiff = (totalEjecutivos - totalAgencia) / 2;
     let deudaLabel: string;
@@ -330,11 +344,12 @@ export class Cobros implements OnInit, OnDestroy {
     const empty = (n: number) => Array(n).fill('');
     const summaryRows = [
       empty(COL_COUNT),
-      ['RESUMEN (distribución 50% / 50%)', ...empty(COL_COUNT - 1)],
-      ['Total cobrado', ...empty(COL_COUNT - 3), totalCobrado, '', ''],
+      ['RESUMEN (neto de gastos, distribución 50% / 50%)', ...empty(COL_COUNT - 1)],
+      ['Total gastos', ...empty(COL_COUNT - 3), totalGastos, '', ''],
+      ['Total cobrado (neto)', ...empty(COL_COUNT - 3), totalCobrado, '', ''],
       ['Corresponde a cada uno (50%)', ...empty(COL_COUNT - 3), correspondeACadaUno, '', ''],
-      ['Cobrado por ejecutivos', ...empty(COL_COUNT - 3), totalEjecutivos, '', ''],
-      ['Cobrado por agencia', ...empty(COL_COUNT - 3), totalAgencia, '', ''],
+      ['Cobrado por ejecutivos (neto)', ...empty(COL_COUNT - 3), totalEjecutivos, '', ''],
+      ['Cobrado por agencia (neto)', ...empty(COL_COUNT - 3), totalAgencia, '', ''],
       [deudaLabel, ...empty(COL_COUNT - 3), deudaMonto, '', ''],
     ];
 
@@ -409,6 +424,31 @@ export class Cobros implements OnInit, OnDestroy {
       error: () => {
         this.pendingSaves--;
         this.executivesService.setClientPaidMonths(entry.clientId, prevPaidMonths);
+      },
+    });
+  }
+
+  onGastosChange(entry: HistorialEntry, rawValue: string): void {
+    const gastos = Math.max(0, Number(rawValue) || 0);
+    if (gastos === entry.gastos) return;
+
+    const currentMonth = this.formatYearMonth(this.selectedDate$.value);
+    const newGastosByMonth = { ...entry.gastosByMonth, [currentMonth]: gastos };
+
+    const prevGastosByMonth = this.executivesService.setClientGastosByMonth(
+      entry.clientId,
+      newGastosByMonth,
+    );
+
+    this.pendingSaves++;
+    this.cobrosService.updateRecord(entry.clientId, { gastosByMonth: newGastosByMonth }).subscribe({
+      next: () => {
+        this.pendingSaves--;
+        this.refreshData();
+      },
+      error: () => {
+        this.pendingSaves--;
+        this.executivesService.setClientGastosByMonth(entry.clientId, prevGastosByMonth);
       },
     });
   }
