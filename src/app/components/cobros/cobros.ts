@@ -31,6 +31,8 @@ export interface CobrosTotals {
   agencia: number;
   pendiente: number;
   total: number;
+  deudaLabel: string;
+  deudaMonto: number;
 }
 
 export interface CobrosHistorialViewModel {
@@ -252,7 +254,23 @@ export class Cobros implements OnInit, OnDestroy {
       }
     }
 
-    return { ejecutivos, agencia, pendiente, total };
+    // Distribución 50/50: quien cobró de más le debe la mitad de la diferencia
+    // al otro (misma cuenta que el resumen del CSV).
+    const netoDiff = (ejecutivos - agencia) / 2;
+    let deudaLabel: string;
+    let deudaMonto: number;
+    if (netoDiff > 0) {
+      deudaLabel = 'Ejecutivo le debe a Agencia';
+      deudaMonto = netoDiff;
+    } else if (netoDiff < 0) {
+      deudaLabel = 'Agencia le debe a Ejecutivo';
+      deudaMonto = Math.abs(netoDiff);
+    } else {
+      deudaLabel = 'Sin diferencia';
+      deudaMonto = 0;
+    }
+
+    return { ejecutivos, agencia, pendiente, total, deudaLabel, deudaMonto };
   }
 
   onExecutiveFilter(executiveId: string): void {

@@ -46,6 +46,10 @@
         <span class="total-label">Total cobrado</span>
         <span class="total-value">${{ vm.totals.total | number:'1.0-0' }}</span>
       </div>
+      <div class="total-card debt">
+        <span class="total-label">{{ vm.totals.deudaLabel }}</span>
+        <span class="total-value">${{ vm.totals.deudaMonto | number:'1.0-0' }}</span>
+      </div>
     </div>
 
     <!-- Tabla -->
@@ -119,6 +123,11 @@
                 <td>{{ entry.executiveName }}</td>
                 <td>{{ entry.plan || '-' }}</td>
                 <td class="col-amount">${{ entry.monto | number:'1.0-0' }}</td>
+                <td class="col-gastos">
+                  <input type="number" min="0" step="0.01" class="gastos-input"
+                    [value]="entry.gastos"
+                    (change)="onGastosChange(entry, $any($event.target).value)" />
+                </td>
                 <td>
                   <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
                   <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
