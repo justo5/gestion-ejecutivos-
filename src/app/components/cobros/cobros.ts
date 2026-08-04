@@ -244,10 +244,9 @@ export class Cobros implements OnInit, OnDestroy {
           // especificar: de lo contrario ese cobro desaparece de la tarjeta
           // "Total cobrado" aunque el cliente sí esté marcado como pagado.
           total += entry.monto - entry.gastos;
-          // El gasto se reparte 50/50 entre ejecutivo y agencia sin importar
-          // quién cobró el pago: ambos afrontan la mitad del gasto.
-          ejecutivos += (entry.collectedBy === 'ejecutivo' ? entry.monto : 0) - entry.gastos / 2;
-          agencia += (entry.collectedBy === 'agencia' ? entry.monto : 0) - entry.gastos / 2;
+          // El gasto lo afronta quien cobró el pago, no se reparte entre ambos.
+          ejecutivos += entry.collectedBy === 'ejecutivo' ? entry.monto - entry.gastos : 0;
+          agencia += entry.collectedBy === 'agencia' ? entry.monto - entry.gastos : 0;
         } else if (entry.monto > 0) {
           pendiente += entry.monto;
         }
@@ -314,10 +313,9 @@ export class Cobros implements OnInit, OnDestroy {
       if (entry.paid) {
         totalGastos += entry.gastos;
         totalCobradoBruto += entry.monto;
-        // El gasto se reparte 50/50 entre ejecutivo y agencia sin importar
-        // quién cobró el pago (igual que en la tarjeta de totales).
-        totalEjecutivos += (entry.collectedBy === 'ejecutivo' ? entry.monto : 0) - entry.gastos / 2;
-        totalAgencia += (entry.collectedBy === 'agencia' ? entry.monto : 0) - entry.gastos / 2;
+        // El gasto lo afronta quien cobró el pago (igual que en la tarjeta de totales).
+        totalEjecutivos += entry.collectedBy === 'ejecutivo' ? entry.monto - entry.gastos : 0;
+        totalAgencia += entry.collectedBy === 'agencia' ? entry.monto - entry.gastos : 0;
       }
     }
 
