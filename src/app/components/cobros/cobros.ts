@@ -185,7 +185,7 @@ export class Cobros implements OnInit, OnDestroy {
           ? allGroups.filter(g => g.dayNum > todayDay)
           : [];
 
-        const totals = this.buildTotals(groups);
+        const totals = this.buildTotals([...groups, ...upcomingGroups]);
 
         return { groups, upcomingGroups, totals, monthLabel, canGoNext, isCurrentMonth, isAdmin, executiveOptions, selectedExecutiveId, clientSearchTerm };
       })
