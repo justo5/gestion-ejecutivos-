@@ -19,6 +19,8 @@ export interface HistorialEntry {
   monto: number;
   gastos: number;
   gastosByMonth: Record<string, number>;
+  yearMonth: string;      // "YYYY-MM" que representa esta fila puntual
+  isCarriedOver: boolean; // true si es un mes anterior arrastrado (no el mes seleccionado)
 }
 
 export interface HistorialGroup {
@@ -147,35 +149,57 @@ export class Cobros implements OnInit, OnDestroy {
             // Number() explícito: si el precio llega como string (columna
             // `numeric`), los acumuladores de buildTotals concatenan en vez de
             // sumar y el pipe `number` corta el render con un error.
+            // NOTA: se usa el precio actual del plan para todos los meses, incluidos
+            // los arrastrados de meses anteriores — no hay snapshot histórico de precio.
             const monto = Number(planConfig?.price ?? 0) || 0;
 
             const rawCobro = client.cobro;
             const gastosByMonth = rawCobro?.gastosByMonth ?? {};
+            const paidMonths = rawCobro?.paidMonths ?? [];
 
-            const entry: HistorialEntry = {
-              clientId: client.id,
-              executiveName: exec.name,
-              clientName: client.name,
-              fanpage: client.fanpage,
-              plan: client.plan,
-              dayNum,
-              collectedBy: this.normalizeCollectedBy(client.collectedBy),
-              paid: (rawCobro?.paidMonths ?? []).includes(selectedYearMonth),
-              paidMonths: rawCobro?.paidMonths ?? [],
-              monto,
-              gastos: Number(gastosByMonth[selectedYearMonth] ?? 0) || 0,
-              gastosByMonth,
-            };
+            // Cobros pendientes de meses anteriores que se arrastran al mes
+            // seleccionado hasta que se marquen como pagados (sin límite de tiempo).
+            const pendingMonths = this.getPendingMonths(client.contactDay, selectedDate, paidMonths);
+            // Si el mes seleccionado ya está pagado, se sigue mostrando esa fila
+            // (mismo comportamiento actual de ver el estado del mes que se mira).
+            const monthsToRender = paidMonths.includes(selectedYearMonth)
+              ? [...pendingMonths, selectedYearMonth]
+              : pendingMonths;
 
-            if (!entriesMap.has(dayNum)) entriesMap.set(dayNum, []);
-            entriesMap.get(dayNum)!.push(entry);
+            if (monthsToRender.length === 0) continue;
+
+            for (const ym of monthsToRender) {
+              const entry: HistorialEntry = {
+                clientId: client.id,
+                executiveName: exec.name,
+                clientName: client.name,
+                fanpage: client.fanpage,
+                plan: client.plan,
+                dayNum,
+                collectedBy: this.normalizeCollectedBy(client.collectedBy),
+                paid: paidMonths.includes(ym),
+                paidMonths,
+                monto,
+                gastos: Number(gastosByMonth[ym] ?? 0) || 0,
+                gastosByMonth,
+                yearMonth: ym,
+                isCarriedOver: ym !== selectedYearMonth,
+              };
+
+              if (!entriesMap.has(dayNum)) entriesMap.set(dayNum, []);
+              entriesMap.get(dayNum)!.push(entry);
+            }
           }
         }
 
         const todayDay = now.getDate();
         const allGroups: HistorialGroup[] = Array.from(entriesMap.entries())
           .sort(([a], [b]) => a - b)
-          .map(([dayNum, entries]) => ({ dayNum, entries }));
+          .map(([dayNum, entries]) => ({
+            dayNum,
+            // Meses atrasados primero, mes seleccionado al final.
+            entries: entries.sort((a, b) => a.yearMonth.localeCompare(b.yearMonth)),
+          }));
 
         const groups = isCurrentMonth
           ? allGroups.filter(g => g.dayNum <= todayDay)
@@ -321,7 +345,7 @@ export class Cobros implements OnInit, OnDestroy {
       }
     }
 
-    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Gastos', 'Cobrado por', 'Estado', 'A favor de'];
+    const headers = ['Día', 'Mes', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Gastos', 'Cobrado por', 'Estado', 'A favor de'];
     const rows = allEntries.map(({ dayNum, entry }) => {
       let aFavorDe = '';
       if (entry.paid) {
@@ -330,6 +354,7 @@ export class Cobros implements OnInit, OnDestroy {
       }
       return [
         dayNum,
+        this.monthLabelFor(entry.yearMonth),
         entry.clientName,
         entry.fanpage ?? '',
         entry.executiveName,
@@ -402,6 +427,33 @@ export class Cobros implements OnInit, OnDestroy {
     return `${y}-${m}`;
   }
 
+  // Devuelve, en orden cronológico, todos los "YYYY-MM" desde el mes siguiente
+  // a contactDay hasta upToDate inclusive que todavía no estén en paidMonths.
+  // Usamos new Date(y, m+1, 1) para el rollover de año (dic -> ene) porque el
+  // constructor de Date normaliza meses fuera de rango [0,11] automáticamente.
+  private getPendingMonths(contactDay: string, upToDate: Date, paidMonths: string[]): string[] {
+    const contactDate = new Date(contactDay + 'T00:00:00');
+    const paidSet = new Set(paidMonths);
+    const months: string[] = [];
+
+    let cursor = new Date(contactDate.getFullYear(), contactDate.getMonth() + 1, 1);
+    const limit = new Date(upToDate.getFullYear(), upToDate.getMonth(), 1);
+
+    while (cursor <= limit) {
+      const ym = this.formatYearMonth(cursor);
+      if (!paidSet.has(ym)) months.push(ym);
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+    return months;
+  }
+
+  // Etiqueta corta de mes/año para mostrar en filas arrastradas de meses
+  // anteriores (ej. "jul. 2026"). Se usa desde el template, por eso no es privado.
+  monthLabelFor(yearMonth: string): string {
+    const [y, m] = yearMonth.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+  }
+
   private normalizePlanText(value: string): string {
     return value
       .normalize('NFD')
@@ -420,10 +472,12 @@ export class Cobros implements OnInit, OnDestroy {
   onPaidChange(entry: HistorialEntry, paid: boolean): void {
     if (!this.canTogglePaid(entry)) return;
 
-    const currentMonth = this.formatYearMonth(this.selectedDate$.value);
+    // Usamos el mes propio de la fila (no el mes seleccionado en pantalla) para
+    // que tildar un mes arrastrado no afecte el estado de otro mes del mismo cliente.
+    const month = entry.yearMonth;
     const newPaidMonths = paid
-      ? [...new Set([...entry.paidMonths, currentMonth])]
-      : entry.paidMonths.filter(m => m !== currentMonth);
+      ? [...new Set([...entry.paidMonths, month])]
+      : entry.paidMonths.filter(m => m !== month);
 
     // Escribimos el cambio en el store en vez de mutar la fila: los totales se
     // calculan dentro del map() del vm, así que sólo se actualizan si el stream
@@ -450,8 +504,8 @@ export class Cobros implements OnInit, OnDestroy {
     const gastos = Math.max(0, Number(rawValue) || 0);
     if (gastos === entry.gastos) return;
 
-    const currentMonth = this.formatYearMonth(this.selectedDate$.value);
-    const newGastosByMonth = { ...entry.gastosByMonth, [currentMonth]: gastos };
+    const month = entry.yearMonth;
+    const newGastosByMonth = { ...entry.gastosByMonth, [month]: gastos };
 
     const prevGastosByMonth = this.executivesService.setClientGastosByMonth(
       entry.clientId,

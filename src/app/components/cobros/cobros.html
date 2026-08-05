@@ -74,7 +74,8 @@
           <!-- Cobros del mes -->
           <ng-container *ngFor="let group of vm.groups">
             <tr *ngFor="let entry of group.entries"
-                [class.row-paid]="entry.paid">
+                [class.row-paid]="entry.paid"
+                [class.row-overdue]="entry.isCarriedOver">
               <td class="col-day">{{ group.dayNum }}</td>
               <td>{{ entry.clientName }}</td>
               <td>{{ entry.fanpage || '-' }}</td>
@@ -95,6 +96,7 @@
                 <span [class]="entry.paid ? 'badge badge-paid' : 'badge badge-pending'">
                   {{ entry.paid ? 'Pagado' : 'Pendiente' }}
                 </span>
+                <span *ngIf="entry.isCarriedOver" class="badge badge-overdue">{{ monthLabelFor(entry.yearMonth) }}</span>
               </td>
               <td class="col-check">
                 <input *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'"
@@ -116,7 +118,8 @@
             <ng-container *ngFor="let group of vm.upcomingGroups">
               <tr *ngFor="let entry of group.entries"
                   class="row-upcoming"
-                  [class.row-paid]="entry.paid">
+                  [class.row-paid]="entry.paid"
+                  [class.row-overdue]="entry.isCarriedOver">
                 <td class="col-day">{{ group.dayNum }}</td>
                 <td>{{ entry.clientName }}</td>
                 <td>{{ entry.fanpage || '-' }}</td>

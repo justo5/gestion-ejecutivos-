@@ -227,6 +227,15 @@
       background: #fef3c7;
     }
   }
+
+  // Mes arrastrado sin pagar. :not(.row-paid) para que, una vez marcado
+  // pagado, se vea verde como cualquier fila pagada en vez de rojo.
+  .row-overdue:not(.row-paid) td {
+    background: #fee2e2;
+    &:hover {
+      background: #fecaca;
+    }
+  }
 }
 
 .col-day {
@@ -304,6 +313,12 @@
 .badge-upcoming {
   background: #fef3c7;
   color: #92400e;
+}
+
+.badge-overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+  margin-left: 4px;
 }
 
 .text-muted {
