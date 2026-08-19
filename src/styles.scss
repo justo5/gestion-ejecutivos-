@@ -18,29 +18,28 @@
   --text-faint: #606060;
   --secondary: #a0a0a0;
 
-  // Acento principal (azul)
-  --primary: #1e88e5;
-  --primary-dark: #1565c0;
-  --primary-light: rgba(30, 136, 229, 0.16);
+  // Acento principal (azul del isotipo Vamos Bien)
+  --primary: #1e9adb;
+  --primary-dark: #226dc6;
+  --primary-light: rgba(30, 154, 219, 0.18);
 
-  // Acentos semánticos
-  --verde: #43a047;
-  --verde-dark: #2e7d32;
-  --verde-bg: rgba(67, 160, 71, 0.16);
+  // Acentos semánticos (lima, naranja y rojo del isotipo)
+  --verde: #afd42a;
+  --verde-dark: #7cb342;
+  --verde-bg: rgba(175, 212, 42, 0.16);
 
-  --naranja: #e65100;
-  --naranja-light: #ff6d00;
-  --naranja-bg: rgba(230, 81, 0, 0.16);
+  --naranja: #fd900f;
+  --naranja-light: #ffab40;
+  --naranja-bg: rgba(253, 144, 15, 0.16);
 
-  --rojo: #e53935;
+  --rojo: #ea3426;
   --rojo-dark: #c62828;
-  --rojo-bg: rgba(229, 57, 53, 0.16);
+  --rojo-bg: rgba(234, 52, 38, 0.16);
 
-  --teal: #26a69a;
-  --teal-dark: #00695c;
-  --teal-bg: rgba(0, 105, 92, 0.2);
-
-  --wa: #1da851;
+  // Turquesa: mezcla de azul + lima del isotipo, para distinguir "Agencia" de "Ejecutivo"
+  --teal: #4cae7d;
+  --teal-dark: #35855e;
+  --teal-bg: rgba(76, 174, 125, 0.18);
 
   --radius: 14px;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);

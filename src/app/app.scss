@@ -21,12 +21,24 @@
   gap: 16px;
 }
 
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-brand-mark {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
 .app-logo {
   font-family: var(--font-heading);
   font-size: 1.3rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(90deg, var(--primary), var(--verde));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

@@ -8,8 +8,8 @@
   box-sizing: border-box;
   padding: 1rem;
   background:
-    radial-gradient(circle at 15% 20%, rgba(30, 136, 229, 0.25), transparent 45%),
-    radial-gradient(circle at 85% 80%, rgba(67, 160, 71, 0.18), transparent 45%),
+    radial-gradient(circle at 15% 20%, rgba(30, 154, 219, 0.25), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(175, 212, 42, 0.14), transparent 45%),
     var(--bg);
 }
 
@@ -44,19 +44,9 @@
 }
 
 .login-logo {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-  color: #fff;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  box-shadow: 0 6px 20px rgba(21, 101, 192, 0.45);
+  width: 56px;
+  height: 56px;
+  filter: drop-shadow(0 6px 16px rgba(30, 154, 219, 0.4));
 }
 
 .login-title {

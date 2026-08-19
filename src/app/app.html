@@ -1,7 +1,10 @@
 <div class="app-wrapper">
   <ng-container *ngIf="isAuthenticated">
     <header class="app-header">
-      <h1 class="app-logo">Gestión Juniors</h1>
+      <div class="app-brand">
+        <img class="app-brand-mark" src="logo.png" alt="Vamos Bien" width="32" height="32" />
+        <h1 class="app-logo">Gestión Juniors</h1>
+      </div>
       <app-header-menu [isAdmin]="isAdmin" (select)="onMenuSelect($event)"></app-header-menu>
     </header>
   </ng-container>
