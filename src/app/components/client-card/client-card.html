@@ -1,0 +1,26 @@
+<button type="button" class="client-card" (click)="cardClick.emit()">
+  <span class="client-card-chevron" aria-hidden="true">&rsaquo;</span>
+
+  <span class="client-card-status">
+    <app-status-dot [status]="view.status"></app-status-dot>
+  </span>
+
+  <span class="client-card-avatar" [style.background]="view.avatarColor">
+    {{ view.avatarInitials }}
+    <span class="client-card-todos" *ngIf="pendingTodos > 0" [attr.title]="pendingTodos + ' tarea(s) pendiente(s)'">
+      {{ pendingTodos > 9 ? '9+' : pendingTodos }}
+    </span>
+  </span>
+
+  <span class="client-card-name">{{ name }}</span>
+
+  <span class="client-card-meta" *ngIf="showMeta">
+    <span class="client-card-exec">{{ view.executiveName }}</span>
+    <span class="client-card-squad" *ngIf="view.squad">{{ view.squad }}</span>
+  </span>
+
+  <span class="client-card-alert" *ngIf="view.importantNotification as n" [class.is-error]="n.type === 'error'">
+    <span class="client-card-alert-dot"></span>
+    <span class="client-card-alert-text">{{ n.text }}</span>
+  </span>
+</button>

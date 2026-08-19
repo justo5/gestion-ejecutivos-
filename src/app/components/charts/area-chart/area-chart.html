@@ -1,0 +1,12 @@
+<svg [attr.viewBox]="viewBox" class="area-chart-svg" preserveAspectRatio="none">
+  <defs>
+    <linearGradient [attr.id]="gradId" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" [attr.stop-color]="color" stop-opacity="0.32" />
+      <stop offset="100%" [attr.stop-color]="color" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <path [attr.d]="areaPath" [attr.fill]="gradFill" />
+  <path [attr.d]="linePath" fill="none" [attr.stroke]="color" stroke-width="2.25" stroke-linecap="round"
+    stroke-linejoin="round" />
+  <circle [attr.cx]="lastPoint[0]" [attr.cy]="lastPoint[1]" r="3.5" [attr.fill]="color" />
+</svg>

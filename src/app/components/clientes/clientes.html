@@ -105,19 +105,14 @@
 
   <ng-container *ngIf="filteredRows$ | async as rows">
     <div class="clients-grid" *ngIf="rows.length > 0">
-      <article class="client-card" *ngFor="let row of rows" [class.is-active]="row.client.active"
-        (click)="selectItem(row)">
-        <span class="client-card-name">{{ cardName(row.client) }}</span>
-
-        <div class="client-card-meta" *ngIf="isAdmin">
-          <span class="client-card-exec">{{ row.executiveName }}</span>
-          <span class="client-card-squad" *ngIf="row.squad">{{ row.squad }}</span>
-        </div>
-
-        <span class="client-card-status" [class.active]="row.client.active">
-          {{ row.client.active ? 'Activo' : 'Inactivo' }}
-        </span>
-      </article>
+      <app-client-card
+        *ngFor="let row of rows"
+        [view]="viewFor(row)"
+        [displayName]="cardName(row.client)"
+        [showMeta]="isAdmin"
+        [pendingTodos]="pendingTodosFor(row.client.id)"
+        (cardClick)="selectItem(row)">
+      </app-client-card>
     </div>
 
     <p class="empty-msg" *ngIf="rows.length === 0">No se encontraron clientes.</p>
@@ -125,23 +120,103 @@
 
   <!-- Detalle del cliente -->
   <div class="detail-backdrop" *ngIf="selectedItem" (click)="onDetailBackdropClick($event)">
-    <div class="detail-panel">
+    <div class="detail-panel" *ngIf="selectedView as view">
+
       <div class="detail-header">
-        <div class="detail-header-info">
-          <h3 class="detail-title">{{ selectedItem.client.name }}</h3>
-          <span class="detail-status" [class.active]="selectedItem.client.active">
-            {{ selectedItem.client.active ? 'Activo' : 'Inactivo' }}
-          </span>
+        <div class="detail-header-top">
+          <span class="detail-avatar" [style.background]="view.avatarColor">{{ view.avatarInitials }}</span>
+
+          <div class="detail-header-info">
+            <div class="detail-header-name-row">
+              <h3 class="detail-title">{{ view.client.name }}</h3>
+
+              <div class="status-picker">
+                <button type="button" class="status-picker-btn" (click)="toggleStatusMenu()">
+                  <app-status-dot [status]="view.status"></app-status-dot>
+                  {{ view.statusLabel }}
+                </button>
+                <div class="status-menu" *ngIf="statusMenuOpen">
+                  <button type="button" *ngFor="let opt of statusOptions" (click)="setStatus(opt.value)"
+                    [class.is-current]="view.status === opt.value">
+                    <span class="status-menu-dot" [style.background]="opt.color"></span>
+                    {{ opt.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="detail-subtitle">
+              {{ view.executiveName }}<span *ngIf="view.squad"> · {{ view.squad }}</span>
+            </p>
+          </div>
+
+          <div class="detail-link" *ngIf="!editingLink">
+            <a *ngIf="linkDraft" [href]="linkDraft" target="_blank" rel="noopener noreferrer" class="detail-link-open">
+              Abrir enlace
+            </a>
+            <button type="button" class="detail-link-edit" (click)="startEditLink()">
+              {{ linkDraft ? 'Editar enlace' : '+ Enlace' }}
+            </button>
+          </div>
+          <div class="detail-link-form" *ngIf="editingLink">
+            <input type="url" class="form-input" [(ngModel)]="linkDraft" name="linkDraft" placeholder="https://…"
+              (keydown)="onLinkKeydown($event)" />
+            <button type="button" class="detail-link-save" (click)="saveLink()" aria-label="Guardar enlace">&#10003;</button>
+            <button type="button" class="detail-link-cancel" (click)="cancelEditLink()" aria-label="Cancelar">&times;</button>
+          </div>
+
+          <div class="detail-header-actions">
+            <button *ngIf="activeTab === 'detalle' && !editMode && canAddClients" type="button" class="edit-btn"
+              (click)="startEdit()">Editar</button>
+            <button *ngIf="activeTab === 'detalle' && !editMode && canAddClients" type="button" class="delete-btn"
+              (click)="openDeleteConfirm()">Eliminar</button>
+            <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Cerrar">&times;</button>
+          </div>
         </div>
-        <div class="detail-header-actions">
-          <button *ngIf="!editMode && canAddClients" type="button" class="edit-btn" (click)="startEdit()">Editar</button>
-          <button *ngIf="!editMode && canAddClients" type="button" class="delete-btn" (click)="openDeleteConfirm()">Eliminar</button>
-          <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Cerrar">&times;</button>
+
+        <div class="detail-tabs">
+          <button type="button" class="detail-tab" [class.active]="activeTab === 'resumen'"
+            (click)="activeTab = 'resumen'">Resumen</button>
+          <button type="button" class="detail-tab" [class.active]="activeTab === 'detalle'"
+            (click)="activeTab = 'detalle'">Detalle</button>
+          <button type="button" class="detail-tab" [class.active]="activeTab === 'todo'"
+            (click)="activeTab = 'todo'">To Do
+            <span class="detail-tab-badge" *ngIf="pendingTodosFor(view.client.id) > 0">{{ pendingTodosFor(view.client.id) }}</span>
+          </button>
+          <button type="button" class="detail-tab" [class.active]="activeTab === 'notas'"
+            (click)="activeTab = 'notas'">Notas</button>
         </div>
       </div>
 
-      <!-- Vista de solo lectura -->
-      <div class="detail-body" *ngIf="!editMode">
+      <!-- ── Resumen ── -->
+      <div class="detail-body" *ngIf="activeTab === 'resumen'">
+        <div class="stat-grid">
+          <div class="stat-tile" *ngFor="let stat of view.stats" [class.tone-warn]="stat.tone === 'warn'"
+            [class.tone-bad]="stat.tone === 'bad'" [class.tone-ok]="stat.tone === 'ok'">
+            <div class="stat-tile-label"><span class="stat-tile-icon">{{ stat.icon }}</span>{{ stat.label }}</div>
+            <div class="stat-tile-value">{{ stat.value }}</div>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-panel-header">Historial de pagos · últimos 12 meses</div>
+          <div class="chart-panel-body">
+            <app-area-chart [data]="view.paymentSeries" color="#4f46e5" [label]="'pagos-' + view.client.id"></app-area-chart>
+          </div>
+        </div>
+
+        <div class="activity-panel">
+          <div class="activity-panel-header">Actividad</div>
+          <ul class="activity-list">
+            <li *ngFor="let n of view.notifications">
+              <app-notif-badge [type]="n.type"></app-notif-badge>
+              <span class="activity-text">{{ n.text }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ── Detalle (vista de solo lectura / edición, como antes) ── -->
+      <div class="detail-body" *ngIf="activeTab === 'detalle' && !editMode">
         <span class="form-success" *ngIf="editSuccess">{{ editSuccess }}</span>
         <table class="detail-table" *ngIf="selectedFields.length > 0">
           <tbody>
@@ -155,7 +230,7 @@
       </div>
 
       <!-- Formulario de edición -->
-      <div class="detail-body" *ngIf="editMode">
+      <div class="detail-body" *ngIf="activeTab === 'detalle' && editMode">
         <form class="add-client-form" (ngSubmit)="submitEdit()">
           <label class="form-field">
             <span class="form-label">Nombre del cliente</span>
@@ -231,6 +306,45 @@
           </div>
         </form>
       </div>
+
+      <!-- ── To Do ── -->
+      <div class="detail-body" *ngIf="activeTab === 'todo'">
+        <div class="todo-input-row">
+          <input type="text" class="form-input" placeholder="Nueva tarea…" [(ngModel)]="newTodoText" name="newTodoText"
+            (keydown)="onTodoKeydown($event)" />
+          <button type="button" class="form-submit" [disabled]="!newTodoText.trim()" (click)="addTodo()">+ Agregar</button>
+        </div>
+
+        <p class="empty-msg" *ngIf="selectedTodos.length === 0">Sin tareas pendientes.</p>
+
+        <ul class="todo-list" *ngIf="selectedTodos.length > 0">
+          <li class="todo-item" *ngFor="let todo of selectedTodos">
+            <button type="button" class="todo-check" [class.is-done]="todo.done" (click)="toggleTodo(todo.id)"
+              [attr.aria-label]="todo.done ? 'Marcar como pendiente' : 'Marcar como hecha'">
+              <span *ngIf="todo.done">&#10003;</span>
+            </button>
+            <span class="todo-text" [class.is-done]="todo.done">{{ todo.text }}</span>
+            <button type="button" class="todo-delete" (click)="deleteTodo(todo.id)" aria-label="Eliminar tarea">&times;</button>
+          </li>
+        </ul>
+
+        <p class="todo-counter" *ngIf="selectedTodos.length > 0">
+          {{ selectedTodos.length - selectedDoneTodosCount }} pendiente{{ (selectedTodos.length - selectedDoneTodosCount) !== 1 ? 's' : '' }}
+          · {{ selectedDoneTodosCount }} completada{{ selectedDoneTodosCount !== 1 ? 's' : '' }}
+        </p>
+      </div>
+
+      <!-- ── Notas ── -->
+      <div class="detail-body" *ngIf="activeTab === 'notas'">
+        <textarea rows="10" class="notes-textarea"
+          placeholder="Notas sobre este cliente: reuniones, acuerdos, seguimiento…" [(ngModel)]="notesDraft"
+          name="notesDraft"></textarea>
+        <div class="notes-actions">
+          <span class="form-success" *ngIf="notesSaved">Guardado</span>
+          <button type="button" class="form-submit" (click)="saveNotes()">Guardar notas</button>
+        </div>
+      </div>
+
     </div>
   </div>
 

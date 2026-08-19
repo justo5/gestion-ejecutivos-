@@ -4,12 +4,29 @@ import { map } from 'rxjs/operators';
 import { CLIENT_DETAIL_FIELDS, Client, Executive, ExecutivesService } from '../../services/executives';
 import { AuthService } from '../../services/auth';
 import { ConfigService, PlanConfig, RubroConfig } from '../../services/config';
+import { ClientExtrasService } from '../../services/client-extras';
+import { ClientViewBuilder } from '../../services/client-view-builder';
+import { ClientCardView, ClientStatus, TodoItem } from '../../models/client-view.model';
 
 export interface ClientCardItem {
   client: Client;
   executiveName: string;
   squad: string;
 }
+
+type DetailTab = 'resumen' | 'detalle' | 'todo' | 'notas';
+
+interface StatusOption {
+  value: ClientStatus;
+  label: string;
+  color: string;
+}
+
+const STATUS_OPTIONS: StatusOption[] = [
+  { value: 'active', label: 'Al día', color: 'var(--verde)' },
+  { value: 'warning', label: 'Atención', color: 'var(--naranja)' },
+  { value: 'critical', label: 'Crítico', color: 'var(--rojo)' },
+];
 
 @Component({
   selector: 'app-clientes',
@@ -40,6 +57,18 @@ export class Clientes implements OnInit {
   showDeleteConfirm = false;
   deleteSubmitting = false;
   deleteError = '';
+
+  // --- Ficha del cliente: resumen / to do / notas (todo local, sin backend) ---
+  readonly statusOptions = STATUS_OPTIONS;
+  activeTab: DetailTab = 'resumen';
+  statusMenuOpen = false;
+
+  newTodoText = '';
+  notesDraft = '';
+  notesSaved = false;
+
+  editingLink = false;
+  linkDraft = '';
 
   editClient: {
     name: string;
@@ -95,6 +124,8 @@ export class Clientes implements OnInit {
     private executivesService: ExecutivesService,
     private auth: AuthService,
     private configService: ConfigService,
+    private extras: ClientExtrasService,
+    private viewBuilder: ClientViewBuilder,
   ) {}
 
   get isAdmin(): boolean {
@@ -182,6 +213,95 @@ export class Clientes implements OnInit {
     this.editMode = false;
     this.editError = '';
     this.editSuccess = '';
+    this.activeTab = 'resumen';
+    this.statusMenuOpen = false;
+    this.editingLink = false;
+    this.linkDraft = this.extras.get(item.client.id).linkOverride ?? '';
+    this.notesDraft = this.extras.get(item.client.id).notes ?? '';
+    this.notesSaved = false;
+    this.newTodoText = '';
+  }
+
+  // --- Vista enriquecida (avatar, estado, salud de pago, historial) ---
+
+  viewFor(item: ClientCardItem): ClientCardView {
+    return this.viewBuilder.build(item.client, item.executiveName, item.squad, this.plans);
+  }
+
+  pendingTodosFor(clientId: string): number {
+    return this.extras.get(clientId).todos.filter(t => !t.done).length;
+  }
+
+  get selectedView(): ClientCardView | null {
+    return this.selectedItem ? this.viewFor(this.selectedItem) : null;
+  }
+
+  get selectedTodos(): TodoItem[] {
+    return this.selectedItem ? this.extras.get(this.selectedItem.client.id).todos : [];
+  }
+
+  get selectedDoneTodosCount(): number {
+    return this.selectedTodos.filter(t => t.done).length;
+  }
+
+  toggleStatusMenu(): void {
+    this.statusMenuOpen = !this.statusMenuOpen;
+  }
+
+  setStatus(status: ClientStatus): void {
+    if (!this.selectedItem || !this.selectedView) return;
+    const clear = status === this.selectedView.status;
+    this.extras.setStatus(this.selectedItem.client.id, clear ? null : status);
+    this.statusMenuOpen = false;
+  }
+
+  addTodo(): void {
+    if (!this.selectedItem) return;
+    this.extras.addTodo(this.selectedItem.client.id, this.newTodoText);
+    this.newTodoText = '';
+  }
+
+  onTodoKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') this.addTodo();
+  }
+
+  toggleTodo(todoId: string): void {
+    if (!this.selectedItem) return;
+    this.extras.toggleTodo(this.selectedItem.client.id, todoId);
+  }
+
+  deleteTodo(todoId: string): void {
+    if (!this.selectedItem) return;
+    this.extras.deleteTodo(this.selectedItem.client.id, todoId);
+  }
+
+  saveNotes(): void {
+    if (!this.selectedItem) return;
+    this.extras.saveNotes(this.selectedItem.client.id, this.notesDraft);
+    this.notesSaved = true;
+    setTimeout(() => (this.notesSaved = false), 2000);
+  }
+
+  startEditLink(): void {
+    if (!this.selectedItem) return;
+    this.linkDraft = this.extras.get(this.selectedItem.client.id).linkOverride ?? '';
+    this.editingLink = true;
+  }
+
+  cancelEditLink(): void {
+    this.editingLink = false;
+  }
+
+  saveLink(): void {
+    if (!this.selectedItem) return;
+    const trimmed = this.linkDraft.trim();
+    this.extras.setLink(this.selectedItem.client.id, trimmed || null);
+    this.editingLink = false;
+  }
+
+  onLinkKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') this.saveLink();
+    if (event.key === 'Escape') this.cancelEditLink();
   }
 
   startEdit(): void {
@@ -295,6 +415,8 @@ export class Clientes implements OnInit {
     this.editSuccess = '';
     this.showDeleteConfirm = false;
     this.deleteError = '';
+    this.statusMenuOpen = false;
+    this.editingLink = false;
   }
 
   onDetailBackdropClick(event: MouseEvent): void {

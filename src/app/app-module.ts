@@ -17,6 +17,10 @@ import { ConfigPage } from './components/config-page/config-page';
 import { Perfil } from './components/perfil/perfil';
 import { Login } from './components/login/login';
 import { authInterceptor } from './interceptors/auth-interceptor';
+import { StatusDot } from './components/status-dot/status-dot';
+import { NotifBadge } from './components/notif-badge/notif-badge';
+import { AreaChart } from './components/charts/area-chart/area-chart';
+import { ClientCard } from './components/client-card/client-card';
 
 @NgModule({
   declarations: [
@@ -32,6 +36,10 @@ import { authInterceptor } from './interceptors/auth-interceptor';
     ConfigPage,
     Perfil,
     Login,
+    StatusDot,
+    NotifBadge,
+    AreaChart,
+    ClientCard,
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule],
   providers: [
