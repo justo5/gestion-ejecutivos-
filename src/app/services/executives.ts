@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { CollectedBy } from './cobros';
+import { ClientStatus, TodoItem } from '../models/client-view.model';
 
 const IMAGES_SHEET_URL =
   'https://docs.google.com/spreadsheets/d/1DgsNhUycGp_-sZBioKlBOP9gZ-RZ_Efwxz-T7nc0f0A/export?format=csv';
@@ -34,6 +35,13 @@ export interface Client {
   contactDay: string | null;
   data: Record<string, unknown>;
   cobro: CobroInfo | null;
+  // Ficha extendida (notas, override de estado/link, to do): persiste en el
+  // backend, no en localStorage. Puede no venir en payloads viejos (import),
+  // por eso son opcionales/nullable.
+  notes?: string | null;
+  statusOverride?: ClientStatus | null;
+  linkOverride?: string | null;
+  todos?: TodoItem[];
 }
 
 // Campos estáticos del cliente que se muestran en el modal de detalle, en el
@@ -95,6 +103,34 @@ export class ExecutivesService {
     this.http.get<Executive[]>('/api/executives').subscribe((executives) => {
       this.executivesSubject.next(executives);
     });
+  }
+
+  get currentExecutives(): Executive[] {
+    return this.executivesSubject.value;
+  }
+
+  findClient(clientId: string): Client | undefined {
+    for (const exec of this.currentExecutives) {
+      const client = exec.clients.find((c) => c.id === clientId);
+      if (client) return client;
+    }
+    return undefined;
+  }
+
+  // Aplica una actualización puntual de un cliente ya cargado en el store,
+  // sin pegarle de nuevo al backend. Lo usan las funciones de la ficha
+  // extendida (notas/estado/link/to do) después de que el PATCH/POST/DELETE
+  // correspondiente confirmó en el servidor, para que la UI se refresque al
+  // toque en vez de esperar un refresh() completo.
+  patchClientLocal(clientId: string, patch: (client: Client) => Client): void {
+    const executives = this.currentExecutives.map((exec) => {
+      if (!exec.clients.some((c) => c.id === clientId)) return exec;
+      return {
+        ...exec,
+        clients: exec.clients.map((client) => (client.id === clientId ? patch(client) : client)),
+      };
+    });
+    this.executivesSubject.next(executives);
   }
 
   // Aplica el cambio de "pagado" (+ en qué mes se cobró cada mes adeudado)
