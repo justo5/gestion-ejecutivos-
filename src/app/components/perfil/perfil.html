@@ -2,7 +2,14 @@
   <h2>Perfil</h2>
 
   <div class="perfil-card" *ngIf="profile">
-    <div class="perfil-avatar">{{ getInitials() }}</div>
+    <div class="perfil-avatar">
+      <img *ngIf="myImageUrl" [src]="myImageUrl" [alt]="profile.name" class="perfil-avatar-img" />
+      <ng-container *ngIf="!myImageUrl">{{ getInitials() }}</ng-container>
+      <label *ngIf="profile.executiveId" class="perfil-avatar-upload" title="Cambiar foto">
+        <span aria-hidden="true">+</span>
+        <input type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+      </label>
+    </div>
 
     <div class="perfil-field">
       <span>Nombre</span>
