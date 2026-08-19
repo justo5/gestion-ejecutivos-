@@ -13,6 +13,10 @@ export interface CobroInfo {
   collectedBy?: CollectedBy | null;
   collectedByMonth?: Record<string, CollectedBy>;
   paidMonths: string[];
+  // Por cada mes de paidMonths, en qué mes calendario se cobró realmente.
+  // Es lo que permite que un cobro atrasado (ej. julio pagado en agosto)
+  // impacte en el total del mes en que efectivamente entró la plata.
+  collectedInMonth?: Record<string, string>;
   gastosByMonth?: Record<string, number>;
 }
 
@@ -93,21 +97,29 @@ export class ExecutivesService {
     });
   }
 
-  // Aplica el cambio de "pagado" sobre el store para que la vista (filas y
-  // totales) se recalcule en el acto, sin esperar el ida y vuelta al servidor.
-  // Devuelve los paidMonths que había, para poder revertir si el PATCH falla.
-  setClientPaidMonths(clientId: string, paidMonths: string[]): string[] {
-    let previous: string[] = [];
+  // Aplica el cambio de "pagado" (+ en qué mes se cobró cada mes adeudado)
+  // sobre el store para que la vista (filas y totales) se recalcule en el
+  // acto, sin esperar el ida y vuelta al servidor. Devuelve el estado previo,
+  // para poder revertir si el PATCH falla.
+  setClientCollection(
+    clientId: string,
+    paidMonths: string[],
+    collectedInMonth: Record<string, string>,
+  ): { paidMonths: string[]; collectedInMonth: Record<string, string> } {
+    let previous = { paidMonths: [] as string[], collectedInMonth: {} as Record<string, string> };
     const executives = this.executivesSubject.value.map((exec) => {
       if (!exec.clients.some((c) => c.id === clientId)) return exec;
       return {
         ...exec,
         clients: exec.clients.map((client) => {
           if (client.id !== clientId) return client;
-          previous = client.cobro?.paidMonths ?? [];
+          previous = {
+            paidMonths: client.cobro?.paidMonths ?? [],
+            collectedInMonth: client.cobro?.collectedInMonth ?? {},
+          };
           const cobro: CobroInfo = client.cobro
-            ? { ...client.cobro, paidMonths }
-            : { planId: null, paidMonths };
+            ? { ...client.cobro, paidMonths, collectedInMonth }
+            : { planId: null, paidMonths, collectedInMonth };
           return { ...client, cobro };
         }),
       };

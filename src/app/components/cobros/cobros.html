@@ -95,6 +95,11 @@
                 <span [class]="entry.paid ? 'badge badge-paid' : 'badge badge-pending'">
                   {{ entry.paid ? 'Pagado' : 'Pendiente' }}
                 </span>
+                <span *ngIf="!entry.paid && entry.owedMonths.length > 1"
+                      class="badge badge-arrears"
+                      title="Incluye meses anteriores sin pagar">
+                  {{ entry.owedMonths.length }} meses
+                </span>
               </td>
               <td class="col-check">
                 <input *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'"

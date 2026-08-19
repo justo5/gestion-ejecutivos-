@@ -291,6 +291,13 @@
   color: #92400e;
 }
 
+// Cuando el pendiente arrastra más de un mes sin pagar.
+.badge-arrears {
+  background: #fee2e2;
+  color: #b91c1c;
+  margin-left: 4px;
+}
+
 .badge-exec {
   background: var(--primary-light);
   color: var(--primary);

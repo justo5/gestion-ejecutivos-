@@ -16,6 +16,11 @@ export interface HistorialEntry {
   collectedBy: CollectedBy | null;
   paid: boolean;
   paidMonths: string[];
+  // Meses (contando desde la activación) que a esta altura siguen sin
+  // pagarse, incluido el mes que se está mirando. Si el cliente viene
+  // arrastrando julio sin pagar y estamos en agosto, acá quedan los dos.
+  owedMonths: string[];
+  collectedInMonth: Record<string, string>;
   monto: number;
   gastos: number;
   gastosByMonth: Record<string, number>;
@@ -147,10 +152,27 @@ export class Cobros implements OnInit, OnDestroy {
             // Number() explícito: si el precio llega como string (columna
             // `numeric`), los acumuladores de buildTotals concatenan en vez de
             // sumar y el pipe `number` corta el render con un error.
-            const monto = Number(planConfig?.price ?? 0) || 0;
+            const planPrice = Number(planConfig?.price ?? 0) || 0;
 
             const rawCobro = client.cobro;
             const gastosByMonth = rawCobro?.gastosByMonth ?? {};
+            const paidMonths = rawCobro?.paidMonths ?? [];
+            const collectedInMonth = rawCobro?.collectedInMonth ?? {};
+
+            // Meses que le corresponden a este cliente desde que se activó
+            // hasta el mes seleccionado (cobramos a mes vencido). Si viene
+            // arrastrando meses sin pagar de atrás, quedan todos acá para
+            // que el pendiente se acumule en vez de perderse al cambiar de mes.
+            const dueMonths = this.monthsUpTo(client.contactDay, selectedYearMonth);
+            const owedMonths = dueMonths.filter(m => !paidMonths.includes(m));
+            // Meses que efectivamente se cobraron mientras se miraba este mes
+            // puntual: pueden ser de antes (si acá se saldó julio+agosto
+            // juntos, ambos quedan "cobrados en agosto" aunque julio fuera el
+            // mes originalmente adeudado).
+            const collectedThisMonth = dueMonths.filter(
+              m => paidMonths.includes(m) && collectedInMonth[m] === selectedYearMonth
+            );
+            const isPaid = owedMonths.length === 0;
 
             const entry: HistorialEntry = {
               clientId: client.id,
@@ -160,9 +182,11 @@ export class Cobros implements OnInit, OnDestroy {
               plan: client.plan,
               dayNum,
               collectedBy: this.normalizeCollectedBy(client.collectedBy),
-              paid: (rawCobro?.paidMonths ?? []).includes(selectedYearMonth),
-              paidMonths: rawCobro?.paidMonths ?? [],
-              monto,
+              paid: isPaid,
+              paidMonths,
+              owedMonths,
+              collectedInMonth,
+              monto: isPaid ? collectedThisMonth.length * planPrice : owedMonths.length * planPrice,
               gastos: Number(gastosByMonth[selectedYearMonth] ?? 0) || 0,
               gastosByMonth,
             };
@@ -400,6 +424,23 @@ export class Cobros implements OnInit, OnDestroy {
     return `${y}-${m}`;
   }
 
+  // Lista de yearMonth ("2026-08") desde el mes siguiente a la activación del
+  // cliente (contactDay) hasta el mes seleccionado, ambos inclusive. Es la
+  // base para saber cuántos meses arrastra sin pagar un cliente.
+  private monthsUpTo(contactDay: string, selectedYearMonth: string): string[] {
+    const contactDate = new Date(contactDay + 'T00:00:00');
+    const [selYear, selMonth] = selectedYearMonth.split('-').map(Number);
+    const selCursor = new Date(selYear, selMonth - 1, 1);
+
+    const months: string[] = [];
+    let cursor = new Date(contactDate.getFullYear(), contactDate.getMonth() + 1, 1);
+    while (cursor <= selCursor) {
+      months.push(this.formatYearMonth(cursor));
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+    return months;
+  }
+
   private normalizePlanText(value: string): string {
     return value
       .normalize('NFD')
@@ -419,29 +460,57 @@ export class Cobros implements OnInit, OnDestroy {
     if (!this.canTogglePaid(entry)) return;
 
     const currentMonth = this.formatYearMonth(this.selectedDate$.value);
-    const newPaidMonths = paid
-      ? [...new Set([...entry.paidMonths, currentMonth])]
-      : entry.paidMonths.filter(m => m !== currentMonth);
+    let newPaidMonths: string[];
+    let newCollectedInMonth: Record<string, string>;
+
+    if (paid) {
+      // Cobra de una sola vez el mes seleccionado y todo lo que venía
+      // arrastrado sin pagar (owedMonths incluye el mes actual). La plata de
+      // todo ese arrastre queda contabilizada en el mes que se está mirando,
+      // sin importar de qué mes era originalmente cada cuota.
+      newPaidMonths = [...new Set([...entry.paidMonths, ...entry.owedMonths])];
+      newCollectedInMonth = { ...entry.collectedInMonth };
+      for (const m of entry.owedMonths) newCollectedInMonth[m] = currentMonth;
+    } else {
+      // Deshace únicamente lo que se cobró mientras se miraba este mes: si
+      // acá se había saldado un arrastre de julio+agosto, destildar en
+      // agosto revierte los dos; entrar a julio y destildar ahí no toca nada
+      // (esa cuota se cobró en agosto, no en julio).
+      const toRevert = new Set(
+        Object.entries(entry.collectedInMonth)
+          .filter(([, collectedMonth]) => collectedMonth === currentMonth)
+          .map(([dueMonth]) => dueMonth)
+      );
+      if (toRevert.size === 0) toRevert.add(currentMonth);
+
+      newPaidMonths = entry.paidMonths.filter(m => !toRevert.has(m));
+      newCollectedInMonth = Object.fromEntries(
+        Object.entries(entry.collectedInMonth).filter(([m]) => !toRevert.has(m))
+      );
+    }
 
     // Escribimos el cambio en el store en vez de mutar la fila: los totales se
     // calculan dentro del map() del vm, así que sólo se actualizan si el stream
     // vuelve a emitir.
-    const prevPaidMonths = this.executivesService.setClientPaidMonths(
+    const prev = this.executivesService.setClientCollection(
       entry.clientId,
       newPaidMonths,
+      newCollectedInMonth,
     );
 
     this.pendingSaves++;
-    this.cobrosService.updateRecord(entry.clientId, { paidMonths: newPaidMonths }).subscribe({
-      next: () => {
-        this.pendingSaves--;
-        this.refreshData();
-      },
-      error: () => {
-        this.pendingSaves--;
-        this.executivesService.setClientPaidMonths(entry.clientId, prevPaidMonths);
-      },
-    });
+    this.cobrosService
+      .updateRecord(entry.clientId, { paidMonths: newPaidMonths, collectedInMonth: newCollectedInMonth })
+      .subscribe({
+        next: () => {
+          this.pendingSaves--;
+          this.refreshData();
+        },
+        error: () => {
+          this.pendingSaves--;
+          this.executivesService.setClientCollection(entry.clientId, prev.paidMonths, prev.collectedInMonth);
+        },
+      });
   }
 
   onGastosChange(entry: HistorialEntry, rawValue: string): void {
