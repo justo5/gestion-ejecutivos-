@@ -52,6 +52,79 @@
       </div>
     </div>
 
+    <!-- Fila de cliente + su detalle expandido, reutilizada para "del mes" y "próximos". -->
+    <ng-template #rowTpl let-entry="entry" let-dayNum="dayNum" let-upcoming="upcoming">
+      <tr [class.row-paid]="entry.paid" [class.row-upcoming]="upcoming">
+        <td class="col-day">{{ dayNum }}</td>
+        <td class="col-client">
+          <button *ngIf="entry.owedMonths.length > 1"
+                  type="button"
+                  class="expand-btn"
+                  [class.expanded]="isExpanded(entry.clientId)"
+                  (click)="toggleExpand(entry.clientId)"
+                  [attr.aria-expanded]="isExpanded(entry.clientId)"
+                  [attr.aria-label]="isExpanded(entry.clientId) ? 'Ocultar meses adeudados' : 'Ver meses adeudados'">&#9656;</button>
+          {{ entry.clientName }}
+        </td>
+        <td>{{ entry.fanpage || '-' }}</td>
+        <td>{{ entry.executiveName }}</td>
+        <td>{{ entry.plan || '-' }}</td>
+        <td class="col-amount">${{ entry.monto | number:'1.0-0' }}</td>
+        <td class="col-gastos">
+          <input type="number" min="0" step="0.01" class="gastos-input"
+            [value]="entry.gastos"
+            (change)="onGastosChange(entry, $any($event.target).value)" />
+        </td>
+        <td>
+          <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
+          <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
+          <span *ngIf="!entry.collectedBy" class="text-muted">-</span>
+        </td>
+        <td>
+          <ng-container *ngIf="!upcoming; else upcomingBadge">
+            <span [class]="entry.paid ? 'badge badge-paid' : 'badge badge-pending'">
+              {{ entry.paid ? 'Pagado' : 'Pendiente' }}
+            </span>
+            <span *ngIf="!entry.paid && entry.owedMonths.length > 1"
+                  class="badge badge-arrears"
+                  title="Incluye meses anteriores sin pagar">
+              {{ entry.owedMonths.length }} meses
+            </span>
+          </ng-container>
+          <ng-template #upcomingBadge>
+            <span class="badge badge-upcoming">Próximo</span>
+          </ng-template>
+        </td>
+        <td class="col-check">
+          <input *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'"
+            type="checkbox" class="entry-check"
+            [checked]="entry.paid"
+            [disabled]="!canTogglePaid(entry)"
+            (change)="onPaidChange(entry, $any($event.target).checked)" />
+        </td>
+      </tr>
+
+      <!-- Desglose mes a mes: sólo si viene arrastrando más de un mes y la tarjeta está expandida. -->
+      <tr *ngIf="isExpanded(entry.clientId) && entry.owedMonths.length > 1" class="row-detail">
+        <td></td>
+        <td colspan="9">
+          <div class="month-breakdown">
+            <span class="month-breakdown-title">Meses adeudados</span>
+            <div class="month-breakdown-item" *ngFor="let due of entry.monthBreakdown">
+              <span class="month-breakdown-label">{{ due.label }}</span>
+              <span class="month-breakdown-amount">${{ due.monto | number:'1.0-0' }}</span>
+              <label class="month-breakdown-check" *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'">
+                <input type="checkbox"
+                       [disabled]="!canTogglePaid(entry)"
+                       (change)="onSingleMonthPaidChange(entry, due.month, $any($event.target).checked)" />
+                Pagar sólo este mes
+              </label>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
     <!-- Tabla -->
     <div class="table-wrapper">
       <table class="cobros-table">
@@ -73,42 +146,9 @@
 
           <!-- Cobros del mes -->
           <ng-container *ngFor="let group of vm.groups">
-            <tr *ngFor="let entry of group.entries"
-                [class.row-paid]="entry.paid">
-              <td class="col-day">{{ group.dayNum }}</td>
-              <td>{{ entry.clientName }}</td>
-              <td>{{ entry.fanpage || '-' }}</td>
-              <td>{{ entry.executiveName }}</td>
-              <td>{{ entry.plan || '-' }}</td>
-              <td class="col-amount">${{ entry.monto | number:'1.0-0' }}</td>
-              <td class="col-gastos">
-                <input type="number" min="0" step="0.01" class="gastos-input"
-                  [value]="entry.gastos"
-                  (change)="onGastosChange(entry, $any($event.target).value)" />
-              </td>
-              <td>
-                <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
-                <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
-                <span *ngIf="!entry.collectedBy" class="text-muted">-</span>
-              </td>
-              <td>
-                <span [class]="entry.paid ? 'badge badge-paid' : 'badge badge-pending'">
-                  {{ entry.paid ? 'Pagado' : 'Pendiente' }}
-                </span>
-                <span *ngIf="!entry.paid && entry.owedMonths.length > 1"
-                      class="badge badge-arrears"
-                      title="Incluye meses anteriores sin pagar">
-                  {{ entry.owedMonths.length }} meses
-                </span>
-              </td>
-              <td class="col-check">
-                <input *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'"
-                  type="checkbox" class="entry-check"
-                  [checked]="entry.paid"
-                  [disabled]="!canTogglePaid(entry)"
-                  (change)="onPaidChange(entry, $any($event.target).checked)" />
-              </td>
-            </tr>
+            <ng-container *ngFor="let entry of group.entries">
+              <ng-container *ngTemplateOutlet="rowTpl; context: { entry: entry, dayNum: group.dayNum, upcoming: false }"></ng-container>
+            </ng-container>
           </ng-container>
 
           <!-- Divisor próximos cobros -->
@@ -119,36 +159,9 @@
               </td>
             </tr>
             <ng-container *ngFor="let group of vm.upcomingGroups">
-              <tr *ngFor="let entry of group.entries"
-                  class="row-upcoming"
-                  [class.row-paid]="entry.paid">
-                <td class="col-day">{{ group.dayNum }}</td>
-                <td>{{ entry.clientName }}</td>
-                <td>{{ entry.fanpage || '-' }}</td>
-                <td>{{ entry.executiveName }}</td>
-                <td>{{ entry.plan || '-' }}</td>
-                <td class="col-amount">${{ entry.monto | number:'1.0-0' }}</td>
-                <td class="col-gastos">
-                  <input type="number" min="0" step="0.01" class="gastos-input"
-                    [value]="entry.gastos"
-                    (change)="onGastosChange(entry, $any($event.target).value)" />
-                </td>
-                <td>
-                  <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
-                  <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
-                  <span *ngIf="!entry.collectedBy" class="text-muted">-</span>
-                </td>
-                <td>
-                  <span class="badge badge-upcoming">Próximo</span>
-                </td>
-                <td class="col-check">
-                  <input *ngIf="vm.isAdmin || entry.collectedBy !== 'agencia'"
-                    type="checkbox" class="entry-check"
-                    [checked]="entry.paid"
-                    [disabled]="!canTogglePaid(entry)"
-                    (change)="onPaidChange(entry, $any($event.target).checked)" />
-                </td>
-              </tr>
+              <ng-container *ngFor="let entry of group.entries">
+                <ng-container *ngTemplateOutlet="rowTpl; context: { entry: entry, dayNum: group.dayNum, upcoming: true }"></ng-container>
+              </ng-container>
             </ng-container>
           </ng-container>
 

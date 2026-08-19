@@ -6,6 +6,12 @@ import { ConfigService } from '../../services/config';
 import { CobrosService, CollectedBy } from '../../services/cobros';
 import { AuthService } from '../../services/auth';
 
+export interface MonthDue {
+  month: string;
+  label: string;
+  monto: number;
+}
+
 export interface HistorialEntry {
   clientId: string;
   executiveName: string;
@@ -20,8 +26,19 @@ export interface HistorialEntry {
   // pagarse, incluido el mes que se está mirando. Si el cliente viene
   // arrastrando julio sin pagar y estamos en agosto, acá quedan los dos.
   owedMonths: string[];
+  // Desglose de owedMonths para la tarjeta expandida: uno por mes adeudado,
+  // con su propio monto, para poder tildarlos de a uno.
+  monthBreakdown: MonthDue[];
   collectedInMonth: Record<string, string>;
+  // Monto a mostrar en la fila principal: lo pendiente si algo queda sin
+  // pagar, o lo cobrado en este mes puntual si ya está todo al día.
   monto: number;
+  // Lo que efectivamente falta cobrar hasta el mes seleccionado (incluido).
+  pendingAmount: number;
+  // Lo que se cobró mientras se miraba este mes puntual, sin importar de
+  // qué mes era originalmente cada cuota. Es lo que impacta en los totales
+  // de este mes.
+  collectedAmount: number;
   gastos: number;
   gastosByMonth: Record<string, number>;
 }
@@ -72,6 +89,10 @@ export class Cobros implements OnInit, OnDestroy {
 
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private pendingSaves = 0;
+  // Clientes cuya tarjeta está expandida mostrando el desglose mes a mes.
+  // No hace falta que dispare recálculo del vm$: el (click) que la togglea ya
+  // corre dentro de Angular y dispara su propio ciclo de detección de cambios.
+  private expandedClients = new Set<string>();
   private readonly onVisibilityChange = () => {
     // Al volver a la pestaña puede haber pasado mucho desde el último tick,
     // así que refrescamos ya y arrancamos de nuevo el intervalo.
@@ -173,6 +194,8 @@ export class Cobros implements OnInit, OnDestroy {
               m => paidMonths.includes(m) && collectedInMonth[m] === selectedYearMonth
             );
             const isPaid = owedMonths.length === 0;
+            const pendingAmount = owedMonths.length * planPrice;
+            const collectedAmount = collectedThisMonth.length * planPrice;
 
             const entry: HistorialEntry = {
               clientId: client.id,
@@ -185,8 +208,15 @@ export class Cobros implements OnInit, OnDestroy {
               paid: isPaid,
               paidMonths,
               owedMonths,
+              monthBreakdown: owedMonths.map(month => ({
+                month,
+                label: this.monthLabel(month),
+                monto: planPrice,
+              })),
               collectedInMonth,
-              monto: isPaid ? collectedThisMonth.length * planPrice : owedMonths.length * planPrice,
+              monto: isPaid ? collectedAmount : pendingAmount,
+              pendingAmount,
+              collectedAmount,
               gastos: Number(gastosByMonth[selectedYearMonth] ?? 0) || 0,
               gastosByMonth,
             };
@@ -263,16 +293,20 @@ export class Cobros implements OnInit, OnDestroy {
 
     for (const group of groups) {
       for (const entry of group.entries) {
-        if (entry.paid) {
+        // pendingAmount y collectedAmount no son mutuamente excluyentes: si
+        // se paga un mes atrasado salteando otro más viejo, el cliente puede
+        // tener plata cobrada este mes Y deuda pendiente al mismo tiempo.
+        if (entry.collectedAmount > 0) {
           // Sumamos siempre al total, incluso si "Quién cobra" quedó sin
           // especificar: de lo contrario ese cobro desaparece de la tarjeta
           // "Total cobrado" aunque el cliente sí esté marcado como pagado.
-          total += entry.monto - entry.gastos;
+          total += entry.collectedAmount - entry.gastos;
           // El gasto lo afronta quien cobró el pago, no se reparte entre ambos.
-          ejecutivos += entry.collectedBy === 'ejecutivo' ? entry.monto - entry.gastos : 0;
-          agencia += entry.collectedBy === 'agencia' ? entry.monto - entry.gastos : 0;
-        } else if (entry.monto > 0) {
-          pendiente += entry.monto;
+          ejecutivos += entry.collectedBy === 'ejecutivo' ? entry.collectedAmount - entry.gastos : 0;
+          agencia += entry.collectedBy === 'agencia' ? entry.collectedAmount - entry.gastos : 0;
+        }
+        if (entry.pendingAmount > 0) {
+          pendiente += entry.pendingAmount;
         }
       }
     }
@@ -334,12 +368,12 @@ export class Cobros implements OnInit, OnDestroy {
     let totalGastos = 0;
     let totalCobradoBruto = 0;
     for (const { entry } of allEntries) {
-      if (entry.paid) {
+      if (entry.collectedAmount > 0) {
         totalGastos += entry.gastos;
-        totalCobradoBruto += entry.monto;
+        totalCobradoBruto += entry.collectedAmount;
         // El gasto lo afronta quien cobró el pago (igual que en la tarjeta de totales).
-        totalEjecutivos += entry.collectedBy === 'ejecutivo' ? entry.monto - entry.gastos : 0;
-        totalAgencia += entry.collectedBy === 'agencia' ? entry.monto - entry.gastos : 0;
+        totalEjecutivos += entry.collectedBy === 'ejecutivo' ? entry.collectedAmount - entry.gastos : 0;
+        totalAgencia += entry.collectedBy === 'agencia' ? entry.collectedAmount - entry.gastos : 0;
       }
     }
 
@@ -456,36 +490,66 @@ export class Cobros implements OnInit, OnDestroy {
     return null;
   }
 
+  // "Julio 2026" a partir de "2026-07", para el desglose de la tarjeta expandida.
+  private monthLabel(yearMonth: string): string {
+    const [y, m] = yearMonth.split('-').map(Number);
+    const label = new Date(y, m - 1, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+
+  isExpanded(clientId: string): boolean {
+    return this.expandedClients.has(clientId);
+  }
+
+  toggleExpand(clientId: string): void {
+    if (this.expandedClients.has(clientId)) this.expandedClients.delete(clientId);
+    else this.expandedClients.add(clientId);
+  }
+
+  // Tilda/destilda el mes completo (todo lo arrastrado, owedMonths incluye
+  // el mes actual). La plata de todo ese arrastre queda contabilizada en el
+  // mes que se está mirando, sin importar de qué mes era originalmente cada
+  // cuota.
   onPaidChange(entry: HistorialEntry, paid: boolean): void {
     if (!this.canTogglePaid(entry)) return;
 
+    if (paid) {
+      this.applyCollection(entry, entry.owedMonths, true);
+      return;
+    }
+
+    // Deshace únicamente lo que se cobró mientras se miraba este mes: si
+    // acá se había saldado un arrastre de julio+agosto, destildar en agosto
+    // revierte los dos; entrar a julio y destildar ahí no toca nada (esa
+    // cuota se cobró en agosto, no en julio).
+    const currentMonth = this.formatYearMonth(this.selectedDate$.value);
+    const toRevert = Object.entries(entry.collectedInMonth)
+      .filter(([, collectedMonth]) => collectedMonth === currentMonth)
+      .map(([dueMonth]) => dueMonth);
+    this.applyCollection(entry, toRevert.length > 0 ? toRevert : [currentMonth], false);
+  }
+
+  // Tilda/destilda un único mes del desglose (tarjeta expandida), sin tocar
+  // el resto de los meses adeudados.
+  onSingleMonthPaidChange(entry: HistorialEntry, month: string, paid: boolean): void {
+    if (!this.canTogglePaid(entry)) return;
+    this.applyCollection(entry, [month], paid);
+  }
+
+  private applyCollection(entry: HistorialEntry, months: string[], paid: boolean): void {
     const currentMonth = this.formatYearMonth(this.selectedDate$.value);
     let newPaidMonths: string[];
     let newCollectedInMonth: Record<string, string>;
 
     if (paid) {
-      // Cobra de una sola vez el mes seleccionado y todo lo que venía
-      // arrastrado sin pagar (owedMonths incluye el mes actual). La plata de
-      // todo ese arrastre queda contabilizada en el mes que se está mirando,
-      // sin importar de qué mes era originalmente cada cuota.
-      newPaidMonths = [...new Set([...entry.paidMonths, ...entry.owedMonths])];
+      newPaidMonths = [...new Set([...entry.paidMonths, ...months])];
       newCollectedInMonth = { ...entry.collectedInMonth };
-      for (const m of entry.owedMonths) newCollectedInMonth[m] = currentMonth;
+      for (const m of months) newCollectedInMonth[m] = currentMonth;
     } else {
-      // Deshace únicamente lo que se cobró mientras se miraba este mes: si
-      // acá se había saldado un arrastre de julio+agosto, destildar en
-      // agosto revierte los dos; entrar a julio y destildar ahí no toca nada
-      // (esa cuota se cobró en agosto, no en julio).
-      const toRevert = new Set(
-        Object.entries(entry.collectedInMonth)
-          .filter(([, collectedMonth]) => collectedMonth === currentMonth)
-          .map(([dueMonth]) => dueMonth)
-      );
-      if (toRevert.size === 0) toRevert.add(currentMonth);
-
-      newPaidMonths = entry.paidMonths.filter(m => !toRevert.has(m));
+      const toRemove = new Set(months);
+      newPaidMonths = entry.paidMonths.filter(m => !toRemove.has(m));
       newCollectedInMonth = Object.fromEntries(
-        Object.entries(entry.collectedInMonth).filter(([m]) => !toRevert.has(m))
+        Object.entries(entry.collectedInMonth).filter(([m]) => !toRemove.has(m))
       );
     }
 

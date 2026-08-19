@@ -235,6 +235,89 @@
   white-space: nowrap;
 }
 
+.col-client {
+  white-space: nowrap;
+}
+
+// ── Desglose de meses atrasados ──────────────────────────────────
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding: 0;
+  margin-right: 6px;
+  width: 12px;
+  display: inline-block;
+  transition: transform 0.15s ease;
+
+  &.expanded {
+    transform: rotate(90deg);
+    color: var(--primary);
+  }
+}
+
+.row-detail td {
+  background: var(--bg);
+  padding: 10px 12px 12px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.month-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.month-breakdown-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+}
+
+.month-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg, #fff);
+}
+
+.month-breakdown-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.month-breakdown-amount {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.month-breakdown-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+
+  input {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+  }
+}
+
 .col-amount {
   font-weight: 700;
   white-space: nowrap;
