@@ -64,8 +64,8 @@
   flex-shrink: 0;
 }
 
-.today-dot     { background: #16a34a; }
-.overdue-dot   { background: #dc2626; }
+.today-dot     { background: var(--verde); }
+.overdue-dot   { background: var(--rojo); }
 .scheduled-dot { background: var(--primary); }
 
 .group-title {
@@ -84,8 +84,8 @@
   border-radius: 999px;
 }
 
-.today-count     { background: #dcfce7; color: #16a34a; }
-.overdue-count   { background: #fee2e2; color: #dc2626; }
+.today-count     { background: var(--verde-bg); color: var(--verde); }
+.overdue-count   { background: var(--rojo-bg); color: var(--rojo); }
 .scheduled-count { background: var(--primary-light); color: var(--primary); }
 
 // ── Lista y tarjetas ─────────────────────────────────────────────
@@ -98,8 +98,8 @@
 .cobro-card {
   background: var(--surface);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border-left: 4px solid #16a34a;
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--verde);
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -108,12 +108,12 @@
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
+    box-shadow: var(--shadow);
   }
 
-  &.overdue   { border-left-color: #dc2626; }
+  &.overdue   { border-left-color: var(--rojo); }
   &.scheduled { border-left-color: var(--primary); }
-  &.paid      { background: #f0fdf4; }
+  &.paid      { background: rgba(67, 160, 71, 0.08); }
 }
 
 .cobro-left {
@@ -142,10 +142,10 @@
   letter-spacing: 0.5px;
 }
 
-.today-tag     { background: #dcfce7; color: #16a34a; }
-.overdue-tag   { background: #fee2e2; color: #dc2626; }
+.today-tag     { background: var(--verde-bg); color: var(--verde); }
+.overdue-tag   { background: var(--rojo-bg); color: var(--rojo); }
 .scheduled-tag { background: var(--primary-light); color: var(--primary); }
-.paid-tag      { background: #dcfce7; color: #16a34a; }
+.paid-tag      { background: var(--verde-bg); color: var(--verde); }
 
 .cobro-fanpage {
   font-size: 0.95rem;

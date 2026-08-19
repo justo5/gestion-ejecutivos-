@@ -87,11 +87,11 @@
   }
 
   &.pending {
-    background: #fef3c7;
+    background: var(--naranja-bg);
   }
 
   &.debt {
-    background: #fee2e2;
+    background: var(--rojo-bg);
   }
 }
 
@@ -155,18 +155,19 @@
 
 // ── Botón CSV ─────────────────────────────────────────────────────
 .csv-btn {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 7px 14px;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s;
+  box-shadow: 0 6px 20px rgba(21, 101, 192, 0.35);
+  transition: box-shadow 0.15s;
 
   &:hover {
-    opacity: 0.88;
+    box-shadow: 0 8px 26px rgba(21, 101, 192, 0.5);
   }
 }
 
@@ -215,16 +216,16 @@
   }
 
   .row-paid td {
-    background: #f0fdf4;
+    background: rgba(67, 160, 71, 0.08);
     &:hover {
-      background: #dcfce7;
+      background: var(--verde-bg);
     }
   }
 
   .row-upcoming td {
-    background: #fffbeb;
+    background: rgba(230, 81, 0, 0.08);
     &:hover {
-      background: #fef3c7;
+      background: var(--naranja-bg);
     }
   }
 }
@@ -286,7 +287,7 @@
   padding: 4px 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--card-bg, #fff);
+  background: var(--surface-2);
 }
 
 .month-breakdown-label {
@@ -365,19 +366,19 @@
 }
 
 .badge-paid {
-  background: #dcfce7;
-  color: #16a34a;
+  background: var(--verde-bg);
+  color: var(--verde);
 }
 
 .badge-pending {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--naranja-bg);
+  color: var(--naranja-light);
 }
 
 // Cuando el pendiente arrastra más de un mes sin pagar.
 .badge-arrears {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--rojo-bg);
+  color: var(--rojo);
   margin-left: 4px;
 }
 
@@ -387,13 +388,13 @@
 }
 
 .badge-agency {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: var(--teal-bg);
+  color: var(--teal);
 }
 
 .badge-upcoming {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--naranja-bg);
+  color: var(--naranja-light);
 }
 
 .text-muted {
@@ -402,16 +403,16 @@
 
 // ── Divisor próximos cobros ───────────────────────────────────────
 .divider-row td {
-  background: #fef3c7 !important;
+  background: var(--naranja-bg) !important;
   padding: 6px 12px;
   text-align: center;
-  border-bottom: 1px solid #fbbf24;
+  border-bottom: 1px solid var(--naranja-light);
 }
 
 .upcoming-label {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #92400e;
+  color: var(--naranja-light);
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }

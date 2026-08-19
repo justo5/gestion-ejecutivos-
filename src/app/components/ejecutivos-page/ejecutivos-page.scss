@@ -50,7 +50,7 @@
   }
 
   &.active strong {
-    color: #16a34a;
+    color: var(--verde);
   }
 }
 
@@ -75,12 +75,12 @@
 
   &:hover {
     border-color: var(--primary);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
     transform: translateY(-2px);
   }
 
   &.is-active {
-    border-color: #16a34a44;
+    border-color: var(--verde-dark);
   }
 }
 
@@ -103,8 +103,8 @@
   color: var(--text-muted);
 
   &.active {
-    background: #dcfce7;
-    color: #16a34a;
+    background: var(--verde-bg);
+    color: var(--verde);
   }
 }
 
@@ -123,8 +123,9 @@
 
 .detail-panel {
   background: var(--surface, #fff);
+  border: 1px solid var(--border);
   border-radius: var(--radius, 10px);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow);
   width: 100%;
   max-width: 720px;
   max-height: 90vh;
@@ -166,8 +167,8 @@
   color: var(--text-muted);
 
   &.active {
-    background: #dcfce7;
-    color: #16a34a;
+    background: var(--verde-bg);
+    color: var(--verde);
   }
 }
 

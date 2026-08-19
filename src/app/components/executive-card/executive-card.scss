@@ -16,7 +16,7 @@
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow);
     .card-img-upload { opacity: 1; }
   }
 }
@@ -65,7 +65,7 @@
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s;
-  border: 2px solid #fff;
+  border: 2px solid var(--surface);
 }
 
 .card-body {
@@ -122,7 +122,7 @@
   font-weight: 700;
   color: var(--text);
 
-  &.active { color: #16a34a; }
+  &.active { color: var(--verde); }
 }
 
 .stat-label {

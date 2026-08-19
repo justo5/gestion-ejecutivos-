@@ -2,9 +2,10 @@
   max-width: 480px;
   margin: 2rem auto;
   padding: 1.5rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .plan-list {
@@ -18,8 +19,8 @@
 
 .plan-item {
   padding: 0.5rem 0.75rem;
-  background: #f8f9fb;
-  border: 1px solid #eee;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -36,12 +37,12 @@
 .plan-name {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text);
 }
 
 .plan-price {
   font-size: 0.95rem;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .plan-actions {
@@ -56,7 +57,7 @@
 
   input {
     padding: 0.4rem 0.6rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 0.9rem;
 
@@ -74,7 +75,7 @@
 .plan-add-name {
   flex: 1;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.95rem;
 }
@@ -82,59 +83,59 @@
 .plan-add-price {
   width: 110px;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.95rem;
 }
 
 .edit-btn {
   padding: 0.3rem 0.75rem;
-  border: 1px solid #2563eb;
+  border: 1px solid var(--primary);
   border-radius: 6px;
-  background: #fff;
-  color: #2563eb;
+  background: transparent;
+  color: var(--primary);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 
-  &:hover { background: #eff6ff; }
+  &:hover { background: var(--primary-light); }
 }
 
 .remove-confirm-btn {
   padding: 0.3rem 0.75rem;
   border: none;
   border-radius: 6px;
-  background: #dc2626;
+  background: var(--rojo);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: #b91c1c; }
+  &:hover:not(:disabled) { background: var(--rojo-dark); }
   &:disabled { opacity: 0.6; cursor: default; }
 }
 
 .cancel-btn {
   padding: 0.3rem 0.75rem;
-  border: 1px solid #aaa;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #fff;
-  color: #555;
+  background: transparent;
+  color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 
-  &:hover { background: #f5f5f5; }
+  &:hover { background: var(--surface-2); }
 }
 
 .row-error {
-  color: #dc2626;
+  color: var(--rojo);
   font-size: 0.82rem;
   margin: 0;
 }
 
 .config-hint {
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 1.5rem;
 }
@@ -151,11 +152,11 @@
   gap: 0.25rem;
   flex: 1;
   font-size: 0.85rem;
-  color: #444;
+  color: var(--text-muted);
 
   input {
     padding: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 0.95rem;
   }
@@ -171,25 +172,26 @@
 .save-btn {
   padding: 0.55rem 1.25rem;
   border: none;
-  border-radius: 6px;
-  background: #2563eb;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 6px 20px rgba(21, 101, 192, 0.35);
 
   &:hover {
-    background: #1d4ed8;
+    box-shadow: 0 8px 26px rgba(21, 101, 192, 0.5);
   }
 }
 
 .saved-msg {
-  color: #16a34a;
+  color: var(--verde);
   font-size: 0.85rem;
 }
 
 .config-divider {
   border: none;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border);
   margin: 2rem 0 1.5rem;
 }
 
@@ -202,22 +204,22 @@
 .rubro-input {
   flex: 1;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.95rem;
 }
 
 .add-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #2563eb;
+  border: 1px solid var(--primary);
   border-radius: 6px;
-  background: #fff;
-  color: #2563eb;
+  background: transparent;
+  color: var(--primary);
   font-weight: 600;
   cursor: pointer;
 
   &:hover {
-    background: #eff6ff;
+    background: var(--primary-light);
   }
 }
 
@@ -235,26 +237,26 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0.75rem;
-  background: #f8f9fb;
-  border: 1px solid #eee;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .rubro-name {
   font-size: 0.95rem;
-  color: #333;
+  color: var(--text);
 }
 
 .remove-btn {
   border: none;
   background: transparent;
-  color: #dc2626;
+  color: var(--rojo);
   font-size: 1.2rem;
   line-height: 1;
   cursor: pointer;
   padding: 0 0.25rem;
 
   &:hover {
-    color: #b91c1c;
+    color: var(--rojo-dark);
   }
 }
