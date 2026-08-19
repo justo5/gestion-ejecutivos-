@@ -190,9 +190,18 @@ export class Cobros implements OnInit, OnDestroy {
             // puntual: pueden ser de antes (si acá se saldó julio+agosto
             // juntos, ambos quedan "cobrados en agosto" aunque julio fuera el
             // mes originalmente adeudado).
-            const collectedThisMonth = dueMonths.filter(
-              m => paidMonths.includes(m) && collectedInMonth[m] === selectedYearMonth
-            );
+            const collectedThisMonth = dueMonths.filter(m => {
+              if (!paidMonths.includes(m)) return false;
+              const collectedIn = collectedInMonth[m];
+              // Clientes viejos/importados quedaron con el mes en paidMonths
+              // pero sin collectedInMonth (nunca se registró en qué mes
+              // entró la plata). Sin este fallback esa plata no impacta en
+              // ningún "Total cobrado" de ningún mes, para siempre. Como acá
+              // no se puede pagar por adelantado, lo más razonable es asumir
+              // que se cobró el mismo mes que se debía, y sólo una vez (no se
+              // duplica: sólo matchea cuando se está mirando justo ese mes).
+              return collectedIn ? collectedIn === selectedYearMonth : m === selectedYearMonth;
+            });
             const isPaid = owedMonths.length === 0;
             const pendingAmount = owedMonths.length * planPrice;
             const collectedAmount = collectedThisMonth.length * planPrice;
@@ -214,12 +223,10 @@ export class Cobros implements OnInit, OnDestroy {
                 monto: planPrice,
               })),
               collectedInMonth,
-              // Si ya está todo pagado pero nada se cobró puntualmente en el
-              // mes que se está mirando (pago adelantado, o dato viejo
-              // importado sin collectedInMonth), mostramos igual el precio
-              // del plan en vez de $0 para no confundir "pagado" con "gratis".
-              // Los totales de la tarjeta no usan este campo, así que no se
-              // ven afectados.
+              // Resguardo: si por algún borde ya está todo pagado pero nada
+              // quedó contabilizado como cobrado este mes puntual, mostramos
+              // igual el precio del plan en vez de $0 para no confundir
+              // "pagado" con "gratis" en la fila.
               monto: isPaid ? (collectedAmount || planPrice) : pendingAmount,
               pendingAmount,
               collectedAmount,
