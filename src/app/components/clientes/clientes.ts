@@ -236,6 +236,31 @@ export class Clientes implements OnInit {
     return this.extras.get(clientId).todos.filter(t => !t.done).length;
   }
 
+  onImageChanged(event: { id: string; url: string }): void {
+    this.executivesService.updateClientImage(event.id, event.url);
+  }
+
+  onDetailImageSelected(event: Event): void {
+    if (!this.selectedItem) return;
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    const clientId = this.selectedItem.client.id;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result as string;
+      this.executivesService.updateClientImage(clientId, url);
+      // rows$/filteredRows$ se refrescan solos vía el observable, pero
+      // selectedItem es un campo propio: se actualiza a mano para que el
+      // avatar grande de la ficha muestre la foto nueva al toque.
+      if (this.selectedItem?.client.id === clientId) {
+        this.selectedItem = { ...this.selectedItem, client: { ...this.selectedItem.client, imageUrl: url } };
+      }
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
   get selectedView(): ClientCardView | null {
     return this.selectedItem ? this.viewFor(this.selectedItem) : null;
   }

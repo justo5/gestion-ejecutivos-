@@ -34,6 +34,8 @@ export interface Client {
   active: boolean;
   contactDay: string | null;
   data: Record<string, unknown>;
+  // Foto del cliente (URL o data URI subida desde el front). null = mostrar iniciales.
+  imageUrl?: string | null;
   cobro: CobroInfo | null;
   // Fecha de baja (soft delete). No nulo = cliente eliminado: no debe
   // aparecer en Clientes ni generar cobros nuevos, pero su historial de
@@ -386,6 +388,12 @@ export class ExecutivesService {
 
   deleteClient(clientId: string): Observable<void> {
     return this.http.delete<void>(`/api/clients/${clientId}`).pipe(tap(() => this.refresh()));
+  }
+
+  updateClientImage(clientId: string, imageUrl: string): void {
+    this.http.patch(`/api/clients/${clientId}/image`, { imageUrl }).subscribe(() => {
+      this.patchClientLocal(clientId, (client) => ({ ...client, imageUrl }));
+    });
   }
 
   updateImage(executiveId: string, imageUrl: string): void {

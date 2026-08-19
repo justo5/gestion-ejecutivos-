@@ -111,7 +111,8 @@
         [displayName]="cardName(row.client)"
         [showMeta]="isAdmin"
         [pendingTodos]="pendingTodosFor(row.client.id)"
-        (cardClick)="selectItem(row)">
+        (cardClick)="selectItem(row)"
+        (imageChanged)="onImageChanged($event)">
       </app-client-card>
     </div>
 
@@ -124,7 +125,14 @@
 
       <div class="detail-header">
         <div class="detail-header-top">
-          <span class="detail-avatar" [style.background]="view.avatarColor">{{ view.avatarInitials }}</span>
+          <span class="detail-avatar" [style.background]="view.client.imageUrl ? 'transparent' : view.avatarColor">
+            <img *ngIf="view.client.imageUrl" [src]="view.client.imageUrl" [alt]="view.client.name" class="detail-avatar-img" />
+            <ng-container *ngIf="!view.client.imageUrl">{{ view.avatarInitials }}</ng-container>
+            <label class="detail-avatar-upload" title="Cambiar foto">
+              <span aria-hidden="true">+</span>
+              <input type="file" accept="image/*" (change)="onDetailImageSelected($event)" hidden />
+            </label>
+          </span>
 
           <div class="detail-header-info">
             <div class="detail-header-name-row">

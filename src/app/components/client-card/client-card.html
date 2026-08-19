@@ -1,15 +1,28 @@
-<button type="button" class="client-card" (click)="cardClick.emit()">
+<article
+  class="client-card"
+  tabindex="0"
+  role="button"
+  [attr.aria-label]="name"
+  (click)="cardClick.emit()"
+  (keydown.enter)="cardClick.emit()"
+  (keydown.space)="$event.preventDefault(); cardClick.emit()"
+>
   <span class="client-card-chevron" aria-hidden="true">&rsaquo;</span>
 
   <span class="client-card-status">
     <app-status-dot [status]="view.status"></app-status-dot>
   </span>
 
-  <span class="client-card-avatar" [style.background]="view.avatarColor">
-    {{ view.avatarInitials }}
+  <span class="client-card-avatar" [style.background]="view.client.imageUrl ? 'transparent' : view.avatarColor">
+    <img *ngIf="view.client.imageUrl" [src]="view.client.imageUrl" [alt]="name" class="client-card-img" />
+    <ng-container *ngIf="!view.client.imageUrl">{{ view.avatarInitials }}</ng-container>
     <span class="client-card-todos" *ngIf="pendingTodos > 0" [attr.title]="pendingTodos + ' tarea(s) pendiente(s)'">
       {{ pendingTodos > 9 ? '9+' : pendingTodos }}
     </span>
+    <label class="client-card-img-upload" title="Cambiar foto" (click)="$event.stopPropagation()">
+      <span aria-hidden="true">+</span>
+      <input type="file" accept="image/*" (change)="onImageSelected($event)" hidden />
+    </label>
   </span>
 
   <span class="client-card-name">{{ name }}</span>
@@ -23,4 +36,4 @@
     <span class="client-card-alert-dot"></span>
     <span class="client-card-alert-text">{{ n.text }}</span>
   </span>
-</button>
+</article>
