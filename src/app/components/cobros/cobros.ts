@@ -214,7 +214,13 @@ export class Cobros implements OnInit, OnDestroy {
                 monto: planPrice,
               })),
               collectedInMonth,
-              monto: isPaid ? collectedAmount : pendingAmount,
+              // Si ya está todo pagado pero nada se cobró puntualmente en el
+              // mes que se está mirando (pago adelantado, o dato viejo
+              // importado sin collectedInMonth), mostramos igual el precio
+              // del plan en vez de $0 para no confundir "pagado" con "gratis".
+              // Los totales de la tarjeta no usan este campo, así que no se
+              // ven afectados.
+              monto: isPaid ? (collectedAmount || planPrice) : pendingAmount,
               pendingAmount,
               collectedAmount,
               gastos: Number(gastosByMonth[selectedYearMonth] ?? 0) || 0,
