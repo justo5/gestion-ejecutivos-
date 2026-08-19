@@ -64,6 +64,8 @@ export class DailyCollections implements OnInit {
         for (const exec of executives) {
           for (const client of exec.clients) {
             if (client.contactDay === null) continue;
+            // Clientes dados de baja no se contactan más, en ningún mes.
+            if (client.deletedAt) continue;
 
             // contactDay is a recurring day-of-month stored as YYYY-MM-DD.
             // The stored year-month reflects when the client was activated.

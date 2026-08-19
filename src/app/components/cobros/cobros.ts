@@ -148,6 +148,12 @@ export class Cobros implements OnInit, OnDestroy {
           for (const client of exec.clients) {
             if (client.contactDay === null) continue;
             if (searchLower && !client.name.toLowerCase().includes(searchLower)) continue;
+            // Cliente dado de baja: se lo sigue mostrando en los meses hasta
+            // el de la baja inclusive (no hay que perder el historial ya
+            // cobrado), pero no genera cobros nuevos en meses posteriores.
+            if (client.deletedAt && selectedYearMonth > this.formatYearMonth(new Date(client.deletedAt))) {
+              continue;
+            }
 
             const contactDate = new Date(client.contactDay + 'T00:00:00');
             const dayNum = contactDate.getDate();

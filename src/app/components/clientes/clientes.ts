@@ -163,6 +163,10 @@ export class Clientes implements OnInit {
     const rows: ClientCardItem[] = [];
     executives.forEach(exec => {
       exec.clients.forEach(client => {
+        // Clientes dados de baja (soft delete) siguen viajando desde el
+        // backend para que Cobros pueda mostrar su historial, pero no
+        // corresponde listarlos acá.
+        if (client.deletedAt) return;
         rows.push({ client, executiveName: exec.name, squad: exec.squad });
       });
     });

@@ -35,6 +35,10 @@ export interface Client {
   contactDay: string | null;
   data: Record<string, unknown>;
   cobro: CobroInfo | null;
+  // Fecha de baja (soft delete). No nulo = cliente eliminado: no debe
+  // aparecer en Clientes ni generar cobros nuevos, pero su historial de
+  // meses anteriores a esta fecha se sigue mostrando en Cobros.
+  deletedAt?: string | null;
   // Ficha extendida (notas, override de estado/link, to do): persiste en el
   // backend, no en localStorage. Puede no venir en payloads viejos (import),
   // por eso son opcionales/nullable.
