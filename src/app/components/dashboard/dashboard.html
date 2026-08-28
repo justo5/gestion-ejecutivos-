@@ -39,13 +39,13 @@
         </div>
         <div
           class="stat-tile"
-          [class.tone-ok]="vm.avgHealth >= 70"
-          [class.tone-warn]="vm.avgHealth >= 40 && vm.avgHealth < 70"
-          [class.tone-bad]="vm.avgHealth < 40"
+          [class.tone-ok]="vm.collectedPct >= 70"
+          [class.tone-warn]="vm.collectedPct >= 40 && vm.collectedPct < 70"
+          [class.tone-bad]="vm.collectedPct < 40"
         >
-          <div class="stat-tile-label"><span class="stat-tile-icon">❤</span>Salud de pago promedio</div>
-          <div class="stat-tile-value">{{ vm.avgHealth }}%</div>
-          <div class="stat-tile-hint">pagos de los últimos 6 meses</div>
+          <div class="stat-tile-label"><span class="stat-tile-icon">❤</span>Porcentaje cobrado</div>
+          <div class="stat-tile-value">{{ vm.collectedPct }}%</div>
+          <div class="stat-tile-hint">clientes activos que ya pagaron este mes</div>
         </div>
       </div>
 

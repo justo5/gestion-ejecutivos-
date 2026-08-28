@@ -3,6 +3,8 @@ import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CLIENT_DETAIL_FIELDS, Client, Executive, ExecutivesService } from '../../services/executives';
 import { AuthService } from '../../services/auth';
+import { FacebookAuthService } from '../../services/facebook-auth';
+import { CampaignsService, CampaignInsight } from '../../services/campaigns';
 import { ConfigService, PlanConfig, RubroConfig } from '../../services/config';
 import { ClientExtrasService } from '../../services/client-extras';
 import { ClientViewBuilder } from '../../services/client-view-builder';
@@ -14,7 +16,7 @@ export interface ClientCardItem {
   squad: string;
 }
 
-type DetailTab = 'resumen' | 'detalle' | 'todo' | 'notas';
+type DetailTab = 'resumen' | 'detalle' | 'todo' | 'notas' | 'campanas';
 
 interface StatusOption {
   value: ClientStatus;
@@ -73,6 +75,17 @@ export class Clientes implements OnInit {
   editingLink = false;
   linkDraft = '';
 
+  // --- Campañas (Meta Ads) ---
+  metaAdsConnected = false;
+  metaAdsConnecting = false;
+  metaAdsError = '';
+  campaigns: CampaignInsight[] = [];
+  campaignsLoading = false;
+  campaignsError = '';
+  editingAdAccount = false;
+  adAccountDraft = '';
+  savingAdAccount = false;
+
   editClient: {
     name: string;
     fanpage: string;
@@ -126,6 +139,8 @@ export class Clientes implements OnInit {
   constructor(
     private executivesService: ExecutivesService,
     private auth: AuthService,
+    private facebookAuth: FacebookAuthService,
+    private campaignsService: CampaignsService,
     private configService: ConfigService,
     private extras: ClientExtrasService,
     private viewBuilder: ClientViewBuilder,
@@ -160,6 +175,11 @@ export class Clientes implements OnInit {
 
     this.executivesService.refresh();
     this.configService.refresh();
+
+    this.auth.getMetaAdsStatus().subscribe({
+      next: (status) => (this.metaAdsConnected = status.connected),
+      error: () => (this.metaAdsConnected = false),
+    });
   }
 
   private buildRows(executives: Executive[]): ClientCardItem[] {
@@ -227,6 +247,11 @@ export class Clientes implements OnInit {
     this.notesDraft = this.extras.get(item.client.id).notes ?? '';
     this.notesSaved = false;
     this.newTodoText = '';
+
+    this.campaigns = [];
+    this.campaignsError = '';
+    this.editingAdAccount = false;
+    this.adAccountDraft = item.client.adAccountId ?? '';
   }
 
   // --- Vista enriquecida (avatar, estado, salud de pago, historial) ---
@@ -334,6 +359,99 @@ export class Clientes implements OnInit {
   onLinkKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter') this.saveLink();
     if (event.key === 'Escape') this.cancelEditLink();
+  }
+
+  // --- Campañas (Meta Ads) ---
+
+  selectCampaignsTab(): void {
+    this.activeTab = 'campanas';
+    this.loadCampaigns();
+  }
+
+  loadCampaigns(): void {
+    if (!this.selectedItem) return;
+    const clientId = this.selectedItem.client.id;
+    if (!this.selectedItem.client.adAccountId || !this.metaAdsConnected) return;
+
+    this.campaignsLoading = true;
+    this.campaignsError = '';
+    this.campaignsService.getCampaigns(clientId).subscribe({
+      next: (campaigns) => {
+        this.campaignsLoading = false;
+        this.campaigns = campaigns;
+      },
+      error: (err) => {
+        this.campaignsLoading = false;
+        this.campaigns = [];
+        if (err?.error?.message === 'meta_ads_not_connected' || err?.status === 401) {
+          this.metaAdsConnected = false;
+        } else {
+          this.campaignsError = err?.error?.message ?? 'No se pudieron traer las campañas.';
+        }
+      },
+    });
+  }
+
+  async connectMeta(): Promise<void> {
+    this.metaAdsError = '';
+    this.metaAdsConnecting = true;
+    try {
+      const token = await this.facebookAuth.connectAds();
+      this.auth.connectMetaAds(token).subscribe({
+        next: () => {
+          this.metaAdsConnecting = false;
+          this.metaAdsConnected = true;
+          this.loadCampaigns();
+        },
+        error: (err) => {
+          this.metaAdsConnecting = false;
+          this.metaAdsError = err?.error?.message ?? 'No se pudo conectar con Meta.';
+        },
+      });
+    } catch {
+      this.metaAdsConnecting = false;
+    }
+  }
+
+  startEditAdAccount(): void {
+    if (!this.selectedItem) return;
+    this.adAccountDraft = this.selectedItem.client.adAccountId ?? '';
+    this.editingAdAccount = true;
+  }
+
+  cancelEditAdAccount(): void {
+    this.editingAdAccount = false;
+  }
+
+  saveAdAccount(): void {
+    if (!this.selectedItem) return;
+    const trimmed = this.adAccountDraft.trim();
+    this.savingAdAccount = true;
+    this.executivesService.updateAdAccountId(this.selectedItem.client.id, trimmed || null).subscribe({
+      next: (client) => {
+        this.savingAdAccount = false;
+        this.editingAdAccount = false;
+        if (this.selectedItem) this.selectedItem = { ...this.selectedItem, client };
+        this.loadCampaigns();
+      },
+      error: () => {
+        this.savingAdAccount = false;
+      },
+    });
+  }
+
+  // Top 2 tipos de resultado por campaña (leads, mensajes, compras…), la
+  // Marketing API no expone un único "resultado" sin conocer el objetivo.
+  topActions(campaign: CampaignInsight) {
+    return campaign.actions.slice(0, 2);
+  }
+
+  get campaignsTotalSpend(): number {
+    return this.campaigns.reduce((sum, c) => sum + c.spend, 0);
+  }
+
+  get campaignsTotalReach(): number {
+    return this.campaigns.reduce((sum, c) => sum + c.reach, 0);
   }
 
   startEdit(): void {

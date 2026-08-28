@@ -43,7 +43,7 @@ interface DashboardViewModel {
   inactiveClients: number;
   mrr: number;
   pendingTotal: number;
-  avgHealth: number;
+  collectedPct: number;
   monthLabels: string[];
   revenueSeries: number[];
   newClientsSeries: number[];
@@ -122,9 +122,12 @@ export class DashboardPage implements OnInit {
     const mrr = activeRows.reduce((sum, r) => sum + r.view.monthlyAmount, 0);
     // Pendiente: deuda acumulada real, sea o no el cliente activo hoy.
     const pendingTotal = rows.reduce((sum, r) => sum + r.view.pendingAmount, 0);
-    const avgHealth = activeRows.length
-      ? Math.round(activeRows.reduce((sum, r) => sum + r.view.health, 0) / activeRows.length)
-      : 0;
+    // % de clientes activos que ya pagaron el mes en curso (último valor de
+    // paymentSeries = mes actual, ver ClientViewBuilder). No es un promedio
+    // de salud individual: es "de los que tienen que pagar este mes, cuántos
+    // ya pagaron".
+    const paidThisMonth = activeRows.filter(r => r.view.paymentSeries[r.view.paymentSeries.length - 1] === 1).length;
+    const collectedPct = activeRows.length ? Math.round((paidThisMonth / activeRows.length) * 100) : 0;
 
     const now = new Date();
     const monthLabels: string[] = [];
@@ -148,7 +151,7 @@ export class DashboardPage implements OnInit {
       inactiveClients: rows.length - activeRows.length,
       mrr,
       pendingTotal,
-      avgHealth,
+      collectedPct,
       monthLabels,
       revenueSeries,
       newClientsSeries,
@@ -162,11 +165,14 @@ export class DashboardPage implements OnInit {
         r => r.view.monthlyAmount,
         (value, count) => `${money(value)} · ${count} cliente${count === 1 ? '' : 's'}`,
       ),
+      // Por ejecutivo no se pliega en "Otros": queremos ver a todos los
+      // ejecutivos listados, no solo el top 8.
       executiveBars: this.buildBars(
         rows,
         r => r.view.executiveName,
         r => r.view.monthlyAmount,
         (value, count) => `${money(value)} · ${count} cliente${count === 1 ? '' : 's'}`,
+        false,
       ),
     };
   }
@@ -190,6 +196,7 @@ export class DashboardPage implements OnInit {
     keyFn: (row: Row) => string | null,
     valueFn: (row: Row) => number,
     formatSecondary: (value: number, count: number) => string,
+    foldExtra = true,
   ): BarItem[] {
     const values = new Map<string, number>();
     const counts = new Map<string, number>();
@@ -200,15 +207,18 @@ export class DashboardPage implements OnInit {
     });
 
     const entries = [...values.entries()].sort((a, b) => b[1] - a[1]);
-    const top = entries.slice(0, MAX_SERIES - 1);
-    const rest = entries.slice(MAX_SERIES - 1);
-    if (rest.length === 1) {
-      top.push(rest[0]);
-    } else if (rest.length > 1) {
-      const restValue = rest.reduce((sum, [, v]) => sum + v, 0);
-      const restCount = rest.reduce((sum, [key]) => sum + (counts.get(key) ?? 0), 0);
-      counts.set('Otros', restCount);
-      top.push(['Otros', restValue]);
+    let top = entries;
+    if (foldExtra) {
+      top = entries.slice(0, MAX_SERIES - 1);
+      const rest = entries.slice(MAX_SERIES - 1);
+      if (rest.length === 1) {
+        top.push(rest[0]);
+      } else if (rest.length > 1) {
+        const restValue = rest.reduce((sum, [, v]) => sum + v, 0);
+        const restCount = rest.reduce((sum, [key]) => sum + (counts.get(key) ?? 0), 0);
+        counts.set('Otros', restCount);
+        top.push(['Otros', restValue]);
+      }
     }
 
     const max = Math.max(...top.map(([, v]) => v), 1);
@@ -229,7 +239,7 @@ export class DashboardPage implements OnInit {
       inactiveClients: 0,
       mrr: 0,
       pendingTotal: 0,
-      avgHealth: 0,
+      collectedPct: 0,
       monthLabels: [],
       revenueSeries: [],
       newClientsSeries: [],

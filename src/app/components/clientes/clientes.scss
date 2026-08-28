@@ -795,3 +795,107 @@
     cursor: not-allowed;
   }
 }
+
+// --- Campañas (Meta Ads) ---
+
+.campaigns-adaccount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.campaigns-adaccount-label {
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+
+  strong {
+    color: var(--text);
+  }
+}
+
+.campaigns-connect {
+  text-align: center;
+  padding: 2rem 1rem;
+
+  p {
+    margin-bottom: 1rem;
+  }
+}
+
+.campaigns-summary {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  background: var(--surface-2, var(--bg));
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.campaigns-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.campaign-item {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.campaign-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.campaign-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.campaign-status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted, #666);
+  background: var(--bg);
+  white-space: nowrap;
+
+  &.is-active {
+    color: var(--verde);
+    background: var(--verde-bg, rgba(76, 175, 80, 0.12));
+  }
+}
+
+.campaign-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #666);
+}
+
+.campaign-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-muted, #666);
+}
