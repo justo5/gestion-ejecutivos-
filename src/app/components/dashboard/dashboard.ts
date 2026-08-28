@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { Client, Executive, ExecutivesService } from '../../services/executives';
 import { ConfigService, PlanConfig } from '../../services/config';
 import { ClientViewBuilder } from '../../services/client-view-builder';
-import { ClientCardView } from '../../models/client-view.model';
+import { ClientCardView, ClientStatus } from '../../models/client-view.model';
 
 // Paleta categórica validada (8 tonos, orden fijo, contraste y separación CVD
 // chequeados contra la superficie oscura de la app con el validador de la
@@ -36,6 +36,22 @@ interface BarItem {
   color: string;
 }
 
+// Fila de detalle para las listas de cliente que se abren al tocar una
+// tarjeta KPI del dashboard. `secondary` ya viene formateado (mismo criterio
+// que BarItem) porque el texto cambia según la tarjeta que la muestra
+// (monto del plan, deuda pendiente, plan, etc.).
+export interface ClientDetailRow {
+  id: string;
+  name: string;
+  executiveName: string;
+  status: ClientStatus;
+  statusLabel: string;
+  secondary: string;
+}
+
+// Tarjetas KPI que se pueden abrir para ver el detalle.
+export type DashboardCard = 'total' | 'mrr' | 'pending' | 'collected';
+
 interface DashboardViewModel {
   hasData: boolean;
   totalClients: number;
@@ -53,6 +69,13 @@ interface DashboardViewModel {
   executiveBars: BarItem[];
   countryBars: BarItem[];
   sexoBars: BarItem[];
+  // Detalle por cliente para cada tarjeta KPI (ver ClientDetailRow).
+  activeClientRows: ClientDetailRow[];
+  inactiveClientRows: ClientDetailRow[];
+  payingClientRows: ClientDetailRow[];
+  pendingClientRows: ClientDetailRow[];
+  paidThisMonthRows: ClientDetailRow[];
+  unpaidThisMonthRows: ClientDetailRow[];
 }
 
 function formatYearMonth(date: Date): string {
@@ -74,6 +97,16 @@ function money(value: number): string {
 export class DashboardPage implements OnInit {
   vm$!: Observable<DashboardViewModel>;
 
+  // Tarjeta KPI actualmente abierta en el modal de detalle (null = cerrado).
+  selectedCard: DashboardCard | null = null;
+
+  private static readonly CARD_TITLES: Record<DashboardCard, string> = {
+    total: 'Clientes totales',
+    mrr: 'Cartera mensual',
+    pending: 'Pendiente de cobro',
+    collected: 'Porcentaje cobrado',
+  };
+
   constructor(
     private executivesService: ExecutivesService,
     private configService: ConfigService,
@@ -90,6 +123,22 @@ export class DashboardPage implements OnInit {
 
   money(value: number): string {
     return money(value);
+  }
+
+  openCard(card: DashboardCard): void {
+    this.selectedCard = card;
+  }
+
+  closeCard(): void {
+    this.selectedCard = null;
+  }
+
+  onBackdropClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeCard();
+  }
+
+  cardTitle(card: DashboardCard): string {
+    return DashboardPage.CARD_TITLES[card];
   }
 
   private buildViewModel(executives: Executive[], plans: PlanConfig[]): DashboardViewModel {
@@ -174,6 +223,50 @@ export class DashboardPage implements OnInit {
         (value, count) => `${money(value)} · ${count} cliente${count === 1 ? '' : 's'}`,
         false,
       ),
+
+      // Detalle por cliente de cada tarjeta KPI, para el modal que se abre
+      // al tocarlas.
+      activeClientRows: activeRows
+        .map(r => this.toRow(r, r.client.plan || 'Sin plan'))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      inactiveClientRows: rows
+        .filter(r => !r.client.active)
+        .map(r => this.toRow(r, r.client.plan || 'Sin plan'))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      payingClientRows: activeRows
+        .filter(r => r.view.monthlyAmount > 0)
+        .sort((a, b) => b.view.monthlyAmount - a.view.monthlyAmount)
+        .map(r => this.toRow(r, `${money(r.view.monthlyAmount)}/mes`)),
+      pendingClientRows: rows
+        .filter(r => r.view.pendingAmount > 0)
+        .sort((a, b) => b.view.pendingAmount - a.view.pendingAmount)
+        .map(r =>
+          this.toRow(
+            r,
+            `${money(r.view.pendingAmount)} · ${r.view.monthsPending} mes${r.view.monthsPending === 1 ? '' : 'es'}`,
+          ),
+        ),
+      paidThisMonthRows: activeRows
+        .filter(r => r.view.paymentSeries[r.view.paymentSeries.length - 1] === 1)
+        .map(r => this.toRow(r, r.view.executiveName))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      unpaidThisMonthRows: activeRows
+        .filter(r => r.view.paymentSeries[r.view.paymentSeries.length - 1] !== 1)
+        .map(r => this.toRow(r, r.view.executiveName))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    };
+  }
+
+  // Arma una fila de detalle a partir de una Row, con el texto secundario ya
+  // formateado por el caller (monto del plan, deuda pendiente, plan, etc.).
+  private toRow(row: Row, secondary: string): ClientDetailRow {
+    return {
+      id: row.client.id,
+      name: row.client.name,
+      executiveName: row.view.executiveName,
+      status: row.view.status,
+      statusLabel: row.view.statusLabel,
+      secondary,
     };
   }
 
@@ -249,6 +342,12 @@ export class DashboardPage implements OnInit {
       executiveBars: [],
       countryBars: [],
       sexoBars: [],
+      activeClientRows: [],
+      inactiveClientRows: [],
+      payingClientRows: [],
+      pendingClientRows: [],
+      paidThisMonthRows: [],
+      unpaidThisMonthRows: [],
     };
   }
 }

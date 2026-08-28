@@ -45,6 +45,17 @@
   &.tone-warn .stat-tile-value { color: var(--naranja); }
   &.tone-bad .stat-tile-value { color: var(--rojo); }
   &.tone-ok .stat-tile-value { color: var(--verde); }
+
+  &.is-clickable {
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+
+    &:hover, &:focus-visible {
+      border-color: var(--primary, var(--text-muted));
+      transform: translateY(-1px);
+    }
+    &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  }
 }
 
 .stat-tile-label {
@@ -213,4 +224,121 @@
 .bars-empty {
   color: var(--text-faint);
   font-size: 0.8rem;
+}
+
+// --- Modal de detalle de tarjeta KPI ---
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal-panel {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.detail-modal-panel {
+  max-width: 560px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--text-muted, #666);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+
+  &:hover {
+    background: var(--bg, #f5f5f5);
+  }
+}
+
+.detail-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-modal-section-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.detail-client-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.detail-client-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+
+  &:hover {
+    background: var(--bg);
+  }
+}
+
+.detail-client-name {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-client-exec {
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
+}
+
+.detail-client-secondary {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-align: right;
 }

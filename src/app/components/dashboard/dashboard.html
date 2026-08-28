@@ -22,26 +22,31 @@
   <ng-container *ngIf="vm$ | async as vm">
     <ng-container *ngIf="vm.hasData; else emptyState">
       <div class="kpi-grid">
-        <div class="stat-tile">
+        <div class="stat-tile is-clickable" role="button" tabindex="0" (click)="openCard('total')"
+          (keydown.enter)="openCard('total')" (keydown.space)="openCard('total')">
           <div class="stat-tile-label"><span class="stat-tile-icon">👥</span>Clientes totales</div>
           <div class="stat-tile-value">{{ vm.totalClients }}</div>
           <div class="stat-tile-hint">{{ vm.activeClients }} activos · {{ vm.inactiveClients }} inactivos</div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile is-clickable" role="button" tabindex="0" (click)="openCard('mrr')"
+          (keydown.enter)="openCard('mrr')" (keydown.space)="openCard('mrr')">
           <div class="stat-tile-label"><span class="stat-tile-icon">💳</span>Cartera mensual</div>
           <div class="stat-tile-value">{{ money(vm.mrr) }}</div>
           <div class="stat-tile-hint">suma de planes activos</div>
         </div>
-        <div class="stat-tile" [class.tone-warn]="vm.pendingTotal > 0">
+        <div class="stat-tile is-clickable" [class.tone-warn]="vm.pendingTotal > 0" role="button" tabindex="0"
+          (click)="openCard('pending')" (keydown.enter)="openCard('pending')" (keydown.space)="openCard('pending')">
           <div class="stat-tile-label"><span class="stat-tile-icon">⏳</span>Pendiente de cobro</div>
           <div class="stat-tile-value">{{ money(vm.pendingTotal) }}</div>
           <div class="stat-tile-hint">meses vencidos sin pagar</div>
         </div>
         <div
-          class="stat-tile"
+          class="stat-tile is-clickable"
           [class.tone-ok]="vm.collectedPct >= 70"
           [class.tone-warn]="vm.collectedPct >= 40 && vm.collectedPct < 70"
           [class.tone-bad]="vm.collectedPct < 40"
+          role="button" tabindex="0"
+          (click)="openCard('collected')" (keydown.enter)="openCard('collected')" (keydown.space)="openCard('collected')"
         >
           <div class="stat-tile-label"><span class="stat-tile-icon">❤</span>Porcentaje cobrado</div>
           <div class="stat-tile-value">{{ vm.collectedPct }}%</div>
@@ -92,6 +97,74 @@
         <ng-container *ngTemplateOutlet="barList; context: { title: 'Por ejecutivo', bars: vm.executiveBars }"></ng-container>
         <ng-container *ngTemplateOutlet="barList; context: { title: 'Por país', bars: vm.countryBars }"></ng-container>
         <ng-container *ngTemplateOutlet="barList; context: { title: 'Por sexo', bars: vm.sexoBars }"></ng-container>
+      </div>
+
+      <!-- Detalle de tarjeta KPI -->
+      <ng-template #clientRows let-list="list" let-emptyText="emptyText">
+        <ul class="detail-client-list" *ngIf="list.length; else noClientRows">
+          <li class="detail-client-row" *ngFor="let c of list">
+            <app-status-dot [status]="c.status"></app-status-dot>
+            <span class="detail-client-name" [attr.title]="c.name">{{ c.name }}</span>
+            <span class="detail-client-exec">{{ c.executiveName }}</span>
+            <span class="detail-client-secondary">{{ c.secondary }}</span>
+          </li>
+        </ul>
+        <ng-template #noClientRows><p class="bars-empty">{{ emptyText }}</p></ng-template>
+      </ng-template>
+
+      <div class="modal-backdrop" *ngIf="selectedCard" (click)="onBackdropClick($event)">
+        <div class="modal-panel detail-modal-panel">
+          <div class="modal-header">
+            <h3 class="modal-title">{{ cardTitle(selectedCard) }}</h3>
+            <button type="button" class="modal-close" (click)="closeCard()" aria-label="Cerrar">&times;</button>
+          </div>
+
+          <div class="detail-modal-body" [ngSwitch]="selectedCard">
+
+            <!-- Clientes totales -->
+            <ng-container *ngSwitchCase="'total'">
+              <ng-container *ngTemplateOutlet="barList; context: { title: 'Semáforo de campañas', bars: vm.statusBars }"></ng-container>
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Activos ({{ vm.activeClients }})</div>
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.activeClientRows, emptyText: 'Sin clientes activos.' }"></ng-container>
+              </div>
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Inactivos ({{ vm.inactiveClients }})</div>
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.inactiveClientRows, emptyText: 'Sin clientes inactivos.' }"></ng-container>
+              </div>
+            </ng-container>
+
+            <!-- Cartera mensual -->
+            <ng-container *ngSwitchCase="'mrr'">
+              <ng-container *ngTemplateOutlet="barList; context: { title: 'Por plan', bars: vm.planBars }"></ng-container>
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Clientes activos que aportan a la cartera</div>
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.payingClientRows, emptyText: 'Sin clientes con plan activo.' }"></ng-container>
+              </div>
+            </ng-container>
+
+            <!-- Pendiente de cobro -->
+            <ng-container *ngSwitchCase="'pending'">
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Clientes con meses vencidos ({{ vm.pendingClientRows.length }})</div>
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.pendingClientRows, emptyText: 'Nadie tiene deuda pendiente. 🎉' }"></ng-container>
+              </div>
+            </ng-container>
+
+            <!-- Porcentaje cobrado -->
+            <ng-container *ngSwitchCase="'collected'">
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Ya pagaron este mes ({{ vm.paidThisMonthRows.length }})</div>
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.paidThisMonthRows, emptyText: 'Todavía nadie pagó este mes.' }"></ng-container>
+              </div>
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Todavía no pagaron ({{ vm.unpaidThisMonthRows.length }})</div>
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.unpaidThisMonthRows, emptyText: 'Todos los clientes activos ya pagaron.' }"></ng-container>
+              </div>
+            </ng-container>
+
+          </div>
+        </div>
       </div>
     </ng-container>
 
