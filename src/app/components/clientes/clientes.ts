@@ -22,10 +22,13 @@ interface StatusOption {
   color: string;
 }
 
+// Semáforo de rendimiento de campañas del cliente (no tiene relación con el
+// estado de pago/cobro, que se muestra aparte). Es 100% manual: lo fija el
+// ejecutivo desde este selector, no se calcula solo.
 const STATUS_OPTIONS: StatusOption[] = [
-  { value: 'active', label: 'Al día', color: 'var(--verde)' },
-  { value: 'warning', label: 'Atención', color: 'var(--naranja)' },
-  { value: 'critical', label: 'Crítico', color: 'var(--rojo)' },
+  { value: 'active', label: 'Verde', color: 'var(--verde)' },
+  { value: 'warning', label: 'Amarillo', color: 'var(--naranja)' },
+  { value: 'critical', label: 'Rojo', color: 'var(--rojo)' },
 ];
 
 @Component({

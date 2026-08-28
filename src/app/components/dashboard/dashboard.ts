@@ -113,9 +113,9 @@ export class DashboardPage implements OnInit {
     const statusCounts = { active: 0, warning: 0, critical: 0 };
     rows.forEach(r => statusCounts[r.view.status]++);
     const statusBars: BarItem[] = [
-      this.statusBar('Al día', statusCounts.active, rows.length, 'var(--verde)'),
-      this.statusBar('Atención', statusCounts.warning, rows.length, 'var(--naranja)'),
-      this.statusBar('Crítico', statusCounts.critical, rows.length, 'var(--rojo)'),
+      this.statusBar('Verde', statusCounts.active, rows.length, 'var(--verde)'),
+      this.statusBar('Amarillo', statusCounts.warning, rows.length, 'var(--naranja)'),
+      this.statusBar('Rojo', statusCounts.critical, rows.length, 'var(--rojo)'),
     ];
 
     // Cartera mensual: solo clientes activos, es la recurrencia esperada.

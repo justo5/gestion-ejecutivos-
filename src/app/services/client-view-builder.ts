@@ -84,14 +84,19 @@ export class ClientViewBuilder {
     const last6Paid = paymentSeries.slice(-6).reduce((a, b) => a + b, 0);
     const health = client.active ? Math.round((last6Paid / 6) * 100) : 0;
 
-    const baseStatus: ClientStatus = !client.active ? 'critical' : monthsPending > 0 ? 'warning' : 'active';
-    const override = this.extras.get(client.id).statusOverride;
-    const status = override ?? baseStatus;
+    // Semáforo de rendimiento de campañas: es manual, no se deriva del pago
+    // (eso ya se ve aparte en "Salud de pago" / "Pendiente"). Sin selección
+    // del ejecutivo arranca en verde ("sin evaluar todavía").
+    const status: ClientStatus = this.extras.get(client.id).statusOverride ?? 'active';
 
-    const notifications = this.buildNotifications(client, monthsPending, paidMonths.length, status);
+    // Estas notificaciones son sobre pagos (ver buildNotifications), así que
+    // se priorizan solas, sin mirar el semáforo de campañas: son dos cosas
+    // independientes.
+    const notifications = this.buildNotifications(client, monthsPending, paidMonths.length);
     const importantNotification =
       notifications.find(n => n.type === 'error') ??
-      (status !== 'active' ? notifications.find(n => n.type === 'alert') ?? null : null);
+      notifications.find(n => n.type === 'alert') ??
+      null;
 
     const hue = AVATAR_HUES[hashString(client.id) % AVATAR_HUES.length];
 
@@ -102,7 +107,7 @@ export class ClientViewBuilder {
       avatarInitials: initialsOf(client.name),
       avatarColor: `hsl(${hue} 62% 46%)`,
       status,
-      statusLabel: status === 'active' ? 'Al día' : status === 'warning' ? 'Atención' : 'Crítico',
+      statusLabel: status === 'active' ? 'Verde' : status === 'warning' ? 'Amarillo' : 'Rojo',
       health,
       notifications,
       importantNotification,
@@ -128,7 +133,6 @@ export class ClientViewBuilder {
     client: Client,
     monthsPending: number,
     monthsPaid: number,
-    status: ClientStatus,
   ): ClientNotification[] {
     const notifications: ClientNotification[] = [];
 
@@ -189,8 +193,8 @@ export class ClientViewBuilder {
         tone: health >= 70 ? 'ok' : health >= 40 ? 'warn' : 'bad',
       },
       {
-        label: 'Estado',
-        value: status === 'active' ? 'Al día' : status === 'warning' ? 'Atención' : 'Crítico',
+        label: 'Semáforo',
+        value: status === 'active' ? 'Verde' : status === 'warning' ? 'Amarillo' : 'Rojo',
         icon: '🟢',
         tone: status === 'active' ? 'ok' : status === 'warning' ? 'warn' : 'bad',
       },
