@@ -192,8 +192,6 @@
           </button>
           <button type="button" class="detail-tab" [class.active]="activeTab === 'notas'"
             (click)="activeTab = 'notas'">Notas</button>
-          <button type="button" class="detail-tab" [class.active]="activeTab === 'campanas'"
-            (click)="selectCampaignsTab()">Campañas</button>
         </div>
       </div>
 
@@ -353,76 +351,6 @@
           <span class="form-success" *ngIf="notesSaved">Guardado</span>
           <button type="button" class="form-submit" (click)="saveNotes()">Guardar notas</button>
         </div>
-      </div>
-
-      <!-- ── Campañas (Meta Ads) ── -->
-      <div class="detail-body" *ngIf="activeTab === 'campanas'">
-        <div class="campaigns-adaccount">
-          <ng-container *ngIf="!editingAdAccount">
-            <span class="campaigns-adaccount-label">
-              Cuenta publicitaria: <strong>{{ view.client.adAccountId || 'Sin vincular' }}</strong>
-            </span>
-            <button type="button" class="detail-link-edit" (click)="startEditAdAccount()">
-              {{ view.client.adAccountId ? 'Cambiar' : '+ Vincular cuenta' }}
-            </button>
-          </ng-container>
-          <div class="detail-link-form" *ngIf="editingAdAccount">
-            <input type="text" class="form-input" [(ngModel)]="adAccountDraft" name="adAccountDraft"
-              placeholder="act_123456789012345" />
-            <button type="button" class="detail-link-save" [disabled]="savingAdAccount" (click)="saveAdAccount()"
-              aria-label="Guardar">&#10003;</button>
-            <button type="button" class="detail-link-cancel" (click)="cancelEditAdAccount()"
-              aria-label="Cancelar">&times;</button>
-          </div>
-        </div>
-
-        <ng-container *ngIf="view.client.adAccountId && !editingAdAccount">
-          <div class="campaigns-connect" *ngIf="!metaAdsConnected">
-            <p class="empty-msg">Conectá tu cuenta de Meta para ver las campañas de este cliente.</p>
-            <span class="form-error" *ngIf="metaAdsError">{{ metaAdsError }}</span>
-            <button type="button" class="form-submit" [disabled]="metaAdsConnecting" (click)="connectMeta()">
-              {{ metaAdsConnecting ? 'Conectando...' : 'Conectar Meta' }}
-            </button>
-          </div>
-
-          <ng-container *ngIf="metaAdsConnected">
-            <p class="empty-msg" *ngIf="campaignsLoading">Cargando campañas…</p>
-            <span class="form-error" *ngIf="campaignsError">{{ campaignsError }}</span>
-
-            <ng-container *ngIf="!campaignsLoading && !campaignsError">
-              <p class="empty-msg" *ngIf="campaigns.length === 0">
-                No se encontraron campañas activas en los últimos 30 días.
-              </p>
-
-              <div class="campaigns-summary" *ngIf="campaigns.length > 0">
-                <span>Gasto total: {{ campaignsTotalSpend | currency }}</span>
-                <span>Alcance total: {{ campaignsTotalReach | number }}</span>
-              </div>
-
-              <ul class="campaigns-list" *ngIf="campaigns.length > 0">
-                <li class="campaign-item" *ngFor="let c of campaigns">
-                  <div class="campaign-item-header">
-                    <span class="campaign-name">{{ c.name }}</span>
-                    <span class="campaign-status" [class.is-active]="c.effectiveStatus === 'ACTIVE'">
-                      {{ c.effectiveStatus }}
-                    </span>
-                  </div>
-                  <div class="campaign-metrics">
-                    <span>Gasto: {{ c.spend | currency }}</span>
-                    <span>Alcance: {{ c.reach | number }}</span>
-                    <span>Impresiones: {{ c.impressions | number }}</span>
-                    <span *ngIf="c.cpm">CPM: {{ c.cpm | currency }}</span>
-                  </div>
-                  <div class="campaign-actions" *ngIf="topActions(c).length > 0">
-                    <span class="campaign-action" *ngFor="let a of topActions(c)">
-                      {{ a.type }}: {{ a.value | number }}
-                    </span>
-                  </div>
-                </li>
-              </ul>
-            </ng-container>
-          </ng-container>
-        </ng-container>
       </div>
 
     </div>
