@@ -1,0 +1,102 @@
+<ng-template #barList let-title="title" let-bars="bars">
+  <div class="bars-panel">
+    <div class="panel-header">{{ title }}</div>
+    <div class="bar-rows" *ngIf="bars.length; else noBars">
+      <div class="bar-row" *ngFor="let b of bars" [attr.title]="b.label + ': ' + b.secondary">
+        <span class="bar-dot" [style.background]="b.color"></span>
+        <span class="bar-label">{{ b.label }}</span>
+        <span class="bar-track"><span class="bar-fill" [style.width.%]="b.pct" [style.background]="b.color"></span></span>
+        <span class="bar-value">{{ b.secondary }}</span>
+      </div>
+    </div>
+    <ng-template #noBars><p class="bars-empty">Sin datos suficientes.</p></ng-template>
+  </div>
+</ng-template>
+
+<div class="dashboard-page">
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">Dashboard</h1>
+    <p class="dashboard-subtitle">Panorama general de la cartera de clientes</p>
+  </div>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <ng-container *ngIf="vm.hasData; else emptyState">
+      <div class="kpi-grid">
+        <div class="stat-tile">
+          <div class="stat-tile-label"><span class="stat-tile-icon">👥</span>Clientes totales</div>
+          <div class="stat-tile-value">{{ vm.totalClients }}</div>
+          <div class="stat-tile-hint">{{ vm.activeClients }} activos · {{ vm.inactiveClients }} inactivos</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-label"><span class="stat-tile-icon">💳</span>Cartera mensual</div>
+          <div class="stat-tile-value">{{ money(vm.mrr) }}</div>
+          <div class="stat-tile-hint">suma de planes activos</div>
+        </div>
+        <div class="stat-tile" [class.tone-warn]="vm.pendingTotal > 0">
+          <div class="stat-tile-label"><span class="stat-tile-icon">⏳</span>Pendiente de cobro</div>
+          <div class="stat-tile-value">{{ money(vm.pendingTotal) }}</div>
+          <div class="stat-tile-hint">meses vencidos sin pagar</div>
+        </div>
+        <div
+          class="stat-tile"
+          [class.tone-ok]="vm.avgHealth >= 70"
+          [class.tone-warn]="vm.avgHealth >= 40 && vm.avgHealth < 70"
+          [class.tone-bad]="vm.avgHealth < 40"
+        >
+          <div class="stat-tile-label"><span class="stat-tile-icon">❤</span>Salud de pago promedio</div>
+          <div class="stat-tile-value">{{ vm.avgHealth }}%</div>
+          <div class="stat-tile-hint">pagos de los últimos 6 meses</div>
+        </div>
+      </div>
+
+      <div class="trend-grid">
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <span>Cartera cobrada · últimos 12 meses</span>
+            <span class="chart-panel-current">
+              <span class="chart-panel-dot" style="background: #afd42a"></span>
+              {{ money(vm.revenueSeries[vm.revenueSeries.length - 1]) }} este mes
+            </span>
+          </div>
+          <div class="chart-panel-body">
+            <app-area-chart [data]="vm.revenueSeries" color="#afd42a" label="dashboard-ingresos"></app-area-chart>
+          </div>
+          <div class="chart-panel-range">
+            <span>{{ vm.monthLabels[0] }}</span>
+            <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <span>Clientes nuevos · últimos 12 meses</span>
+            <span class="chart-panel-current">
+              <span class="chart-panel-dot" style="background: #1e9adb"></span>
+              {{ vm.newClientsSeries[vm.newClientsSeries.length - 1] }} este mes
+            </span>
+          </div>
+          <div class="chart-panel-body">
+            <app-area-chart [data]="vm.newClientsSeries" color="#1e9adb" label="dashboard-nuevos"></app-area-chart>
+          </div>
+          <div class="chart-panel-range">
+            <span>{{ vm.monthLabels[0] }}</span>
+            <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bars-grid">
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Estado de cartera', bars: vm.statusBars }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por rubro', bars: vm.rubroBars }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por plan', bars: vm.planBars }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por ejecutivo', bars: vm.executiveBars }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por país', bars: vm.countryBars }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por sexo', bars: vm.sexoBars }"></ng-container>
+      </div>
+    </ng-container>
+
+    <ng-template #emptyState>
+      <p class="empty-state">Todavía no hay clientes cargados para mostrar analíticas.</p>
+    </ng-template>
+  </ng-container>
+</div>

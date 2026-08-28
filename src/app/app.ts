@@ -23,6 +23,7 @@ export class App {
   }
 
   private static readonly ROUTES: Record<HeaderMenuAction, string> = {
+    dashboard: '/dashboard',
     ejecutivos: '/ejecutivos',
     cobros: '/cobros',
     clientes: '/clientes',

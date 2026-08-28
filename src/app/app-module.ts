@@ -13,6 +13,7 @@ import { HeaderMenu } from './components/header-menu/header-menu';
 import { EjecutivosPage } from './components/ejecutivos-page/ejecutivos-page';
 import { Cobros } from './components/cobros/cobros';
 import { Clientes } from './components/clientes/clientes';
+import { DashboardPage } from './components/dashboard/dashboard';
 import { ConfigPage } from './components/config-page/config-page';
 import { Perfil } from './components/perfil/perfil';
 import { Login } from './components/login/login';
@@ -33,6 +34,7 @@ import { ClientCard } from './components/client-card/client-card';
     EjecutivosPage,
     Cobros,
     Clientes,
+    DashboardPage,
     ConfigPage,
     Perfil,
     Login,

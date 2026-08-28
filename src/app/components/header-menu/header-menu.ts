@@ -1,6 +1,7 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 
 export type HeaderMenuAction =
+  | 'dashboard'
   | 'ejecutivos'
   | 'cobros'
   | 'clientes'
@@ -26,6 +27,7 @@ export class HeaderMenu {
   open = false;
 
   private readonly allItems: MenuItem[] = [
+    { label: 'Dashboard', action: 'dashboard', icon: 'chart' },
     { label: 'Ejecutivos', action: 'ejecutivos', icon: 'users' },
     { label: 'Resumen de Cobros', action: 'cobros', icon: 'receipt' },
     { label: 'Clientes', action: 'clientes', icon: 'user' },
