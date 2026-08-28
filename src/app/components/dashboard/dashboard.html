@@ -1,5 +1,6 @@
-<ng-template #barList let-title="title" let-bars="bars">
-  <div class="bars-panel">
+<ng-template #barList let-title="title" let-bars="bars" let-dim="dim">
+  <div class="bars-panel" [class.is-clickable]="dim" [attr.role]="dim ? 'button' : null" [attr.tabindex]="dim ? 0 : null"
+    (click)="dim && openBars(dim)" (keydown.enter)="dim && openBars(dim)" (keydown.space)="dim && openBars(dim)">
     <div class="panel-header">{{ title }}</div>
     <div class="bar-rows" *ngIf="bars.length; else noBars">
       <div class="bar-row" *ngFor="let b of bars" [attr.title]="b.label + ': ' + b.secondary">
@@ -55,7 +56,8 @@
       </div>
 
       <div class="trend-grid">
-        <div class="chart-panel">
+        <div class="chart-panel is-clickable" role="button" tabindex="0" (click)="openChart('revenue')"
+          (keydown.enter)="openChart('revenue')" (keydown.space)="openChart('revenue')">
           <div class="chart-panel-header">
             <span>Cartera cobrada · últimos 12 meses</span>
             <span class="chart-panel-current">
@@ -72,7 +74,8 @@
           </div>
         </div>
 
-        <div class="chart-panel">
+        <div class="chart-panel is-clickable" role="button" tabindex="0" (click)="openChart('newClients')"
+          (keydown.enter)="openChart('newClients')" (keydown.space)="openChart('newClients')">
           <div class="chart-panel-header">
             <span>Clientes nuevos · últimos 12 meses</span>
             <span class="chart-panel-current">
@@ -91,12 +94,12 @@
       </div>
 
       <div class="bars-grid">
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Semáforo de campañas', bars: vm.statusBars }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por rubro', bars: vm.rubroBars }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por plan', bars: vm.planBars }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por ejecutivo', bars: vm.executiveBars }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por país', bars: vm.countryBars }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por sexo', bars: vm.sexoBars }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Semáforo de campañas', bars: vm.statusBars, dim: 'status' }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por rubro', bars: vm.rubroBars, dim: 'rubro' }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por plan', bars: vm.planBars, dim: 'plan' }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por ejecutivo', bars: vm.executiveBars, dim: 'executive' }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por país', bars: vm.countryBars, dim: 'country' }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por sexo', bars: vm.sexoBars, dim: 'sexo' }"></ng-container>
       </div>
 
       <!-- Detalle de tarjeta KPI -->
@@ -163,6 +166,59 @@
               </div>
             </ng-container>
 
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalle de panel de barras (semáforo, rubro, plan, ejecutivo, país, sexo) -->
+      <div class="modal-backdrop" *ngIf="selectedBars" (click)="onBarsBackdropClick($event)">
+        <div class="modal-panel detail-modal-panel">
+          <div class="modal-header">
+            <h3 class="modal-title">{{ barsTitle(selectedBars) }}</h3>
+            <button type="button" class="modal-close" (click)="closeBars()" aria-label="Cerrar">&times;</button>
+          </div>
+
+          <div class="detail-modal-body">
+            <div class="group-accordion" *ngFor="let g of groupsFor(vm, selectedBars)">
+              <button type="button" class="group-row" (click)="toggleGroup(g.label)">
+                <span class="bar-dot" [style.background]="g.color"></span>
+                <span class="group-label">{{ g.label }}</span>
+                <span class="bar-track"><span class="bar-fill" [style.width.%]="g.pct" [style.background]="g.color"></span></span>
+                <span class="group-secondary">{{ g.secondary }}</span>
+                <span class="group-chevron" [class.is-open]="expandedGroupLabel === g.label">›</span>
+              </button>
+              <div class="group-detail" *ngIf="expandedGroupLabel === g.label">
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: g.clients, emptyText: 'Sin clientes en este grupo.' }"></ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalle de gráfico de tendencia (cartera cobrada, clientes nuevos) -->
+      <div class="modal-backdrop" *ngIf="selectedChart" (click)="onChartBackdropClick($event)">
+        <div class="modal-panel detail-modal-panel chart-modal-panel">
+          <div class="modal-header">
+            <h3 class="modal-title">{{ chartTitle(selectedChart) }}</h3>
+            <button type="button" class="modal-close" (click)="closeChart()" aria-label="Cerrar">&times;</button>
+          </div>
+
+          <div class="detail-modal-body">
+            <div class="chart-panel-body chart-modal-chart">
+              <app-area-chart [data]="chartSeries(vm, selectedChart)" [color]="chartColor(selectedChart)"
+                [label]="'dashboard-modal-' + selectedChart"></app-area-chart>
+            </div>
+
+            <div class="group-accordion" *ngFor="let m of monthDetailsFor(vm, selectedChart); let i = index">
+              <button type="button" class="group-row month-row" (click)="toggleMonth(i)">
+                <span class="group-label">{{ vm.monthLabels[i] }}</span>
+                <span class="group-secondary">{{ m.valueLabel }}</span>
+                <span class="group-chevron" [class.is-open]="expandedMonthIndex === i">›</span>
+              </button>
+              <div class="group-detail" *ngIf="expandedMonthIndex === i">
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: m.clients, emptyText: 'Sin clientes este mes.' }"></ng-container>
+              </div>
+            </div>
           </div>
         </div>
       </div>
