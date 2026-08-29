@@ -57,4 +57,18 @@ export class AreaChart {
   get lastPoint(): [number, number] {
     return this.points[this.points.length - 1] ?? [0, 0];
   }
+
+  // Una línea vertical recesiva por mes (misma x que cada punto), para poder
+  // ubicar a qué mes corresponde cada valor de un vistazo.
+  get gridX(): number[] {
+    return this.points.map(([x]) => x);
+  }
+
+  get gridTop(): number {
+    return this.padding;
+  }
+
+  get gridBottom(): number {
+    return this.height - this.padding;
+  }
 }

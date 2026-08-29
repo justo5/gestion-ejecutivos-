@@ -9,3 +9,10 @@
   height: 100%;
   display: block;
 }
+
+// Guías de mes: recesivas, solo para ubicar a qué mes corresponde cada
+// tramo de la curva, nunca compiten con la línea/área de datos.
+.month-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}

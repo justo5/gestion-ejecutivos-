@@ -101,6 +101,13 @@ export class MultiLineChart {
     return data.map((v, i): [number, number] => [this.xForColumn(i), this.valueToY(v)]);
   }
 
+  // Una línea vertical recesiva por mes real (no por la columna reservada al
+  // objetivo, que ya tiene su propia guía horizontal), para ubicar de un
+  // vistazo a qué mes corresponde cada tramo de las series.
+  get monthGridX(): number[] {
+    return Array.from({ length: this.realColumns }, (_, i) => this.xForColumn(i));
+  }
+
   linePath(data: number[]): string {
     return this.pointsFor(data)
       .map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x} ${y}`)

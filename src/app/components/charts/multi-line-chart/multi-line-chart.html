@@ -7,6 +7,11 @@
     (mousemove)="onMouseMove($event)"
     (mouseleave)="onMouseLeave()"
   >
+    <line
+      class="month-grid-line"
+      *ngFor="let x of monthGridX"
+      [attr.x1]="x" [attr.x2]="x" [attr.y1]="chartTop" [attr.y2]="chartBottom"
+    />
     <g *ngFor="let s of series; let i = index">
       <path
         [attr.d]="linePath(s.data)"

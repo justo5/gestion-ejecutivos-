@@ -5,6 +5,7 @@
       <stop offset="100%" [attr.stop-color]="color" stop-opacity="0" />
     </linearGradient>
   </defs>
+  <line class="month-grid-line" *ngFor="let x of gridX" [attr.x1]="x" [attr.x2]="x" [attr.y1]="gridTop" [attr.y2]="gridBottom" />
   <path [attr.d]="areaPath" [attr.fill]="gradFill" />
   <path [attr.d]="linePath" fill="none" [attr.stroke]="color" stroke-width="2.25" stroke-linecap="round"
     stroke-linejoin="round" />
