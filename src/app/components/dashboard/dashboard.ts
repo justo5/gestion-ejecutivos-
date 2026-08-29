@@ -496,10 +496,10 @@ export class DashboardPage implements OnInit {
   // Crecimiento acumulado de clientes por ejecutivo: para cada mes de
   // monthYms (más viejo → más nuevo), cuántos clientes tenía ya sumados el
   // ejecutivo (contactDay antes de la ventana cuenta como "ya estaba", igual
-  // que un contactDay vacío/desconocido). Igual que buildBars, del 9°
-  // ejecutivo en adelante se pliega en "Otros" para que las líneas no se
-  // amontonen; a diferencia de executiveBars, acá sí conviene plegar porque
-  // es un gráfico, no una lista.
+  // que un contactDay vacío/desconocido). A diferencia de buildBars no se
+  // pliega ningún ejecutivo en "Otros": queremos ver a todos a detalle, y el
+  // hover del gráfico ya despeja cuál línea es cuál aunque los colores se
+  // repitan del 9° ejecutivo en adelante.
   private buildExecutiveGrowth(rows: Row[], monthYms: string[]): LineSeries[] {
     if (monthYms.length === 0) return [];
     const windowStartYm = monthYms[0];
@@ -512,12 +512,6 @@ export class DashboardPage implements OnInit {
     });
 
     const ranked = [...byExec.entries()].sort((a, b) => b[1].length - a[1].length);
-    let top = ranked;
-    let rest: [string, Row[]][] = [];
-    if (ranked.length > MAX_SERIES) {
-      top = ranked.slice(0, MAX_SERIES - 1);
-      rest = ranked.slice(MAX_SERIES - 1);
-    }
 
     const cumulativeSeries = (execRows: Row[]): number[] => {
       const baseline = execRows.filter(r => {
@@ -531,21 +525,11 @@ export class DashboardPage implements OnInit {
       });
     };
 
-    const series: LineSeries[] = top.map(([label, execRows], i) => ({
+    return ranked.map(([label, execRows], i) => ({
       label,
       color: SERIES_COLORS[i % SERIES_COLORS.length],
       data: cumulativeSeries(execRows),
     }));
-
-    if (rest.length) {
-      series.push({
-        label: 'Otros',
-        color: OTHER_COLOR,
-        data: cumulativeSeries(rest.flatMap(([, execRows]) => execRows)),
-      });
-    }
-
-    return series;
   }
 
   // Misma agrupación que buildBars, pero sin plegar el 9° grupo en adelante

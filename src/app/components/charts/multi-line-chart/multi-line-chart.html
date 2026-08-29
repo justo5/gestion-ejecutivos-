@@ -1,13 +1,50 @@
-<svg [attr.viewBox]="viewBox" class="multi-line-chart-svg" preserveAspectRatio="none">
-  <g *ngFor="let s of series">
-    <path
-      [attr.d]="linePath(s.data)"
-      fill="none"
-      [attr.stroke]="s.color"
-      stroke-width="2.25"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+<div class="multi-line-chart-wrap">
+  <svg
+    #svgEl
+    [attr.viewBox]="viewBox"
+    class="multi-line-chart-svg"
+    preserveAspectRatio="none"
+    (mousemove)="onMouseMove($event)"
+    (mouseleave)="onMouseLeave()"
+  >
+    <g *ngFor="let s of series; let i = index">
+      <path
+        [attr.d]="linePath(s.data)"
+        fill="none"
+        [attr.stroke]="s.color"
+        [attr.stroke-width]="hoveredIndex === i ? 3 : 2.25"
+        [class.is-dimmed]="isDimmed(i)"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <circle
+        [attr.cx]="lastPoint(s.data)[0]"
+        [attr.cy]="lastPoint(s.data)[1]"
+        r="3"
+        [attr.fill]="s.color"
+        [class.is-dimmed]="isDimmed(i)"
+      />
+    </g>
+    <circle
+      *ngIf="hoveredSeries as hs"
+      class="hover-dot"
+      [attr.cx]="pointAt(hs.data, hoveredPointIndex)[0]"
+      [attr.cy]="pointAt(hs.data, hoveredPointIndex)[1]"
+      r="4.5"
+      [attr.fill]="hs.color"
     />
-    <circle [attr.cx]="lastPoint(s.data)[0]" [attr.cy]="lastPoint(s.data)[1]" r="3" [attr.fill]="s.color" />
-  </g>
-</svg>
+  </svg>
+
+  <div
+    *ngIf="hoveredSeries as hs"
+    class="chart-tooltip"
+    [style.left.%]="tooltipLeftPct"
+    [style.top.%]="tooltipTopPct"
+  >
+    <span class="chart-tooltip-dot" [style.background]="hs.color"></span>
+    <strong>{{ hs.label }}</strong>
+    <span *ngIf="hoveredMonthLabel" class="chart-tooltip-detail">
+      {{ hoveredMonthLabel }} · {{ hoveredValue }} cliente{{ hoveredValue === 1 ? '' : 's' }}
+    </span>
+  </div>
+</div>

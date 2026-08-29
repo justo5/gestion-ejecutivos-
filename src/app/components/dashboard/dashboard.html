@@ -98,7 +98,7 @@
           <span>Crecimiento de clientes por ejecutivo · últimos 12 meses</span>
         </div>
         <div class="chart-panel-body growth-panel-body">
-          <app-multi-line-chart [series]="vm.executiveGrowth"></app-multi-line-chart>
+          <app-multi-line-chart [series]="vm.executiveGrowth" [monthLabels]="vm.monthLabels"></app-multi-line-chart>
         </div>
         <div class="chart-panel-range">
           <span>{{ vm.monthLabels[0] }}</span>
