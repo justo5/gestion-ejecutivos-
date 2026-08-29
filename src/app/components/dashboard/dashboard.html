@@ -93,6 +93,26 @@
         </div>
       </div>
 
+      <div class="chart-panel growth-panel" *ngIf="vm.executiveGrowth.length">
+        <div class="chart-panel-header">
+          <span>Crecimiento de clientes por ejecutivo · últimos 12 meses</span>
+        </div>
+        <div class="chart-panel-body growth-panel-body">
+          <app-multi-line-chart [series]="vm.executiveGrowth"></app-multi-line-chart>
+        </div>
+        <div class="chart-panel-range">
+          <span>{{ vm.monthLabels[0] }}</span>
+          <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
+        </div>
+        <div class="growth-legend">
+          <span class="growth-legend-item" *ngFor="let s of vm.executiveGrowth">
+            <span class="bar-dot" [style.background]="s.color"></span>
+            <span class="growth-legend-label">{{ s.label }}</span>
+            <strong>{{ s.data[s.data.length - 1] }}</strong>
+          </span>
+        </div>
+      </div>
+
       <div class="bars-grid">
         <ng-container *ngTemplateOutlet="barList; context: { title: 'Semáforo de campañas', bars: vm.statusBars, dim: 'status' }"></ng-container>
         <ng-container *ngTemplateOutlet="barList; context: { title: 'Por rubro', bars: vm.rubroBars, dim: 'rubro' }"></ng-container>

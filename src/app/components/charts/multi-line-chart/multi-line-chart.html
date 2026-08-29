@@ -1,0 +1,13 @@
+<svg [attr.viewBox]="viewBox" class="multi-line-chart-svg" preserveAspectRatio="none">
+  <g *ngFor="let s of series">
+    <path
+      [attr.d]="linePath(s.data)"
+      fill="none"
+      [attr.stroke]="s.color"
+      stroke-width="2.25"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle [attr.cx]="lastPoint(s.data)[0]" [attr.cy]="lastPoint(s.data)[1]" r="3" [attr.fill]="s.color" />
+  </g>
+</svg>

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Client, Executive, ExecutivesService } from '../../services/executives';
+import { LineSeries } from '../charts/multi-line-chart/multi-line-chart';
 import { ConfigService, PlanConfig } from '../../services/config';
 import { ClientViewBuilder } from '../../services/client-view-builder';
 import { ClientCardView, ClientStatus } from '../../models/client-view.model';
@@ -92,6 +93,9 @@ interface DashboardViewModel {
   executiveBars: BarItem[];
   countryBars: BarItem[];
   sexoBars: BarItem[];
+  // Crecimiento acumulado de clientes por ejecutivo, últimos 12 meses (una
+  // línea por ejecutivo, misma escala de meses que revenueSeries).
+  executiveGrowth: LineSeries[];
   // Detalle por cliente para cada tarjeta KPI (ver ClientDetailRow).
   activeClientRows: ClientDetailRow[];
   inactiveClientRows: ClientDetailRow[];
@@ -304,6 +308,7 @@ export class DashboardPage implements OnInit {
 
     const now = new Date();
     const monthLabels: string[] = [];
+    const monthYms: string[] = [];
     const revenueSeries: number[] = [];
     const newClientsSeries: number[] = [];
     const revenueMonthDetails: MonthDetail[] = [];
@@ -312,6 +317,7 @@ export class DashboardPage implements OnInit {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       monthLabels.push(d.toLocaleDateString('es-AR', { month: 'short' }));
       const ym = formatYearMonth(d);
+      monthYms.push(ym);
       const idx = 11 - i; // mismo orden que view.paymentSeries (más viejo → más nuevo)
 
       const paidRows = rows.filter(r => r.view.paymentSeries[idx] === 1);
@@ -364,6 +370,7 @@ export class DashboardPage implements OnInit {
         (value, count) => `${money(value)} · ${count} cliente${count === 1 ? '' : 's'}`,
         false,
       ),
+      executiveGrowth: this.buildExecutiveGrowth(rows, monthYms),
 
       // Mismos grupos que los *Bars de arriba, pero sin plegar en "Otros" y
       // con el detalle de clientes de cada grupo, para el modal que se abre
@@ -486,6 +493,61 @@ export class DashboardPage implements OnInit {
     }));
   }
 
+  // Crecimiento acumulado de clientes por ejecutivo: para cada mes de
+  // monthYms (más viejo → más nuevo), cuántos clientes tenía ya sumados el
+  // ejecutivo (contactDay antes de la ventana cuenta como "ya estaba", igual
+  // que un contactDay vacío/desconocido). Igual que buildBars, del 9°
+  // ejecutivo en adelante se pliega en "Otros" para que las líneas no se
+  // amontonen; a diferencia de executiveBars, acá sí conviene plegar porque
+  // es un gráfico, no una lista.
+  private buildExecutiveGrowth(rows: Row[], monthYms: string[]): LineSeries[] {
+    if (monthYms.length === 0) return [];
+    const windowStartYm = monthYms[0];
+
+    const byExec = new Map<string, Row[]>();
+    rows.forEach(row => {
+      const key = (row.view.executiveName ?? '').trim() || 'Sin dato';
+      if (!byExec.has(key)) byExec.set(key, []);
+      byExec.get(key)!.push(row);
+    });
+
+    const ranked = [...byExec.entries()].sort((a, b) => b[1].length - a[1].length);
+    let top = ranked;
+    let rest: [string, Row[]][] = [];
+    if (ranked.length > MAX_SERIES) {
+      top = ranked.slice(0, MAX_SERIES - 1);
+      rest = ranked.slice(MAX_SERIES - 1);
+    }
+
+    const cumulativeSeries = (execRows: Row[]): number[] => {
+      const baseline = execRows.filter(r => {
+        const ym = (r.client.contactDay ?? '').slice(0, 7);
+        return !ym || ym < windowStartYm;
+      }).length;
+      let running = baseline;
+      return monthYms.map(ym => {
+        running += execRows.filter(r => (r.client.contactDay ?? '').slice(0, 7) === ym).length;
+        return running;
+      });
+    };
+
+    const series: LineSeries[] = top.map(([label, execRows], i) => ({
+      label,
+      color: SERIES_COLORS[i % SERIES_COLORS.length],
+      data: cumulativeSeries(execRows),
+    }));
+
+    if (rest.length) {
+      series.push({
+        label: 'Otros',
+        color: OTHER_COLOR,
+        data: cumulativeSeries(rest.flatMap(([, execRows]) => execRows)),
+      });
+    }
+
+    return series;
+  }
+
   // Misma agrupación que buildBars, pero sin plegar el 9° grupo en adelante
   // en "Otros" y devolviendo, por grupo, la lista de clientes que lo
   // componen (para el acordeón del modal de detalle de cada panel).
@@ -537,6 +599,7 @@ export class DashboardPage implements OnInit {
       executiveBars: [],
       countryBars: [],
       sexoBars: [],
+      executiveGrowth: [],
       activeClientRows: [],
       inactiveClientRows: [],
       payingClientRows: [],

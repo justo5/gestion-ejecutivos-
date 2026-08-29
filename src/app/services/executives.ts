@@ -25,6 +25,9 @@ export interface Client {
   id: string;
   name: string;
   fanpage: string | null;
+  // Cuenta de Meta Ads del cliente (ej. "act_123456789012345"), usada para
+  // traer sus campañas. Ver services/campaigns.ts.
+  adAccountId: string | null;
   plan: string | null;
   country: string | null;
   sexo: string | null;
@@ -388,6 +391,12 @@ export class ExecutivesService {
 
   deleteClient(clientId: string): Observable<void> {
     return this.http.delete<void>(`/api/clients/${clientId}`).pipe(tap(() => this.refresh()));
+  }
+
+  updateAdAccountId(clientId: string, adAccountId: string | null): Observable<Client> {
+    return this.http.patch<Client>(`/api/clients/${clientId}`, { adAccountId }).pipe(
+      tap(() => this.patchClientLocal(clientId, (client) => ({ ...client, adAccountId }))),
+    );
   }
 
   updateClientImage(clientId: string, imageUrl: string): void {

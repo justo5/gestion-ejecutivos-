@@ -158,6 +158,41 @@
   color: var(--text-faint);
 }
 
+// --- Crecimiento por ejecutivo (multi-line chart) ---
+
+.growth-panel {
+  margin-bottom: 1.5rem;
+}
+
+.growth-panel-body {
+  height: 200px;
+}
+
+.growth-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.growth-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+
+  strong {
+    color: var(--text);
+  }
+}
+
+.growth-legend-label {
+  color: var(--text);
+}
+
 // --- Distribuciones (barras horizontales) ---
 
 .bars-grid {

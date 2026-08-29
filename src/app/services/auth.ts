@@ -17,6 +17,11 @@ interface LoginResponse {
   user: AuthUser;
 }
 
+export interface MetaAdsStatus {
+  connected: boolean;
+  expiresAt: string | null;
+}
+
 const TOKEN_KEY = 'auth-token-v1';
 const USER_KEY = 'auth-user-v1';
 
@@ -61,6 +66,27 @@ export class AuthService {
         this.userSubject.next(user);
       })
     );
+  }
+
+  loginWithFacebook(facebookAccessToken: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/api/auth/facebook', { accessToken: facebookAccessToken }).pipe(
+      tap(({ accessToken, user }) => {
+        localStorage.setItem(TOKEN_KEY, accessToken);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        this.userSubject.next(user);
+      })
+    );
+  }
+
+  // Conecta (o renueva) el acceso a Meta Ads del usuario logueado. No tiene
+  // que ver con cómo inició sesión en VBcobros: sirve igual si entró con
+  // email/password.
+  connectMetaAds(facebookAccessToken: string): Observable<MetaAdsStatus> {
+    return this.http.post<MetaAdsStatus>('/api/auth/meta-ads/connect', { accessToken: facebookAccessToken });
+  }
+
+  getMetaAdsStatus(): Observable<MetaAdsStatus> {
+    return this.http.get<MetaAdsStatus>('/api/auth/meta-ads/status');
   }
 
   logout(): void {
