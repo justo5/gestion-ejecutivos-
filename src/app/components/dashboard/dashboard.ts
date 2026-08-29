@@ -75,7 +75,7 @@ export interface MonthDetail {
 }
 
 // Gráficos de tendencia que se pueden abrir.
-export type ChartKind = 'revenue' | 'newClients';
+export type ChartKind = 'revenue' | 'newClients' | 'churn';
 
 interface DashboardViewModel {
   hasData: boolean;
@@ -88,6 +88,8 @@ interface DashboardViewModel {
   monthLabels: string[];
   revenueSeries: number[];
   newClientsSeries: number[];
+  // Bajas de clientes (soft delete) por mes, mismo eje de meses que arriba.
+  churnSeries: number[];
   statusBars: BarItem[];
   rubroBars: BarItem[];
   planBars: BarItem[];
@@ -115,6 +117,7 @@ interface DashboardViewModel {
   // Detalle mes a mes de los gráficos de tendencia.
   revenueMonthDetails: MonthDetail[];
   newClientsMonthDetails: MonthDetail[];
+  churnMonthDetails: MonthDetail[];
 }
 
 function formatYearMonth(date: Date): string {
@@ -184,6 +187,7 @@ export class DashboardPage implements OnInit {
   private static readonly CHART_TITLES: Record<ChartKind, string> = {
     revenue: 'Cartera cobrada · últimos 12 meses',
     newClients: 'Clientes nuevos · últimos 12 meses',
+    churn: 'Bajas de clientes · últimos 12 meses',
   };
 
   constructor(
@@ -359,15 +363,30 @@ export class DashboardPage implements OnInit {
   }
 
   chartSeries(vm: DashboardViewModel, chart: ChartKind | null): number[] {
-    return chart === 'revenue' ? vm.revenueSeries : chart === 'newClients' ? vm.newClientsSeries : [];
+    switch (chart) {
+      case 'revenue': return vm.revenueSeries;
+      case 'newClients': return vm.newClientsSeries;
+      case 'churn': return vm.churnSeries;
+      default: return [];
+    }
   }
 
   chartColor(chart: ChartKind | null): string {
-    return chart === 'revenue' ? '#afd42a' : '#1e9adb';
+    switch (chart) {
+      case 'revenue': return '#afd42a';
+      case 'newClients': return '#1e9adb';
+      case 'churn': return '#e66767';
+      default: return '#1e9adb';
+    }
   }
 
   monthDetailsFor(vm: DashboardViewModel, chart: ChartKind | null): MonthDetail[] {
-    return chart === 'revenue' ? vm.revenueMonthDetails : chart === 'newClients' ? vm.newClientsMonthDetails : [];
+    switch (chart) {
+      case 'revenue': return vm.revenueMonthDetails;
+      case 'newClients': return vm.newClientsMonthDetails;
+      case 'churn': return vm.churnMonthDetails;
+      default: return [];
+    }
   }
 
   private buildViewModel(executives: Executive[], plans: PlanConfig[]): DashboardViewModel {
@@ -376,10 +395,16 @@ export class DashboardPage implements OnInit {
     // duplicar reglas de negocio (vencimientos, salud de pago, resolución de
     // precio del plan).
     const rows: Row[] = [];
+    // Clientes dados de baja (soft delete): no cuentan para las analíticas de
+    // arriba, pero su fecha de baja (deletedAt) es justamente lo que alimenta
+    // el gráfico de bajas más abajo.
+    const churnRows: Row[] = [];
     executives.forEach(exec => {
       exec.clients.forEach(client => {
-        // Clientes dados de baja (soft delete) no cuentan para las analíticas.
-        if (client.deletedAt) return;
+        if (client.deletedAt) {
+          churnRows.push({ client, view: this.viewBuilder.build(client, exec.name, exec.squad, plans) });
+          return;
+        }
         rows.push({ client, view: this.viewBuilder.build(client, exec.name, exec.squad, plans) });
       });
     });
@@ -412,8 +437,10 @@ export class DashboardPage implements OnInit {
     const monthYms: string[] = [];
     const revenueSeries: number[] = [];
     const newClientsSeries: number[] = [];
+    const churnSeries: number[] = [];
     const revenueMonthDetails: MonthDetail[] = [];
     const newClientsMonthDetails: MonthDetail[] = [];
+    const churnMonthDetails: MonthDetail[] = [];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       monthLabels.push(d.toLocaleDateString('es-AR', { month: 'short' }));
@@ -439,6 +466,15 @@ export class DashboardPage implements OnInit {
           .map(r => this.toRow(r, r.view.executiveName))
           .sort((a, b) => a.name.localeCompare(b.name)),
       });
+
+      const churnedRows = churnRows.filter(r => formatYearMonth(new Date(r.client.deletedAt!)) === ym);
+      churnSeries.push(churnedRows.length);
+      churnMonthDetails.push({
+        valueLabel: `${churnedRows.length} cliente${churnedRows.length === 1 ? '' : 's'}`,
+        clients: churnedRows
+          .map(r => this.toRow(r, this.formatChurnDate(r.client.deletedAt!)))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      });
     }
 
     return {
@@ -452,6 +488,7 @@ export class DashboardPage implements OnInit {
       monthLabels,
       revenueSeries,
       newClientsSeries,
+      churnSeries,
       statusBars,
       rubroBars: this.buildBars(rows, r => r.client.rubro, () => 1, count => `${count} cliente${count === 1 ? '' : 's'}`),
       countryBars: this.buildBars(rows, r => r.client.country, () => 1, count => `${count} cliente${count === 1 ? '' : 's'}`),
@@ -493,6 +530,7 @@ export class DashboardPage implements OnInit {
 
       revenueMonthDetails,
       newClientsMonthDetails,
+      churnMonthDetails,
 
       // Detalle por cliente de cada tarjeta KPI, para el modal que se abre
       // al tocarlas.
@@ -538,6 +576,11 @@ export class DashboardPage implements OnInit {
       statusLabel: row.view.statusLabel,
       secondary,
     };
+  }
+
+  // Fecha de baja formateada para el detalle del gráfico de bajas, ej. "12 mar 2026".
+  private formatChurnDate(deletedAt: string): string {
+    return new Date(deletedAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   private statusBar(label: string, count: number, total: number, color: string): BarItem {
@@ -678,6 +721,7 @@ export class DashboardPage implements OnInit {
       monthLabels: [],
       revenueSeries: [],
       newClientsSeries: [],
+      churnSeries: [],
       statusBars: [],
       rubroBars: [],
       planBars: [],
@@ -699,6 +743,7 @@ export class DashboardPage implements OnInit {
       sexoGroups: [],
       revenueMonthDetails: [],
       newClientsMonthDetails: [],
+      churnMonthDetails: [],
     };
   }
 }

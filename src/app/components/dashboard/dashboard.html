@@ -101,6 +101,23 @@
             <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
           </div>
         </div>
+
+        <div class="chart-panel is-clickable" role="button" tabindex="0" (click)="openChart('churn')"
+          (keydown.enter)="openChart('churn')" (keydown.space)="openChart('churn')">
+          <div class="chart-panel-header">
+            <span>Bajas de clientes · últimos 12 meses</span>
+            <span class="chart-panel-current">
+              <span class="chart-panel-dot" style="background: #e66767"></span>
+              {{ vm.churnSeries[vm.churnSeries.length - 1] }} este mes
+            </span>
+          </div>
+          <div class="chart-panel-body">
+            <app-area-chart [data]="vm.churnSeries" color="#e66767" label="dashboard-bajas"></app-area-chart>
+          </div>
+          <div class="chart-panel-range">
+            <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
+          </div>
+        </div>
       </div>
 
       <div class="chart-panel growth-panel" *ngIf="vm.executiveGrowth.length">
