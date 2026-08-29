@@ -69,7 +69,6 @@
             <app-area-chart [data]="vm.revenueSeries" color="#afd42a" label="dashboard-ingresos"></app-area-chart>
           </div>
           <div class="chart-panel-range">
-            <span>{{ vm.monthLabels[0] }}</span>
             <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
           </div>
         </div>
@@ -87,7 +86,6 @@
             <app-area-chart [data]="vm.newClientsSeries" color="#1e9adb" label="dashboard-nuevos"></app-area-chart>
           </div>
           <div class="chart-panel-range">
-            <span>{{ vm.monthLabels[0] }}</span>
             <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
           </div>
         </div>
@@ -138,7 +136,6 @@
           ></app-multi-line-chart>
         </div>
         <div class="chart-panel-range">
-          <span>{{ vm.monthLabels[0] }}</span>
           <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
         </div>
         <div class="growth-legend">
