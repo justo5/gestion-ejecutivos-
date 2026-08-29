@@ -10,7 +10,7 @@
           fill="none"
           [style.stroke]="seg.slice.color"
           [attr.stroke-width]="strokeWidth"
-          stroke-linecap="round"
+          stroke-linecap="butt"
           [attr.stroke-dasharray]="seg.length + ' ' + (circumference - seg.length)"
           [attr.stroke-dashoffset]="seg.offset"
           (mouseenter)="onHover(i)"

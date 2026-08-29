@@ -44,7 +44,7 @@ export class DonutChart {
   readonly strokeWidth = 20;
   // Hueco entre porciones, en unidades de circunferencia (equivalente al gap
   // de 2px que separa segmentos tocándose en una barra apilada).
-  private readonly gap = 3;
+  private readonly gap = 2;
 
   get center(): number {
     return this.size / 2;
