@@ -14,6 +14,19 @@
   </div>
 </ng-template>
 
+<!-- Igual que barList (mismo panel clickeable), pero part-to-whole como
+     donut en vez de barras: solo para dimensiones ya plegadas en "Otros"
+     (<=8 porciones). "Por ejecutivo" no se pliega a propósito, así que sigue
+     usando barList arriba. -->
+<ng-template #donutPanel let-title="title" let-items="items" let-dim="dim" let-format="format" let-centerLabel="centerLabel">
+  <div class="bars-panel is-clickable" role="button" tabindex="0"
+    (click)="openBars(dim)" (keydown.enter)="openBars(dim)" (keydown.space)="openBars(dim)">
+    <div class="panel-header">{{ title }}</div>
+    <app-donut-chart *ngIf="items.length; else noDonut" [items]="items" [format]="format" [centerLabel]="centerLabel"></app-donut-chart>
+    <ng-template #noDonut><p class="bars-empty">Sin datos suficientes.</p></ng-template>
+  </div>
+</ng-template>
+
 <div class="dashboard-page">
   <div class="dashboard-header">
     <h1 class="dashboard-title">Dashboard</h1>
@@ -148,12 +161,14 @@
       </div>
 
       <div class="bars-grid">
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Semáforo de campañas', bars: vm.statusBars, dim: 'status' }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por rubro', bars: vm.rubroBars, dim: 'rubro' }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por plan', bars: vm.planBars, dim: 'plan' }"></ng-container>
+        <ng-container *ngTemplateOutlet="donutPanel; context: { title: 'Semáforo de campañas', items: vm.statusBars, dim: 'status', format: 'count', centerLabel: 'clientes' }"></ng-container>
+        <ng-container *ngTemplateOutlet="donutPanel; context: { title: 'Por rubro', items: vm.rubroBars, dim: 'rubro', format: 'count', centerLabel: 'clientes' }"></ng-container>
+        <ng-container *ngTemplateOutlet="donutPanel; context: { title: 'Por plan', items: vm.planBars, dim: 'plan', format: 'money', centerLabel: 'cartera' }"></ng-container>
+        <!-- Por ejecutivo no se pliega en "Otros" (queremos ver a todos): con
+             muchas porciones finas una torta deja de leerse, sigue en barras. -->
         <ng-container *ngTemplateOutlet="barList; context: { title: 'Por ejecutivo', bars: vm.executiveBars, dim: 'executive' }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por país', bars: vm.countryBars, dim: 'country' }"></ng-container>
-        <ng-container *ngTemplateOutlet="barList; context: { title: 'Por sexo', bars: vm.sexoBars, dim: 'sexo' }"></ng-container>
+        <ng-container *ngTemplateOutlet="donutPanel; context: { title: 'Por país', items: vm.countryBars, dim: 'country', format: 'count', centerLabel: 'clientes' }"></ng-container>
+        <ng-container *ngTemplateOutlet="donutPanel; context: { title: 'Por sexo', items: vm.sexoBars, dim: 'sexo', format: 'count', centerLabel: 'clientes' }"></ng-container>
       </div>
 
       <!-- Detalle de tarjeta KPI -->

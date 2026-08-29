@@ -22,6 +22,7 @@ import { StatusDot } from './components/status-dot/status-dot';
 import { NotifBadge } from './components/notif-badge/notif-badge';
 import { AreaChart } from './components/charts/area-chart/area-chart';
 import { MultiLineChart } from './components/charts/multi-line-chart/multi-line-chart';
+import { DonutChart } from './components/charts/donut-chart/donut-chart';
 import { ClientCard } from './components/client-card/client-card';
 
 @NgModule({
@@ -43,6 +44,7 @@ import { ClientCard } from './components/client-card/client-card';
     NotifBadge,
     AreaChart,
     MultiLineChart,
+    DonutChart,
     ClientCard,
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule],

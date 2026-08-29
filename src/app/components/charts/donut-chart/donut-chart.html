@@ -1,0 +1,42 @@
+<div class="donut-chart-wrap">
+  <div class="donut-ring-wrap">
+    <svg [attr.viewBox]="viewBox" class="donut-chart-svg">
+      <g [attr.transform]="'rotate(-90 ' + center + ' ' + center + ')'">
+        <circle
+          *ngFor="let seg of segments; let i = index"
+          class="donut-segment"
+          [class.is-dimmed]="isDimmed(i)"
+          [attr.cx]="center" [attr.cy]="center" [attr.r]="radius"
+          fill="none"
+          [style.stroke]="seg.slice.color"
+          [attr.stroke-width]="strokeWidth"
+          stroke-linecap="round"
+          [attr.stroke-dasharray]="seg.length + ' ' + (circumference - seg.length)"
+          [attr.stroke-dashoffset]="seg.offset"
+          (mouseenter)="onHover(i)"
+          (mouseleave)="onLeave()"
+        />
+      </g>
+    </svg>
+
+    <div class="donut-center">
+      <span class="donut-center-value">{{ centerValueLabel }}</span>
+      <span class="donut-center-label" *ngIf="centerLabel">{{ centerLabel }}</span>
+    </div>
+
+    <div class="chart-tooltip" *ngIf="hoveredSegment as hs" [style.left.%]="tooltipLeftPct" [style.top.%]="tooltipTopPct">
+      <span class="chart-tooltip-dot" [style.background]="hs.slice.color"></span>
+      <strong>{{ hs.slice.label }}</strong>
+      <span class="chart-tooltip-detail">{{ hs.slice.secondary }} · {{ pct(hs.slice) }}%</span>
+    </div>
+  </div>
+
+  <ul class="donut-legend">
+    <li class="donut-legend-item" *ngFor="let s of items; let i = index" [class.is-dimmed]="isDimmed(i)"
+      (mouseenter)="onHover(i)" (mouseleave)="onLeave()">
+      <span class="bar-dot" [style.background]="s.color"></span>
+      <span class="donut-legend-label">{{ s.label }}</span>
+      <span class="donut-legend-value">{{ s.secondary }}</span>
+    </li>
+  </ul>
+</div>
