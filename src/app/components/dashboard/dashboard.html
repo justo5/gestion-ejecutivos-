@@ -294,16 +294,21 @@
                 [label]="'dashboard-modal-' + selectedChart"></app-area-chart>
             </div>
 
-            <div class="group-accordion" *ngFor="let m of monthDetailsFor(vm, selectedChart); let i = index">
-              <button type="button" class="group-row month-row" (click)="toggleMonth(i)">
-                <span class="group-label">{{ vm.monthLabels[i] }}</span>
-                <span class="group-secondary">{{ m.valueLabel }}</span>
-                <span class="group-chevron" [class.is-open]="expandedMonthIndex === i">›</span>
-              </button>
-              <div class="group-detail" *ngIf="expandedMonthIndex === i">
-                <ng-container *ngTemplateOutlet="clientRows; context: { list: m.clients, emptyText: 'Sin clientes este mes.' }"></ng-container>
+            <!-- Se recorre en orden inverso (mes actual arriba) sin tocar el
+                 orden de los arrays de datos, que sigue siendo cronológico
+                 porque lo usa el gráfico de arriba (izquierda = más viejo). -->
+            <ng-container *ngIf="monthDetailsFor(vm, selectedChart) as monthDetails">
+              <div class="group-accordion" *ngFor="let i of reversedMonthIndexes(vm)">
+                <button type="button" class="group-row month-row" (click)="toggleMonth(i)">
+                  <span class="group-label">{{ vm.monthLabels[i] }}</span>
+                  <span class="group-secondary">{{ monthDetails[i].valueLabel }}</span>
+                  <span class="group-chevron" [class.is-open]="expandedMonthIndex === i">›</span>
+                </button>
+                <div class="group-detail" *ngIf="expandedMonthIndex === i">
+                  <ng-container *ngTemplateOutlet="clientRows; context: { list: monthDetails[i].clients, emptyText: 'Sin clientes este mes.' }"></ng-container>
+                </div>
               </div>
-            </div>
+            </ng-container>
           </div>
         </div>
       </div>

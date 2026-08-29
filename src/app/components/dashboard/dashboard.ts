@@ -380,6 +380,14 @@ export class DashboardPage implements OnInit {
     }
   }
 
+  // Índices de vm.monthLabels/monthDetailsFor en orden inverso (mes actual
+  // primero), para el acordeón del modal de detalle. Los arrays de datos en
+  // sí quedan intactos (cronológicos) porque el gráfico de arriba los pinta
+  // de izquierda a derecha del más viejo al más nuevo.
+  reversedMonthIndexes(vm: DashboardViewModel): number[] {
+    return vm.monthLabels.map((_, i) => i).reverse();
+  }
+
   monthDetailsFor(vm: DashboardViewModel, chart: ChartKind | null): MonthDetail[] {
     switch (chart) {
       case 'revenue': return vm.revenueMonthDetails;
