@@ -217,6 +217,24 @@ export class DashboardPage implements OnInit {
     return { value: goal.targetClients, monthLabel: formatGoalMonth(goal.targetMonth) };
   }
 
+  // Opciones del desplegable de mes objetivo: los próximos 5 años, mes a mes.
+  // Si el objetivo guardado (o el que se está editando) cae fuera de ese
+  // rango, se agrega igual al principio para no perderlo de la lista.
+  get goalMonthOptions(): { value: string; label: string }[] {
+    const now = new Date();
+    const options: { value: string; label: string }[] = [];
+    for (let i = 0; i <= 60; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const value = formatYearMonth(d);
+      options.push({ value, label: formatGoalMonth(value) });
+    }
+    const current = this.goalMonthInput || this.currentGoal?.targetMonth;
+    if (current && !options.some(o => o.value === current)) {
+      options.unshift({ value: current, label: formatGoalMonth(current) });
+    }
+    return options;
+  }
+
   openGoalEditor(): void {
     this.goalClientsInput = this.currentGoal?.targetClients ?? null;
     this.goalMonthInput = this.currentGoal?.targetMonth ?? '';

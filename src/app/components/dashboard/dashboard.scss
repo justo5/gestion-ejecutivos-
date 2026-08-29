@@ -206,7 +206,8 @@
   font-size: 0.72rem;
   color: var(--text-muted);
 
-  input {
+  input,
+  select {
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text);

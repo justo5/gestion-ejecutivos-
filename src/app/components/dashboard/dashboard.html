@@ -108,7 +108,10 @@
           </label>
           <label class="goal-editor-field">
             Mes objetivo
-            <input type="month" [(ngModel)]="goalMonthInput" />
+            <select [(ngModel)]="goalMonthInput">
+              <option value="" disabled>Elegí un mes</option>
+              <option *ngFor="let m of goalMonthOptions" [value]="m.value">{{ m.label }}</option>
+            </select>
           </label>
           <div class="goal-editor-actions">
             <button type="button" class="goal-btn-primary" [disabled]="goalSaving" (click)="saveGoal()">Guardar</button>
