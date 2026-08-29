@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Client, Executive, ExecutivesService } from '../../services/executives';
-import { LineSeries } from '../charts/multi-line-chart/multi-line-chart';
-import { ConfigService, PlanConfig } from '../../services/config';
+import { ChartGoal, LineSeries } from '../charts/multi-line-chart/multi-line-chart';
+import { ConfigService, DashboardGoal, PlanConfig } from '../../services/config';
+import { AuthService } from '../../services/auth';
 import { ClientViewBuilder } from '../../services/client-view-builder';
 import { ClientCardView, ClientStatus } from '../../models/client-view.model';
 
@@ -126,6 +127,15 @@ function money(value: number): string {
   return `$${Math.round(value).toLocaleString('es-AR')}`;
 }
 
+// 'YYYY-MM' -> "mar 2027". A diferencia de monthLabels (solo el mes, sin año,
+// porque siempre son los últimos 12 meses) el objetivo puede caer en
+// cualquier año futuro, así que hace falta desambiguar.
+function formatGoalMonth(ym: string): string {
+  const [year, month] = ym.split('-').map(Number);
+  const d = new Date(year, (month || 1) - 1, 1);
+  return d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: false,
@@ -145,6 +155,15 @@ export class DashboardPage implements OnInit {
   // Gráfico de tendencia actualmente abierto, y el mes expandido dentro de él.
   selectedChart: ChartKind | null = null;
   expandedMonthIndex: number | null = null;
+
+  // Objetivo general del equipo marcado en el gráfico de crecimiento, y
+  // estado del formulario para definirlo/editarlo (solo admin).
+  currentGoal: DashboardGoal | null = null;
+  editingGoal = false;
+  goalClientsInput: number | null = null;
+  goalMonthInput = '';
+  goalSaving = false;
+  goalError = '';
 
   private static readonly CARD_TITLES: Record<DashboardCard, string> = {
     total: 'Clientes totales',
@@ -170,6 +189,7 @@ export class DashboardPage implements OnInit {
   constructor(
     private executivesService: ExecutivesService,
     private configService: ConfigService,
+    private authService: AuthService,
     private viewBuilder: ClientViewBuilder,
   ) {}
 
@@ -177,12 +197,75 @@ export class DashboardPage implements OnInit {
     this.vm$ = combineLatest([this.executivesService.executives$, this.configService.plans$]).pipe(
       map(([executives, plans]) => this.buildViewModel(executives, plans)),
     );
+    this.configService.goal$.subscribe(goal => (this.currentGoal = goal));
     this.executivesService.refresh();
     this.configService.refresh();
   }
 
   money(value: number): string {
     return money(value);
+  }
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  // Objetivo ya formateado para pasarle al gráfico de líneas.
+  get chartGoal(): ChartGoal | null {
+    const goal = this.currentGoal;
+    if (!goal) return null;
+    return { value: goal.targetClients, monthLabel: formatGoalMonth(goal.targetMonth) };
+  }
+
+  openGoalEditor(): void {
+    this.goalClientsInput = this.currentGoal?.targetClients ?? null;
+    this.goalMonthInput = this.currentGoal?.targetMonth ?? '';
+    this.goalError = '';
+    this.editingGoal = true;
+  }
+
+  cancelGoalEditor(): void {
+    this.editingGoal = false;
+    this.goalError = '';
+  }
+
+  saveGoal(): void {
+    const targetClients = this.goalClientsInput;
+    const targetMonth = this.goalMonthInput;
+    if (!targetClients || targetClients <= 0) {
+      this.goalError = 'Ingresá una cantidad de clientes mayor a cero.';
+      return;
+    }
+    if (!targetMonth) {
+      this.goalError = 'Elegí un mes objetivo.';
+      return;
+    }
+    this.goalSaving = true;
+    this.goalError = '';
+    this.configService.saveGoal(targetClients, targetMonth).subscribe({
+      next: () => {
+        this.goalSaving = false;
+        this.editingGoal = false;
+      },
+      error: () => {
+        this.goalSaving = false;
+        this.goalError = 'No se pudo guardar el objetivo.';
+      },
+    });
+  }
+
+  removeGoal(): void {
+    this.goalSaving = true;
+    this.configService.clearGoal().subscribe({
+      next: () => {
+        this.goalSaving = false;
+        this.editingGoal = false;
+      },
+      error: () => {
+        this.goalSaving = false;
+        this.goalError = 'No se pudo quitar el objetivo.';
+      },
+    });
   }
 
   openCard(card: DashboardCard): void {

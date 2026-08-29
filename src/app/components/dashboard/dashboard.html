@@ -94,11 +94,45 @@
       </div>
 
       <div class="chart-panel growth-panel" *ngIf="vm.executiveGrowth.length">
-        <div class="chart-panel-header">
+        <div class="chart-panel-header growth-panel-header">
           <span>Crecimiento de clientes por ejecutivo · últimos 12 meses</span>
+          <button *ngIf="isAdmin" type="button" class="goal-edit-btn" (click)="openGoalEditor()">
+            🎯 {{ currentGoal ? 'Editar objetivo' : 'Marcar objetivo' }}
+          </button>
         </div>
+
+        <div class="goal-editor" *ngIf="editingGoal">
+          <label class="goal-editor-field">
+            Clientes objetivo
+            <input type="number" min="1" [(ngModel)]="goalClientsInput" />
+          </label>
+          <label class="goal-editor-field">
+            Mes objetivo
+            <input type="month" [(ngModel)]="goalMonthInput" />
+          </label>
+          <div class="goal-editor-actions">
+            <button type="button" class="goal-btn-primary" [disabled]="goalSaving" (click)="saveGoal()">Guardar</button>
+            <button type="button" class="goal-btn-secondary" [disabled]="goalSaving" (click)="cancelGoalEditor()">Cancelar</button>
+            <button
+              type="button"
+              class="goal-btn-link"
+              *ngIf="currentGoal"
+              [disabled]="goalSaving"
+              (click)="removeGoal()"
+            >
+              Quitar objetivo
+            </button>
+          </div>
+          <p class="goal-editor-error" *ngIf="goalError">{{ goalError }}</p>
+        </div>
+
         <div class="chart-panel-body growth-panel-body">
-          <app-multi-line-chart [series]="vm.executiveGrowth" [monthLabels]="vm.monthLabels"></app-multi-line-chart>
+          <app-multi-line-chart
+            [series]="vm.executiveGrowth"
+            [monthLabels]="vm.monthLabels"
+            [goal]="chartGoal"
+            [height]="200"
+          ></app-multi-line-chart>
         </div>
         <div class="chart-panel-range">
           <span>{{ vm.monthLabels[0] }}</span>

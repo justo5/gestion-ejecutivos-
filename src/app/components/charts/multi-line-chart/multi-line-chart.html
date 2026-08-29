@@ -33,6 +33,19 @@
       r="4.5"
       [attr.fill]="hs.color"
     />
+
+    <!-- Objetivo a futuro: guía punteada a la altura de la meta (para comparar
+         con las líneas reales) y un punto + etiqueta en la columna reservada. -->
+    <g *ngIf="goal as g" class="goal-marker">
+      <line class="goal-guide" [attr.x1]="chartLeft" [attr.x2]="chartRight" [attr.y1]="goalY" [attr.y2]="goalY" />
+      <circle class="goal-dot" [attr.cx]="goalX" [attr.cy]="goalY" r="4.5" />
+      <text
+        class="goal-label"
+        [attr.x]="goalX - 6"
+        [attr.y]="goalLabelBelow ? goalY + 16 : goalY - 8"
+        text-anchor="end"
+      >🎯 {{ g.value }} · {{ g.monthLabel }}</text>
+    </g>
   </svg>
 
   <div

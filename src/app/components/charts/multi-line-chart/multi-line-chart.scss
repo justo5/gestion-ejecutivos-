@@ -32,6 +32,27 @@
   stroke-width: 1.5;
 }
 
+// Objetivo a futuro: dorado a propósito, para no confundirse con ningún
+// color de la paleta categórica de ejecutivos.
+.goal-guide {
+  stroke: #f0a202;
+  stroke-width: 1.25;
+  stroke-dasharray: 4 3;
+  opacity: 0.8;
+}
+
+.goal-dot {
+  fill: #f0a202;
+  stroke: var(--surface, #fff);
+  stroke-width: 1.5;
+}
+
+.goal-label {
+  fill: var(--text);
+  font-size: 9px;
+  font-weight: 600;
+}
+
 .chart-tooltip {
   position: absolute;
   transform: translate(-50%, -130%);

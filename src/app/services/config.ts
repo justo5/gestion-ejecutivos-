@@ -14,6 +14,13 @@ export interface RubroConfig {
   name: string;
 }
 
+// Objetivo general del equipo, marcado a futuro en el gráfico de crecimiento
+// de clientes del dashboard. targetMonth en formato 'YYYY-MM'.
+export interface DashboardGoal {
+  targetClients: number;
+  targetMonth: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -23,6 +30,10 @@ export class ConfigService {
 
   private rubrosSubject = new BehaviorSubject<RubroConfig[]>([]);
   rubros$ = this.rubrosSubject.asObservable();
+
+  // null = todavía no se marcó ningún objetivo.
+  private goalSubject = new BehaviorSubject<DashboardGoal | null>(null);
+  goal$ = this.goalSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -38,10 +49,15 @@ export class ConfigService {
       .get<PlanConfig[]>('/api/plans')
       .subscribe(plans => this.plansSubject.next(plans.map(p => this.normalizePlan(p))));
     this.refreshRubros();
+    this.refreshGoal();
   }
 
   refreshRubros(): void {
     this.http.get<RubroConfig[]>('/api/rubros').subscribe(rubros => this.rubrosSubject.next(rubros));
+  }
+
+  refreshGoal(): void {
+    this.http.get<DashboardGoal | null>('/api/goals').subscribe(goal => this.goalSubject.next(goal));
   }
 
   getPlans(): PlanConfig[] {
@@ -94,5 +110,17 @@ export class ConfigService {
     return this.http
       .put<RubroConfig[]>('/api/rubros', { names })
       .pipe(tap(rubros => this.rubrosSubject.next(rubros)));
+  }
+
+  // Define o reemplaza el objetivo general del equipo.
+  saveGoal(targetClients: number, targetMonth: string) {
+    return this.http
+      .put<DashboardGoal>('/api/goals', { targetClients, targetMonth })
+      .pipe(tap(goal => this.goalSubject.next(goal)));
+  }
+
+  // Quita el objetivo marcado (el gráfico deja de mostrarlo).
+  clearGoal() {
+    return this.http.delete('/api/goals').pipe(tap(() => this.goalSubject.next(null)));
   }
 }
