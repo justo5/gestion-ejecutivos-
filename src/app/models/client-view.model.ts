@@ -47,3 +47,19 @@ export interface ClientCardView {
   pendingAmount: number;
   monthlyAmount: number;
 }
+
+// Un punto en la línea de tiempo de vencimientos: cuándo le toca pagar (o
+// pagó de más) a un cliente puntual. "Vencido" = ya pasó la fecha y sigue sin
+// pagar; si no, es el próximo vencimiento (día de cobro del mes en curso o
+// el que viene, según corresponda).
+export interface ClientTimelineEntry {
+  clientId: string;
+  clientName: string;
+  fanpage: string | null;
+  executiveName: string;
+  dueDate: Date;
+  amount: number;
+  overdue: boolean;
+  // Cantidad total de meses sin pagar a esta altura (incluye el de dueDate).
+  monthsOverdue: number;
+}

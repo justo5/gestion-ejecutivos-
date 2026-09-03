@@ -185,6 +185,10 @@
         <ng-container *ngTemplateOutlet="barList; context: { title: 'Por ejecutivo', bars: vm.executiveBars, dim: 'executive' }"></ng-container>
         <ng-container *ngTemplateOutlet="donutPanel; context: { title: 'Por país', items: vm.countryBars, dim: 'country', format: 'count', centerLabel: 'clientes' }"></ng-container>
         <ng-container *ngTemplateOutlet="donutPanel; context: { title: 'Por sexo', items: vm.sexoBars, dim: 'sexo', format: 'count', centerLabel: 'clientes' }"></ng-container>
+        <!-- Tiempo de vida promedio: es un promedio, no una parte de un
+             todo, así que va en barras (como "Por ejecutivo") y no en torta. -->
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Tiempo de vida promedio · por rubro', bars: vm.lifetimeRubroBars, dim: 'lifetimeRubro' }"></ng-container>
+        <ng-container *ngTemplateOutlet="barList; context: { title: 'Tiempo de vida promedio · por ejecutivo', bars: vm.lifetimeExecutiveBars, dim: 'lifetimeExecutive' }"></ng-container>
       </div>
 
       <!-- Detalle de tarjeta KPI -->

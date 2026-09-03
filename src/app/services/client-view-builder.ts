@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Client } from './executives';
 import { PlanConfig } from './config';
 import { ClientExtrasService } from './client-extras';
-import { ClientCardView, ClientNotification, ClientStatus, StatTile } from '../models/client-view.model';
+import { ClientCardView, ClientNotification, ClientStatus, ClientTimelineEntry, StatTile } from '../models/client-view.model';
 
 // Arma la vista "rica" de un cliente a partir de datos reales (cobro, plan,
 // antigüedad) y completa con contenido derivado/mock estable (avatar,
@@ -45,6 +45,14 @@ function formatYearMonth(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   return `${y}-${m}`;
+}
+
+// Arma una fecha real para "el día `day` del mes `month` (0-indexado) del año
+// `year`", recortando al último día del mes si `day` no existe ahí (ej. día
+// 31 en un mes de 30 → cae el 30). Evita que Date "desborde" al mes siguiente.
+function dateForDay(year: number, month: number, day: number): Date {
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, lastDay));
 }
 
 @Injectable({ providedIn: 'root' })
@@ -117,6 +125,69 @@ export class ClientViewBuilder {
       pendingAmount,
       monthlyAmount,
       stats: this.buildStats(monthlyAmount, paidMonths.length, pendingAmount, monthsActive, health, status),
+    };
+  }
+
+  // Punto de la línea de tiempo de vencimientos para un cliente puntual.
+  // Misma lógica de "mes vencido" que usa Cobros (services/cobros.ts): el
+  // cobro de un mes se considera vencido recién al llegar el día de cobro
+  // (mismo día del mes que contactDay) del mes siguiente. Si hay meses
+  // atrasados, se muestra el más viejo sin pagar (el vencimiento real más
+  // urgente); si está al día, se muestra el próximo vencimiento.
+  buildTimelineEntry(
+    client: Client,
+    executiveName: string,
+    plans: PlanConfig[],
+  ): ClientTimelineEntry | null {
+    if (!client.active || !client.contactDay || client.deletedAt) return null;
+
+    const contactDate = new Date(client.contactDay + 'T00:00:00');
+    const dayNum = contactDate.getDate();
+    if (isNaN(dayNum)) return null;
+
+    const paidMonths = client.cobro?.paidMonths ?? [];
+    const paidSet = new Set(paidMonths);
+    const amount = this.resolvePlanPrice(client.plan, plans);
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Meses desde el siguiente al alta hasta el actual (inclusive) que
+    // todavía no figuran pagados.
+    const owedMonths: string[] = [];
+    let cursor = new Date(contactDate.getFullYear(), contactDate.getMonth() + 1, 1);
+    while (cursor <= currentMonthStart) {
+      if (!paidSet.has(formatYearMonth(cursor))) owedMonths.push(formatYearMonth(cursor));
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+
+    let dueDate: Date;
+    let monthsOverdue = 0;
+
+    if (owedMonths.length > 0) {
+      const [y, m] = owedMonths[0].split('-').map(Number);
+      dueDate = dateForDay(y, m - 1, dayNum);
+      monthsOverdue = owedMonths.length;
+    } else {
+      // Al día: el próximo vencimiento cae el día de cobro del mes siguiente.
+      const nextMonth = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth() + 1, 1);
+      dueDate = dateForDay(nextMonth.getFullYear(), nextMonth.getMonth(), dayNum);
+    }
+
+    // El más viejo adeudado puede ser el mes en curso, cuyo día de cobro
+    // todavía no llegó: en ese caso no está vencido, es el próximo.
+    const overdue = dueDate < today;
+
+    return {
+      clientId: client.id,
+      clientName: client.name,
+      fanpage: client.fanpage,
+      executiveName,
+      dueDate,
+      amount,
+      overdue,
+      monthsOverdue,
     };
   }
 

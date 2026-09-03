@@ -172,6 +172,165 @@
   color: var(--rojo);
 }
 
+// --- Línea de tiempo de vencimientos ---
+
+.timeline-panel {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.timeline-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.timeline-panel-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.timeline-panel-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.timeline-empty {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.timeline-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.timeline-track {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 22px;
+  padding: 0 4px;
+
+  // Línea horizontal que conecta todos los puntos, a la altura del dot.
+  &::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 27px;
+    height: 2px;
+    background: var(--border);
+  }
+}
+
+.timeline-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 104px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: center;
+
+  &:hover .timeline-client { color: var(--primary); }
+}
+
+.timeline-date {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--primary);
+  margin: 2px 0 4px;
+}
+
+.timeline-item.is-overdue .timeline-dot {
+  background: var(--rojo);
+  border-color: var(--rojo);
+}
+
+.timeline-client {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-amount {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.timeline-badge {
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--rojo-bg);
+  color: var(--rojo);
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.timeline-today-marker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 0;
+  flex-shrink: 0;
+  align-self: stretch;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary);
+  }
+}
+
+.timeline-today-label {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 // --- Grilla de tarjetas ---
 // El diseño de cada tarjeta vive en app-client-card (components/client-card).
 

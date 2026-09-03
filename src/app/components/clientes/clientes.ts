@@ -6,7 +6,12 @@ import { AuthService } from '../../services/auth';
 import { ConfigService, PlanConfig, RubroConfig } from '../../services/config';
 import { ClientExtrasService } from '../../services/client-extras';
 import { ClientViewBuilder } from '../../services/client-view-builder';
-import { ClientCardView, ClientStatus, TodoItem } from '../../models/client-view.model';
+import { ClientCardView, ClientStatus, ClientTimelineEntry, TodoItem } from '../../models/client-view.model';
+
+// Ventana de "próximos vencimientos" que se muestra en la línea de tiempo:
+// todo lo vencido entra sin importar cuánto atraso tenga, más lo que vaya a
+// vencer dentro de este rango.
+const TIMELINE_UPCOMING_DAYS = 30;
 
 export interface ClientCardItem {
   client: Client;
@@ -40,8 +45,12 @@ const STATUS_OPTIONS: StatusOption[] = [
 export class Clientes implements OnInit {
   rows$!: Observable<ClientCardItem[]>;
   filteredRows$!: Observable<ClientCardItem[]>;
+  timeline$!: Observable<ClientTimelineEntry[]>;
 
   private searchSubject = new BehaviorSubject<string>('');
+  // Cache del último valor de rows$: permite resolver a qué cliente
+  // corresponde un punto de la línea de tiempo sin volver a suscribirse.
+  private allRows: ClientCardItem[] = [];
 
   showForm = false;
   formError = '';
@@ -142,6 +151,7 @@ export class Clientes implements OnInit {
   ngOnInit(): void {
     this.rows$ = this.executivesService.executives$.pipe(map(executives => this.buildRows(executives)));
     this.executivesService.executives$.subscribe(executives => (this.executives = executives));
+    this.rows$.subscribe(rows => (this.allRows = rows));
 
     this.filteredRows$ = combineLatest([this.rows$, this.searchSubject]).pipe(
       map(([rows, search]) => {
@@ -158,8 +168,36 @@ export class Clientes implements OnInit {
     this.configService.plans$.subscribe(plans => (this.plans = plans));
     this.configService.rubros$.subscribe(rubros => (this.rubros = rubros));
 
+    this.timeline$ = combineLatest([this.rows$, this.configService.plans$]).pipe(
+      map(([rows, plans]) => this.buildTimeline(rows, plans))
+    );
+
     this.executivesService.refresh();
     this.configService.refresh();
+  }
+
+  // Vencidos (sin importar hace cuánto) + próximos vencimientos dentro de
+  // TIMELINE_UPCOMING_DAYS, ordenados cronológicamente (lo más urgente primero).
+  private buildTimeline(rows: ClientCardItem[], plans: PlanConfig[]): ClientTimelineEntry[] {
+    const now = new Date();
+    const limit = new Date(now.getFullYear(), now.getMonth(), now.getDate() + TIMELINE_UPCOMING_DAYS);
+
+    return rows
+      .map(row => this.viewBuilder.buildTimelineEntry(row.client, row.executiveName, plans))
+      .filter((entry): entry is ClientTimelineEntry => entry !== null && (entry.overdue || entry.dueDate <= limit))
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  }
+
+  // Abre la ficha del cliente al que corresponde este punto de la línea de
+  // tiempo (mismo flujo que clickear su tarjeta en la grilla).
+  selectTimelineEntry(entry: ClientTimelineEntry): void {
+    const row = this.allRows.find(r => r.client.id === entry.clientId);
+    if (row) this.selectItem(row);
+  }
+
+  timelineDateLabel(date: Date): string {
+    const label = date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+    return label.replace('.', '');
   }
 
   private buildRows(executives: Executive[]): ClientCardItem[] {
