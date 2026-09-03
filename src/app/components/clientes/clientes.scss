@@ -272,6 +272,18 @@
   border-color: var(--rojo);
 }
 
+// Corte de información (15 días antes del vencimiento): mismo patrón que
+// vencido pero en naranja, para no confundirlo con un cobro atrasado.
+.timeline-item.is-cutoff .timeline-dot {
+  background: var(--surface);
+  border-color: var(--naranja);
+}
+
+.timeline-item.is-cutoff.is-overdue .timeline-dot {
+  background: var(--naranja);
+  border-color: var(--naranja);
+}
+
 .timeline-client {
   font-size: 0.8rem;
   font-weight: 600;
@@ -296,6 +308,11 @@
   font-size: 0.65rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.timeline-badge-cutoff {
+  background: var(--naranja-bg);
+  color: var(--naranja);
 }
 
 .timeline-today-marker {

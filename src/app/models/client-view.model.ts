@@ -52,6 +52,11 @@ export interface ClientCardView {
 // pagó de más) a un cliente puntual. "Vencido" = ya pasó la fecha y sigue sin
 // pagar; si no, es el próximo vencimiento (día de cobro del mes en curso o
 // el que viene, según corresponda).
+//
+// "cutoff" es un tipo de punto aparte: el corte de información que se le
+// pide al cliente 15 días antes de su vencimiento (no es un cobro en sí,
+// `amount`/`monthsOverdue` no aplican). `relatedDueDate` conecta el corte
+// con el vencimiento al que corresponde.
 export interface ClientTimelineEntry {
   clientId: string;
   clientName: string;
@@ -62,4 +67,7 @@ export interface ClientTimelineEntry {
   overdue: boolean;
   // Cantidad total de meses sin pagar a esta altura (incluye el de dueDate).
   monthsOverdue: number;
+  kind: 'due' | 'cutoff';
+  // Solo presente cuando kind === 'cutoff': el vencimiento real al que corresponde este corte.
+  relatedDueDate?: Date;
 }

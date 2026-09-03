@@ -12,6 +12,10 @@ import { ClientCardView, ClientNotification, ClientStatus, ClientTimelineEntry, 
 
 const AVATAR_HUES = [8, 24, 42, 160, 190, 210, 260, 300, 330];
 
+// Días antes del vencimiento en que se hace el "corte" de información: se le
+// pide al cliente que confirme sus datos para poder facturar/cobrar a tiempo.
+const CUTOFF_DAYS_BEFORE = 15;
+
 const DIACRITICS_RE = new RegExp('[\\u0300-\\u036f]', 'g');
 
 function normalizeText(value: string): string {
@@ -188,7 +192,41 @@ export class ClientViewBuilder {
       amount,
       overdue,
       monthsOverdue,
+      kind: 'due',
     };
+  }
+
+  // Puntos de línea de tiempo de un cliente: su vencimiento y, si todavía no
+  // está vencido, el corte de información CUTOFF_DAYS_BEFORE días antes (no
+  // tiene sentido mostrar el corte de un ciclo que ya venció). Se apoya en
+  // buildTimelineEntry para no repetir el cálculo de meses adeudados.
+  buildTimelineEntries(
+    client: Client,
+    executiveName: string,
+    plans: PlanConfig[],
+  ): ClientTimelineEntry[] {
+    const due = this.buildTimelineEntry(client, executiveName, plans);
+    if (!due) return [];
+
+    const entries: ClientTimelineEntry[] = [due];
+
+    if (!due.overdue) {
+      const cutoffDate = new Date(due.dueDate);
+      cutoffDate.setDate(cutoffDate.getDate() - CUTOFF_DAYS_BEFORE);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      entries.push({
+        ...due,
+        kind: 'cutoff',
+        dueDate: cutoffDate,
+        relatedDueDate: due.dueDate,
+        overdue: cutoffDate < today,
+        monthsOverdue: 0,
+      });
+    }
+
+    return entries;
   }
 
   private resolvePlanPrice(planText: string | null, plans: PlanConfig[]): number {

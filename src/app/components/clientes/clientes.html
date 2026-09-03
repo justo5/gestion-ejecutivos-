@@ -117,14 +117,24 @@
           </div>
 
           <button type="button" class="timeline-item" [class.is-overdue]="entry.overdue"
-            (click)="selectTimelineEntry(entry)">
+            [class.is-cutoff]="entry.kind === 'cutoff'" (click)="selectTimelineEntry(entry)">
             <span class="timeline-date">{{ timelineDateLabel(entry.dueDate) }}</span>
             <span class="timeline-dot"></span>
             <span class="timeline-client">{{ entry.clientName }}</span>
-            <span class="timeline-amount" *ngIf="entry.amount > 0">${{ entry.amount | number:'1.0-0' }}</span>
-            <span class="timeline-badge" *ngIf="entry.overdue">
-              {{ entry.monthsOverdue }} mes{{ entry.monthsOverdue === 1 ? '' : 'es' }} vencido{{ entry.monthsOverdue === 1 ? '' : 's' }}
-            </span>
+
+            <ng-container *ngIf="entry.kind === 'due'">
+              <span class="timeline-amount" *ngIf="entry.amount > 0">${{ entry.amount | number:'1.0-0' }}</span>
+              <span class="timeline-badge" *ngIf="entry.overdue">
+                {{ entry.monthsOverdue }} mes{{ entry.monthsOverdue === 1 ? '' : 'es' }} vencido{{ entry.monthsOverdue === 1 ? '' : 's' }}
+              </span>
+            </ng-container>
+
+            <ng-container *ngIf="entry.kind === 'cutoff' && entry.relatedDueDate as related">
+              <span class="timeline-amount">vence {{ timelineDateLabel(related) }}</span>
+              <span class="timeline-badge timeline-badge-cutoff">
+                {{ entry.overdue ? 'Corte pendiente' : 'Corte de info' }}
+              </span>
+            </ng-container>
           </button>
         </ng-container>
       </div>

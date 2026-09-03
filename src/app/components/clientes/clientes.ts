@@ -183,8 +183,8 @@ export class Clientes implements OnInit {
     const limit = new Date(now.getFullYear(), now.getMonth(), now.getDate() + TIMELINE_UPCOMING_DAYS);
 
     return rows
-      .map(row => this.viewBuilder.buildTimelineEntry(row.client, row.executiveName, plans))
-      .filter((entry): entry is ClientTimelineEntry => entry !== null && (entry.overdue || entry.dueDate <= limit))
+      .flatMap(row => this.viewBuilder.buildTimelineEntries(row.client, row.executiveName, plans))
+      .filter(entry => entry.overdue || entry.dueDate <= limit)
       .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
   }
 
