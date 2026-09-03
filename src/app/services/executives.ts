@@ -106,11 +106,21 @@ export class ExecutivesService {
   private columnOptionsSubject = new BehaviorSubject<string[]>([]);
   columnOptions$ = this.columnOptionsSubject.asObservable();
 
+  // Crecimiento acumulado de TODA la empresa, últimos 12 meses (más viejo →
+  // más nuevo). A diferencia de executives$, el backend no lo filtra por
+  // ejecutivo: cualquier usuario logueado ve el mismo dato, es el único
+  // gráfico "general" que le llega a un ejecutivo no admin.
+  private generalGrowthSubject = new BehaviorSubject<number[]>([]);
+  generalGrowth$ = this.generalGrowthSubject.asObservable();
+
   constructor(private zone: NgZone, private http: HttpClient) {}
 
   refresh(): void {
     this.http.get<Executive[]>('/api/executives').subscribe((executives) => {
       this.executivesSubject.next(executives);
+    });
+    this.http.get<number[]>('/api/executives/growth/general').subscribe((counts) => {
+      this.generalGrowthSubject.next(counts);
     });
   }
 

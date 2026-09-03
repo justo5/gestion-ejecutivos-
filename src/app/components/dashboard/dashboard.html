@@ -120,6 +120,26 @@
         </div>
       </div>
 
+      <!-- Crecimiento de TODA la empresa (todos los ejecutivos sumados), sin
+           filtrar por rol: a diferencia del resto de los gráficos de este
+           dashboard, cualquier ejecutivo ve el mismo dato acá, no solo su
+           propia cartera. -->
+      <div class="chart-panel" *ngIf="vm.generalGrowth.length">
+        <div class="chart-panel-header">
+          <span>Crecimiento general de clientes · últimos 12 meses</span>
+          <span class="chart-panel-current">
+            <span class="chart-panel-dot" style="background: #9085e9"></span>
+            {{ vm.generalGrowth[vm.generalGrowth.length - 1] }} clientes en total
+          </span>
+        </div>
+        <div class="chart-panel-body">
+          <app-area-chart [data]="vm.generalGrowth" color="#9085e9" label="dashboard-general"></app-area-chart>
+        </div>
+        <div class="chart-panel-range">
+          <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>
+        </div>
+      </div>
+
       <div class="chart-panel growth-panel" *ngIf="vm.executiveGrowth.length">
         <div class="chart-panel-header growth-panel-header">
           <span>Crecimiento de clientes por ejecutivo · últimos 12 meses</span>

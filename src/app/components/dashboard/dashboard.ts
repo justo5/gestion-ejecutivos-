@@ -120,8 +120,14 @@ interface DashboardViewModel {
   lifetimeRubroBars: BarItem[];
   lifetimeExecutiveBars: BarItem[];
   // Crecimiento acumulado de clientes por ejecutivo, últimos 12 meses (una
-  // línea por ejecutivo, misma escala de meses que revenueSeries).
+  // línea por ejecutivo, misma escala de meses que revenueSeries). Para un
+  // ejecutivo no admin, esto solo trae su propia línea (ver
+  // ExecutivesService#findAllForUser en el backend).
   executiveGrowth: LineSeries[];
+  // Crecimiento acumulado de TODA la empresa, últimos 12 meses, sin filtrar
+  // por rol (ver ExecutivesService#generalGrowth$): el único gráfico que le
+  // muestra a un ejecutivo no admin cómo va el equipo en conjunto.
+  generalGrowth: number[];
   // Detalle por cliente para cada tarjeta KPI (ver ClientDetailRow).
   activeClientRows: ClientDetailRow[];
   inactiveClientRows: ClientDetailRow[];
@@ -240,8 +246,12 @@ export class DashboardPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.vm$ = combineLatest([this.executivesService.executives$, this.configService.plans$]).pipe(
-      map(([executives, plans]) => this.buildViewModel(executives, plans)),
+    this.vm$ = combineLatest([
+      this.executivesService.executives$,
+      this.configService.plans$,
+      this.executivesService.generalGrowth$,
+    ]).pipe(
+      map(([executives, plans, generalGrowth]) => this.buildViewModel(executives, plans, generalGrowth)),
     );
     this.configService.goal$.subscribe(goal => (this.currentGoal = goal));
     this.executivesService.refresh();
@@ -441,7 +451,7 @@ export class DashboardPage implements OnInit {
     }
   }
 
-  private buildViewModel(executives: Executive[], plans: PlanConfig[]): DashboardViewModel {
+  private buildViewModel(executives: Executive[], plans: PlanConfig[], generalGrowth: number[]): DashboardViewModel {
     // Ficha "rica" por cliente (estado, salud, serie de pagos, monto del
     // plan): es la misma que arma la vista de Clientes, reusada acá para no
     // duplicar reglas de negocio (vencimientos, salud de pago, resolución de
@@ -461,7 +471,7 @@ export class DashboardPage implements OnInit {
       });
     });
 
-    if (rows.length === 0) return this.emptyViewModel();
+    if (rows.length === 0) return this.emptyViewModel(generalGrowth);
 
     const activeRows = rows.filter(r => r.client.active);
 
@@ -578,6 +588,7 @@ export class DashboardPage implements OnInit {
       lifetimeRubroBars: this.buildAvgBars(lifeRows, lr => lr.row.client.rubro),
       lifetimeExecutiveBars: this.buildAvgBars(lifeRows, lr => lr.row.view.executiveName, false),
       executiveGrowth: this.buildExecutiveGrowth(rows, monthYms),
+      generalGrowth,
 
       // Mismos grupos que los *Bars de arriba, pero sin plegar en "Otros" y
       // con el detalle de clientes de cada grupo, para el modal que se abre
@@ -858,7 +869,7 @@ export class DashboardPage implements OnInit {
     }));
   }
 
-  private emptyViewModel(): DashboardViewModel {
+  private emptyViewModel(generalGrowth: number[] = []): DashboardViewModel {
     return {
       hasData: false,
       totalClients: 0,
@@ -880,6 +891,7 @@ export class DashboardPage implements OnInit {
       lifetimeRubroBars: [],
       lifetimeExecutiveBars: [],
       executiveGrowth: [],
+      generalGrowth,
       activeClientRows: [],
       inactiveClientRows: [],
       payingClientRows: [],
