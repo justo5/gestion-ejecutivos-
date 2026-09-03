@@ -158,6 +158,16 @@
   color: var(--text-faint);
 }
 
+// --- Crecimiento general (todos los ejecutivos sumados) ---
+
+// Es un .chart-panel suelto (no vive en .trend-grid, que ya separa sus
+// tarjetas con gap), así que necesita su propio margen para no quedar
+// pegado al panel de abajo (por ejecutivo) — mismo ritmo de 1.5rem que
+// .kpi-grid, .trend-grid y .growth-panel usan entre secciones.
+.general-growth-panel {
+  margin-bottom: 1.5rem;
+}
+
 // --- Crecimiento por ejecutivo (multi-line chart) ---
 
 .growth-panel {
