@@ -3,8 +3,7 @@ import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Client, Executive, ExecutivesService } from '../../services/executives';
 import { ChartGoal, LineSeries } from '../charts/multi-line-chart/multi-line-chart';
-import { ConfigService, DashboardGoal, PlanConfig } from '../../services/config';
-import { AuthService } from '../../services/auth';
+import { ConfigService, DashboardGoal, PlanConfig, formatGoalMonth, formatYearMonth } from '../../services/config';
 import { ClientViewBuilder } from '../../services/client-view-builder';
 import { ClientCardView, ClientStatus } from '../../models/client-view.model';
 
@@ -151,12 +150,6 @@ interface DashboardViewModel {
   churnMonthDetails: MonthDetail[];
 }
 
-function formatYearMonth(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  return `${y}-${m}`;
-}
-
 function money(value: number): string {
   return `$${Math.round(value).toLocaleString('es-AR')}`;
 }
@@ -174,15 +167,6 @@ function formatLifetime(months: number): string {
   const restMonths = months % 12;
   const yearsLabel = `${years} año${years === 1 ? '' : 's'}`;
   return restMonths ? `${yearsLabel} ${restMonths} mes${restMonths === 1 ? '' : 'es'}` : yearsLabel;
-}
-
-// 'YYYY-MM' -> "mar 2027". A diferencia de monthLabels (solo el mes, sin año,
-// porque siempre son los últimos 12 meses) el objetivo puede caer en
-// cualquier año futuro, así que hace falta desambiguar.
-function formatGoalMonth(ym: string): string {
-  const [year, month] = ym.split('-').map(Number);
-  const d = new Date(year, (month || 1) - 1, 1);
-  return d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
 }
 
 @Component({
@@ -205,14 +189,10 @@ export class DashboardPage implements OnInit {
   selectedChart: ChartKind | null = null;
   expandedMonthIndex: number | null = null;
 
-  // Objetivo general del equipo marcado en el gráfico de crecimiento, y
-  // estado del formulario para definirlo/editarlo (solo admin).
+  // Objetivo general del equipo, marcado en los gráficos de crecimiento.
+  // Se define/edita desde el perfil del admin (ver Perfil), acá solo se lee
+  // para dibujarlo.
   currentGoal: DashboardGoal | null = null;
-  editingGoal = false;
-  goalClientsInput: number | null = null;
-  goalMonthInput = '';
-  goalSaving = false;
-  goalError = '';
 
   private static readonly CARD_TITLES: Record<DashboardCard, string> = {
     total: 'Clientes totales',
@@ -241,7 +221,6 @@ export class DashboardPage implements OnInit {
   constructor(
     private executivesService: ExecutivesService,
     private configService: ConfigService,
-    private authService: AuthService,
     private viewBuilder: ClientViewBuilder,
   ) {}
 
@@ -262,84 +241,11 @@ export class DashboardPage implements OnInit {
     return money(value);
   }
 
-  get isAdmin(): boolean {
-    return this.authService.isAdmin();
-  }
-
-  // Objetivo ya formateado para pasarle al gráfico de líneas.
+  // Objetivo ya formateado para pasarle a los gráficos de crecimiento.
   get chartGoal(): ChartGoal | null {
     const goal = this.currentGoal;
     if (!goal) return null;
     return { value: goal.targetClients, monthLabel: formatGoalMonth(goal.targetMonth) };
-  }
-
-  // Opciones del desplegable de mes objetivo: los próximos 5 años, mes a mes.
-  // Si el objetivo guardado (o el que se está editando) cae fuera de ese
-  // rango, se agrega igual al principio para no perderlo de la lista.
-  get goalMonthOptions(): { value: string; label: string }[] {
-    const now = new Date();
-    const options: { value: string; label: string }[] = [];
-    for (let i = 0; i <= 60; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const value = formatYearMonth(d);
-      options.push({ value, label: formatGoalMonth(value) });
-    }
-    const current = this.goalMonthInput || this.currentGoal?.targetMonth;
-    if (current && !options.some(o => o.value === current)) {
-      options.unshift({ value: current, label: formatGoalMonth(current) });
-    }
-    return options;
-  }
-
-  openGoalEditor(): void {
-    this.goalClientsInput = this.currentGoal?.targetClients ?? null;
-    this.goalMonthInput = this.currentGoal?.targetMonth ?? '';
-    this.goalError = '';
-    this.editingGoal = true;
-  }
-
-  cancelGoalEditor(): void {
-    this.editingGoal = false;
-    this.goalError = '';
-  }
-
-  saveGoal(): void {
-    const targetClients = this.goalClientsInput;
-    const targetMonth = this.goalMonthInput;
-    if (!targetClients || targetClients <= 0) {
-      this.goalError = 'Ingresá una cantidad de clientes mayor a cero.';
-      return;
-    }
-    if (!targetMonth) {
-      this.goalError = 'Elegí un mes objetivo.';
-      return;
-    }
-    this.goalSaving = true;
-    this.goalError = '';
-    this.configService.saveGoal(targetClients, targetMonth).subscribe({
-      next: () => {
-        this.goalSaving = false;
-        this.editingGoal = false;
-      },
-      error: () => {
-        this.goalSaving = false;
-        this.goalError = 'No se pudo guardar el objetivo.';
-      },
-    });
-  }
-
-  removeGoal(): void {
-    this.goalSaving = true;
-    this.configService.clearGoal().subscribe({
-      next: () => {
-        this.goalSaving = false;
-        this.editingGoal = false;
-      },
-      error: () => {
-        this.goalSaving = false;
-        this.goalError = 'No se pudo quitar el objetivo.';
-      },
-    });
   }
 
   openCard(card: DashboardCard): void {

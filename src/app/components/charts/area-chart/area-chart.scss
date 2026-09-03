@@ -16,3 +16,24 @@
   stroke: var(--border);
   stroke-width: 1;
 }
+
+// Objetivo a futuro: dorado a propósito, para no confundirse con el color
+// de la serie de datos.
+.goal-guide {
+  stroke: #f0a202;
+  stroke-width: 1.25;
+  stroke-dasharray: 4 3;
+  opacity: 0.8;
+}
+
+.goal-dot {
+  fill: #f0a202;
+  stroke: var(--surface, #fff);
+  stroke-width: 1.5;
+}
+
+.goal-label {
+  fill: var(--text);
+  font-size: 9px;
+  font-weight: 600;
+}

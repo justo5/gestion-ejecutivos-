@@ -21,6 +21,24 @@ export interface DashboardGoal {
   targetMonth: string;
 }
 
+// Date -> 'YYYY-MM'. Usado tanto para armar las opciones de mes del editor
+// de objetivo (perfil) como para agrupar series mes a mes (dashboard).
+export function formatYearMonth(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+// 'YYYY-MM' -> "mar 2027". A diferencia de los meses de los gráficos de
+// tendencia (solo el mes, sin año, porque siempre son los últimos 12 meses)
+// el objetivo puede caer en cualquier año futuro, así que hace falta
+// desambiguar.
+export function formatGoalMonth(ym: string): string {
+  const [year, month] = ym.split('-').map(Number);
+  const d = new Date(year, (month || 1) - 1, 1);
+  return d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+}
+
 @Injectable({
   providedIn: 'root',
 })

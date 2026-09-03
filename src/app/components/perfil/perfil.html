@@ -30,4 +30,51 @@
       <button type="button" class="save-btn" (click)="logout()">Cerrar sesión</button>
     </div>
   </div>
+
+  <!-- Objetivo general del equipo: se marca en los gráficos de crecimiento
+       de clientes del dashboard (general y por ejecutivo). Solo un admin
+       puede definirlo. -->
+  <div class="perfil-card goal-card" *ngIf="isAdmin">
+    <div class="goal-card-header">
+      <h3 class="goal-card-title">Objetivo general de clientes</h3>
+      <button type="button" class="goal-edit-btn" (click)="openGoalEditor()" *ngIf="!editingGoal">
+        🎯 {{ currentGoal ? 'Editar objetivo' : 'Marcar objetivo' }}
+      </button>
+    </div>
+
+    <p class="goal-summary" *ngIf="currentGoal && !editingGoal">
+      {{ currentGoal.targetClients }} clientes para {{ goalMonthLabel }}
+    </p>
+    <p class="goal-summary goal-summary-empty" *ngIf="!currentGoal && !editingGoal">
+      Todavía no hay un objetivo marcado. Se va a mostrar en los gráficos de crecimiento del dashboard.
+    </p>
+
+    <div class="goal-editor" *ngIf="editingGoal">
+      <label class="goal-editor-field">
+        Clientes objetivo
+        <input type="number" min="1" [(ngModel)]="goalClientsInput" />
+      </label>
+      <label class="goal-editor-field">
+        Mes objetivo
+        <select [(ngModel)]="goalMonthInput">
+          <option value="" disabled>Elegí un mes</option>
+          <option *ngFor="let m of goalMonthOptions" [value]="m.value">{{ m.label }}</option>
+        </select>
+      </label>
+      <div class="goal-editor-actions">
+        <button type="button" class="goal-btn-primary" [disabled]="goalSaving" (click)="saveGoal()">Guardar</button>
+        <button type="button" class="goal-btn-secondary" [disabled]="goalSaving" (click)="cancelGoalEditor()">Cancelar</button>
+        <button
+          type="button"
+          class="goal-btn-link"
+          *ngIf="currentGoal"
+          [disabled]="goalSaving"
+          (click)="removeGoal()"
+        >
+          Quitar objetivo
+        </button>
+      </div>
+      <p class="goal-editor-error" *ngIf="goalError">{{ goalError }}</p>
+    </div>
+  </div>
 </section>
