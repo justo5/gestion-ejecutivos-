@@ -241,11 +241,26 @@ export class DashboardPage implements OnInit {
     return money(value);
   }
 
-  // Objetivo ya formateado para pasarle a los gráficos de crecimiento.
+  // Objetivo ya formateado para el gráfico por ejecutivo: el valor cargado
+  // es "clientes objetivo por ejecutivo", así que se marca tal cual, como
+  // una vara común para comparar la línea de cada ejecutivo.
   get chartGoal(): ChartGoal | null {
     const goal = this.currentGoal;
     if (!goal) return null;
     return { value: goal.targetClients, monthLabel: formatGoalMonth(goal.targetMonth) };
+  }
+
+  // Objetivo para el gráfico general (suma de todos los ejecutivos): el
+  // mismo objetivo "por ejecutivo" multiplicado por la cantidad de
+  // ejecutivos que efectivamente tiene la empresa, para que sea comparable
+  // contra el total sumado en vez de contra el objetivo individual.
+  generalChartGoal(executivesCount: number): ChartGoal | null {
+    const goal = this.currentGoal;
+    if (!goal) return null;
+    return {
+      value: goal.targetClients * Math.max(executivesCount, 1),
+      monthLabel: formatGoalMonth(goal.targetMonth),
+    };
   }
 
   openCard(card: DashboardCard): void {

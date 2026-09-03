@@ -133,7 +133,7 @@
           </span>
         </div>
         <div class="chart-panel-body">
-          <app-area-chart [data]="vm.generalGrowth" color="#9085e9" label="dashboard-general" [goal]="chartGoal"></app-area-chart>
+          <app-area-chart [data]="vm.generalGrowth" color="#9085e9" label="dashboard-general" [goal]="generalChartGoal(vm.executiveGrowth.length)"></app-area-chart>
         </div>
         <div class="chart-panel-range">
           <span>{{ vm.monthLabels[vm.monthLabels.length - 1] }}</span>

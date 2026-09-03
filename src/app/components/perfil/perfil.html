@@ -36,22 +36,23 @@
        puede definirlo. -->
   <div class="perfil-card goal-card" *ngIf="isAdmin">
     <div class="goal-card-header">
-      <h3 class="goal-card-title">Objetivo general de clientes</h3>
+      <h3 class="goal-card-title">Objetivo de clientes por ejecutivo</h3>
       <button type="button" class="goal-edit-btn" (click)="openGoalEditor()" *ngIf="!editingGoal">
         🎯 {{ currentGoal ? 'Editar objetivo' : 'Marcar objetivo' }}
       </button>
     </div>
 
     <p class="goal-summary" *ngIf="currentGoal && !editingGoal">
-      {{ currentGoal.targetClients }} clientes para {{ goalMonthLabel }}
+      {{ currentGoal.targetClients }} clientes por ejecutivo para {{ goalMonthLabel }}
     </p>
     <p class="goal-summary goal-summary-empty" *ngIf="!currentGoal && !editingGoal">
-      Todavía no hay un objetivo marcado. Se va a mostrar en los gráficos de crecimiento del dashboard.
+      Todavía no hay un objetivo marcado. Se va a mostrar en los gráficos de crecimiento del dashboard: tal cual en
+      el de por ejecutivo, y multiplicado por la cantidad de ejecutivos en el general.
     </p>
 
     <div class="goal-editor" *ngIf="editingGoal">
       <label class="goal-editor-field">
-        Clientes objetivo
+        Clientes objetivo (por ejecutivo)
         <input type="number" min="1" [(ngModel)]="goalClientsInput" />
       </label>
       <label class="goal-editor-field">
