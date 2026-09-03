@@ -127,6 +127,17 @@ interface DashboardViewModel {
   // por rol (ver ExecutivesService#generalGrowth$): el único gráfico que le
   // muestra a un ejecutivo no admin cómo va el equipo en conjunto.
   generalGrowth: number[];
+  // Objetivo marcado en cada gráfico de crecimiento, ya formateado (ver
+  // ChartGoal) y calculado una sola vez acá. Importante: nunca se computan
+  // en el template con una llamada a método/getter, porque eso devuelve un
+  // objeto nuevo en cada ciclo de detección de cambios y con `goal` como
+  // @Input de un componente hijo eso dispara NG0103 (loop infinito). Acá se
+  // recalculan solo cuando cambian executives/plans/generalGrowth/goal$.
+  executiveGoal: ChartGoal | null;
+  // El mismo objetivo (que se carga como "clientes por ejecutivo") pero
+  // escalado por la cantidad de ejecutivos, para que sea comparable contra
+  // el total sumado del gráfico general.
+  generalGoal: ChartGoal | null;
   // Detalle por cliente para cada tarjeta KPI (ver ClientDetailRow).
   activeClientRows: ClientDetailRow[];
   inactiveClientRows: ClientDetailRow[];
@@ -189,11 +200,6 @@ export class DashboardPage implements OnInit {
   selectedChart: ChartKind | null = null;
   expandedMonthIndex: number | null = null;
 
-  // Objetivo general del equipo, marcado en los gráficos de crecimiento.
-  // Se define/edita desde el perfil del admin (ver Perfil), acá solo se lee
-  // para dibujarlo.
-  currentGoal: DashboardGoal | null = null;
-
   private static readonly CARD_TITLES: Record<DashboardCard, string> = {
     total: 'Clientes totales',
     mrr: 'Cartera mensual',
@@ -229,38 +235,16 @@ export class DashboardPage implements OnInit {
       this.executivesService.executives$,
       this.configService.plans$,
       this.executivesService.generalGrowth$,
+      this.configService.goal$,
     ]).pipe(
-      map(([executives, plans, generalGrowth]) => this.buildViewModel(executives, plans, generalGrowth)),
+      map(([executives, plans, generalGrowth, goal]) => this.buildViewModel(executives, plans, generalGrowth, goal)),
     );
-    this.configService.goal$.subscribe(goal => (this.currentGoal = goal));
     this.executivesService.refresh();
     this.configService.refresh();
   }
 
   money(value: number): string {
     return money(value);
-  }
-
-  // Objetivo ya formateado para el gráfico por ejecutivo: el valor cargado
-  // es "clientes objetivo por ejecutivo", así que se marca tal cual, como
-  // una vara común para comparar la línea de cada ejecutivo.
-  get chartGoal(): ChartGoal | null {
-    const goal = this.currentGoal;
-    if (!goal) return null;
-    return { value: goal.targetClients, monthLabel: formatGoalMonth(goal.targetMonth) };
-  }
-
-  // Objetivo para el gráfico general (suma de todos los ejecutivos): el
-  // mismo objetivo "por ejecutivo" multiplicado por la cantidad de
-  // ejecutivos que efectivamente tiene la empresa, para que sea comparable
-  // contra el total sumado en vez de contra el objetivo individual.
-  generalChartGoal(executivesCount: number): ChartGoal | null {
-    const goal = this.currentGoal;
-    if (!goal) return null;
-    return {
-      value: goal.targetClients * Math.max(executivesCount, 1),
-      monthLabel: formatGoalMonth(goal.targetMonth),
-    };
   }
 
   openCard(card: DashboardCard): void {
@@ -372,7 +356,12 @@ export class DashboardPage implements OnInit {
     }
   }
 
-  private buildViewModel(executives: Executive[], plans: PlanConfig[], generalGrowth: number[]): DashboardViewModel {
+  private buildViewModel(
+    executives: Executive[],
+    plans: PlanConfig[],
+    generalGrowth: number[],
+    goal: DashboardGoal | null,
+  ): DashboardViewModel {
     // Ficha "rica" por cliente (estado, salud, serie de pagos, monto del
     // plan): es la misma que arma la vista de Clientes, reusada acá para no
     // duplicar reglas de negocio (vencimientos, salud de pago, resolución de
@@ -392,7 +381,7 @@ export class DashboardPage implements OnInit {
       });
     });
 
-    if (rows.length === 0) return this.emptyViewModel(generalGrowth);
+    if (rows.length === 0) return this.emptyViewModel(generalGrowth, goal);
 
     const activeRows = rows.filter(r => r.client.active);
 
@@ -472,6 +461,10 @@ export class DashboardPage implements OnInit {
       });
     }
 
+    const executiveGrowth = this.buildExecutiveGrowth(rows, monthYms);
+    const executiveGoal = this.buildChartGoal(goal);
+    const generalGoal = this.buildChartGoal(goal, executiveGrowth.length);
+
     return {
       hasData: true,
       totalClients: rows.length,
@@ -508,8 +501,10 @@ export class DashboardPage implements OnInit {
       // executiveBars.
       lifetimeRubroBars: this.buildAvgBars(lifeRows, lr => lr.row.client.rubro),
       lifetimeExecutiveBars: this.buildAvgBars(lifeRows, lr => lr.row.view.executiveName, false),
-      executiveGrowth: this.buildExecutiveGrowth(rows, monthYms),
+      executiveGrowth,
       generalGrowth,
+      executiveGoal,
+      generalGoal,
 
       // Mismos grupos que los *Bars de arriba, pero sin plegar en "Otros" y
       // con el detalle de clientes de cada grupo, para el modal que se abre
@@ -687,6 +682,22 @@ export class DashboardPage implements OnInit {
     });
   }
 
+  // Objetivo ya formateado para pasarle a un gráfico de crecimiento. El
+  // valor cargado (ver DashboardGoal) es "clientes objetivo por ejecutivo":
+  // sin executivesCount se marca tal cual (gráfico por ejecutivo); con
+  // executivesCount se escala para ser comparable contra un total sumado
+  // (gráfico general). Se calcula una única vez por emisión de vm$ y no en
+  // el template: un getter/método llamado desde el binding devolvería un
+  // objeto nuevo en cada ciclo de detección de cambios y, al ser `goal` un
+  // @Input de un componente hijo, eso dispara NG0103 (loop infinito).
+  private buildChartGoal(goal: DashboardGoal | null, executivesCount = 1): ChartGoal | null {
+    if (!goal) return null;
+    return {
+      value: goal.targetClients * Math.max(executivesCount, 1),
+      monthLabel: formatGoalMonth(goal.targetMonth),
+    };
+  }
+
   // Crecimiento acumulado de clientes por ejecutivo: para cada mes de
   // monthYms (más viejo → más nuevo), cuántos clientes tenía ya sumados el
   // ejecutivo (contactDay antes de la ventana cuenta como "ya estaba", igual
@@ -790,7 +801,7 @@ export class DashboardPage implements OnInit {
     }));
   }
 
-  private emptyViewModel(generalGrowth: number[] = []): DashboardViewModel {
+  private emptyViewModel(generalGrowth: number[] = [], goal: DashboardGoal | null = null): DashboardViewModel {
     return {
       hasData: false,
       totalClients: 0,
@@ -813,6 +824,8 @@ export class DashboardPage implements OnInit {
       lifetimeExecutiveBars: [],
       executiveGrowth: [],
       generalGrowth,
+      executiveGoal: this.buildChartGoal(goal),
+      generalGoal: this.buildChartGoal(goal),
       activeClientRows: [],
       inactiveClientRows: [],
       payingClientRows: [],

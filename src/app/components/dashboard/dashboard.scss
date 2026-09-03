@@ -236,7 +236,12 @@
 
 .bar-row {
   display: grid;
-  grid-template-columns: auto minmax(64px, 0.85fr) minmax(60px, 2fr) auto;
+  // Los nombres de ejecutivo suelen ser dos palabras ("Gonzalo De Andrade");
+  // con 0.85fr contra 2fr del track quedaban truncados casi siempre. Le
+  // damos al label más peso que al track (que es solo un adorno visual, el
+  // valor real ya está en bar-value) para que la mayoría de los nombres
+  // entren enteros.
+  grid-template-columns: auto minmax(90px, 1.3fr) minmax(40px, 1fr) auto;
   align-items: center;
   gap: 8px;
   font-size: 0.82rem;
@@ -368,7 +373,8 @@
 .group-row {
   width: 100%;
   display: grid;
-  grid-template-columns: auto minmax(64px, 0.85fr) minmax(60px, 2fr) auto auto;
+  // Mismo criterio que .bar-row: más peso al nombre que al track adorno.
+  grid-template-columns: auto minmax(90px, 1.3fr) minmax(40px, 1fr) auto auto;
   align-items: center;
   gap: 8px;
   padding: 8px 4px;

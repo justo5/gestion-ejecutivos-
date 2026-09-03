@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService, AuthUser } from '../../services/auth';
 import { ExecutivesService } from '../../services/executives';
@@ -23,12 +23,19 @@ export class Perfil implements OnInit {
   goalMonthInput = '';
   goalSaving = false;
   goalError = '';
+  // Opciones del desplegable de mes objetivo. Se calculan una sola vez al
+  // abrir el editor (ver openGoalEditor), NUNCA como getter leído desde el
+  // template: un getter usado en un *ngFor arma un array nuevo en cada
+  // ciclo de detección de cambios y, bajo el CD zoneless de Angular, eso
+  // dispara NG0103 (loop infinito de refresco).
+  goalMonthOptions: { value: string; label: string }[] = [];
 
   constructor(
     private auth: AuthService,
     private router: Router,
     private executivesService: ExecutivesService,
     private configService: ConfigService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.profile = this.auth.getUser();
   }
@@ -41,12 +48,20 @@ export class Perfil implements OnInit {
       const executiveId = this.profile.executiveId;
       this.executivesService.executives$.subscribe(execs => {
         this.myImageUrl = execs.find(e => e.id === executiveId)?.imageUrl ?? null;
+        // La app corre con detección de cambios zoneless (ver app-module.ts):
+        // un callback de subscribe() que llega fuera del ciclo que originó el
+        // click no repinta la vista solo, hace falta pedirlo a mano (mismo
+        // criterio que ConfigPage con plans$).
+        this.cdr.detectChanges();
       });
       this.executivesService.refresh();
     }
 
     if (this.isAdmin) {
-      this.configService.goal$.subscribe(goal => (this.currentGoal = goal));
+      this.configService.goal$.subscribe(goal => {
+        this.currentGoal = goal;
+        this.cdr.detectChanges();
+      });
       this.configService.refreshGoal();
     }
   }
@@ -60,10 +75,10 @@ export class Perfil implements OnInit {
     return this.currentGoal ? formatGoalMonth(this.currentGoal.targetMonth) : null;
   }
 
-  // Opciones del desplegable de mes objetivo: los próximos 5 años, mes a mes.
-  // Si el objetivo guardado (o el que se está editando) cae fuera de ese
-  // rango, se agrega igual al principio para no perderlo de la lista.
-  get goalMonthOptions(): { value: string; label: string }[] {
+  // Arma las opciones del desplegable de mes objetivo: los próximos 5 años,
+  // mes a mes. Si el objetivo guardado cae fuera de ese rango, se agrega
+  // igual al principio para no perderlo de la lista.
+  private buildGoalMonthOptions(): { value: string; label: string }[] {
     const now = new Date();
     const options: { value: string; label: string }[] = [];
     for (let i = 0; i <= 60; i++) {
@@ -71,7 +86,7 @@ export class Perfil implements OnInit {
       const value = formatYearMonth(d);
       options.push({ value, label: formatGoalMonth(value) });
     }
-    const current = this.goalMonthInput || this.currentGoal?.targetMonth;
+    const current = this.currentGoal?.targetMonth;
     if (current && !options.some(o => o.value === current)) {
       options.unshift({ value: current, label: formatGoalMonth(current) });
     }
@@ -81,6 +96,7 @@ export class Perfil implements OnInit {
   openGoalEditor(): void {
     this.goalClientsInput = this.currentGoal?.targetClients ?? null;
     this.goalMonthInput = this.currentGoal?.targetMonth ?? '';
+    this.goalMonthOptions = this.buildGoalMonthOptions();
     this.goalError = '';
     this.editingGoal = true;
   }
@@ -107,10 +123,12 @@ export class Perfil implements OnInit {
       next: () => {
         this.goalSaving = false;
         this.editingGoal = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.goalSaving = false;
         this.goalError = 'No se pudo guardar el objetivo.';
+        this.cdr.detectChanges();
       },
     });
   }
@@ -121,10 +139,12 @@ export class Perfil implements OnInit {
       next: () => {
         this.goalSaving = false;
         this.editingGoal = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.goalSaving = false;
         this.goalError = 'No se pudo quitar el objetivo.';
+        this.cdr.detectChanges();
       },
     });
   }
