@@ -56,6 +56,7 @@
     <ng-template #rowTpl let-entry="entry" let-dayNum="dayNum" let-upcoming="upcoming">
       <tr [class.row-paid]="entry.paid" [class.row-upcoming]="upcoming">
         <td class="col-day">{{ dayNum }}</td>
+        <td>{{ entry.country || '-' }}</td>
         <td class="col-client">
           <button *ngIf="entry.owedMonths.length > 1"
                   type="button"
@@ -113,7 +114,7 @@
       <!-- Desglose mes a mes: sólo si viene arrastrando más de un mes y la tarjeta está expandida. -->
       <tr *ngIf="isExpanded(entry.clientId) && entry.owedMonths.length > 1" class="row-detail">
         <td></td>
-        <td colspan="10">
+        <td colspan="11">
           <div class="month-breakdown">
             <span class="month-breakdown-title">Meses adeudados</span>
             <div class="month-breakdown-item" *ngFor="let due of entry.monthBreakdown">
@@ -137,6 +138,7 @@
         <thead>
           <tr>
             <th>Día</th>
+            <th>País</th>
             <th>Cliente</th>
             <th>Fanpage</th>
             <th>Ejecutivo</th>
@@ -161,7 +163,7 @@
           <!-- Divisor próximos cobros -->
           <ng-container *ngIf="vm.upcomingGroups.length > 0">
             <tr class="divider-row">
-              <td colspan="11">
+              <td colspan="12">
                 <span class="upcoming-label">Próximos cobros</span>
               </td>
             </tr>
@@ -174,7 +176,7 @@
 
           <!-- Estado vacío -->
           <tr *ngIf="vm.groups.length === 0 && vm.upcomingGroups.length === 0">
-            <td colspan="11" class="empty-msg">Sin cobros para este mes</td>
+            <td colspan="12" class="empty-msg">Sin cobros para este mes</td>
           </tr>
 
         </tbody>

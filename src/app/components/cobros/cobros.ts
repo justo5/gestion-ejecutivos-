@@ -18,6 +18,7 @@ export interface HistorialEntry {
   executiveName: string;
   clientName: string;
   fanpage: string | null;
+  country: string | null;
   plan: string | null;
   dayNum: number;
   collectedBy: CollectedBy | null;
@@ -227,6 +228,7 @@ export class Cobros implements OnInit, OnDestroy {
               executiveName: exec.name,
               clientName: client.name,
               fanpage: client.fanpage,
+              country: client.country,
               plan: client.plan,
               dayNum,
               collectedBy: this.normalizeCollectedBy(client.collectedBy),
@@ -408,7 +410,7 @@ export class Cobros implements OnInit, OnDestroy {
       }
     }
 
-    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Gastos', 'IVA', 'Cobrado por', 'Estado', 'A favor de'];
+    const headers = ['Día', 'País', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Gastos', 'IVA', 'Cobrado por', 'Estado', 'A favor de'];
     const rows = allEntries.map(({ dayNum, entry }) => {
       let aFavorDe = '';
       if (entry.paid) {
@@ -417,6 +419,7 @@ export class Cobros implements OnInit, OnDestroy {
       }
       return [
         dayNum,
+        entry.country ?? '',
         entry.clientName,
         entry.fanpage ?? '',
         entry.executiveName,
