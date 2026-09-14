@@ -510,7 +510,8 @@ export class DashboardPage implements OnInit {
       // con el detalle de clientes de cada grupo, para el modal que se abre
       // al tocar el panel.
       statusGroups: this.buildGroupDetail(rows, r => r.view.statusLabel, () => 1,
-        count => `${count} cliente${count === 1 ? '' : 's'}`, r => r.view.executiveName),
+        count => `${count} cliente${count === 1 ? '' : 's'}`, r => r.view.executiveName,
+        label => this.statusGroupColor(label)),
       rubroGroups: this.buildGroupDetail(rows, r => r.client.rubro, () => 1,
         count => `${count} cliente${count === 1 ? '' : 's'}`, r => r.client.plan || 'Sin plan'),
       countryGroups: this.buildGroupDetail(rows, r => r.client.country, () => 1,
@@ -746,6 +747,12 @@ export class DashboardPage implements OnInit {
     valueFn: (row: Row) => number,
     formatSecondary: (value: number, count: number) => string,
     rowSecondary: (row: Row) => string,
+    // Por defecto el color de cada grupo depende de su posición en el
+    // ranking (igual que buildBars). El semáforo necesita en cambio un color
+    // fijo por etiqueta (Verde/Amarillo/Rojo), sea cual sea el orden, para
+    // no desentonar con los puntos de estado de cada cliente ni con el panel
+    // plegado: se le pasa colorFn para eso.
+    colorFn?: (label: string, index: number) => string,
   ): GroupDetail[] {
     const groups = new Map<string, Row[]>();
     rows.forEach(row => {
@@ -763,11 +770,23 @@ export class DashboardPage implements OnInit {
       label: e.label,
       secondary: formatSecondary(e.value, e.groupRows.length),
       pct: Math.round((e.value / max) * 100),
-      color: SERIES_COLORS[i % SERIES_COLORS.length],
+      color: colorFn ? colorFn(e.label, i) : SERIES_COLORS[i % SERIES_COLORS.length],
       clients: e.groupRows
         .map(r => this.toRow(r, rowSecondary(r)))
         .sort((a, b) => a.name.localeCompare(b.name)),
     }));
+  }
+
+  // Mismo color por etiqueta que usan statusBars y app-status-dot, para que
+  // el semáforo no cambie de color según el orden del ranking al expandirlo.
+  private static readonly STATUS_COLORS: Record<string, string> = {
+    Verde: 'var(--verde)',
+    Amarillo: 'var(--naranja)',
+    Rojo: 'var(--rojo)',
+  };
+
+  private statusGroupColor(label: string): string {
+    return DashboardPage.STATUS_COLORS[label] ?? OTHER_COLOR;
   }
 
   // Igual que buildGroupDetail, pero para el tiempo de vida: el detalle de
