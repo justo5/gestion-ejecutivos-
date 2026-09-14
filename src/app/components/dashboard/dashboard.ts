@@ -23,6 +23,9 @@ const SERIES_COLORS = [
 ];
 const OTHER_COLOR = '#6b6b70';
 const MAX_SERIES = 8;
+// Orden fijo del semáforo, sea cual sea la cantidad de clientes en cada
+// estado: nunca se reordena por ranking.
+const STATUS_ORDER = ['Verde', 'Amarillo', 'Rojo'];
 
 interface Row {
   client: Client;
@@ -511,7 +514,7 @@ export class DashboardPage implements OnInit {
       // al tocar el panel.
       statusGroups: this.buildGroupDetail(rows, r => r.view.statusLabel, () => 1,
         count => `${count} cliente${count === 1 ? '' : 's'}`, r => r.view.executiveName,
-        label => this.statusGroupColor(label)),
+        label => this.statusGroupColor(label), STATUS_ORDER),
       rubroGroups: this.buildGroupDetail(rows, r => r.client.rubro, () => 1,
         count => `${count} cliente${count === 1 ? '' : 's'}`, r => r.client.plan || 'Sin plan'),
       countryGroups: this.buildGroupDetail(rows, r => r.client.country, () => 1,
@@ -753,6 +756,10 @@ export class DashboardPage implements OnInit {
     // no desentonar con los puntos de estado de cada cliente ni con el panel
     // plegado: se le pasa colorFn para eso.
     colorFn?: (label: string, index: number) => string,
+    // Por defecto los grupos se ordenan por cantidad (igual que buildBars).
+    // El semáforo necesita en cambio un orden fijo (Verde, Amarillo, Rojo)
+    // sea cual sea la cantidad de clientes en cada uno.
+    labelOrder?: string[],
   ): GroupDetail[] {
     const groups = new Map<string, Row[]>();
     rows.forEach(row => {
@@ -763,7 +770,9 @@ export class DashboardPage implements OnInit {
 
     const entries = [...groups.entries()]
       .map(([label, groupRows]) => ({ label, groupRows, value: groupRows.reduce((sum, r) => sum + valueFn(r), 0) }))
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => labelOrder
+        ? labelOrder.indexOf(a.label) - labelOrder.indexOf(b.label)
+        : b.value - a.value);
 
     const max = Math.max(...entries.map(e => e.value), 1);
     return entries.map((e, i) => ({
