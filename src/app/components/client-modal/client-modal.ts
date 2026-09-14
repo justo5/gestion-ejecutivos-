@@ -24,7 +24,7 @@ export class ClientModal implements OnChanges {
     // Campos tipados destacados, en su orden definido.
     const typed = CLIENT_DETAIL_FIELDS.map(field => ({
       label: field.label,
-      value: client[field.key],
+      value: field.format ? field.format(client[field.key]) : client[field.key],
     }));
 
     // Resto de columnas crudas del archivo importado (data) que no estén ya cubiertas.

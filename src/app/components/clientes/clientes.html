@@ -83,6 +83,15 @@
         </label>
 
         <label class="form-field">
+          <span class="form-label">IVA</span>
+          <select class="form-input" [(ngModel)]="newClient.iva" name="iva">
+            <option [ngValue]="null">Sin especificar</option>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </label>
+
+        <label class="form-field">
           <span class="form-label">Día de inicio <span class="required-mark">*</span></span>
           <input type="date" class="form-input" [(ngModel)]="newClient.contactDay" name="contactDay" required />
         </label>
@@ -332,6 +341,15 @@
             <select class="form-input" [(ngModel)]="editClient.rubro" name="rubro">
               <option value="">Sin rubro</option>
               <option *ngFor="let rubro of rubros" [value]="rubro.name">{{ rubro.name }}</option>
+            </select>
+          </label>
+
+          <label class="form-field">
+            <span class="form-label">IVA</span>
+            <select class="form-input" [(ngModel)]="editClient.iva" name="iva">
+              <option [ngValue]="null">Sin especificar</option>
+              <option [ngValue]="true">Sí</option>
+              <option [ngValue]="false">No</option>
             </select>
           </label>
 

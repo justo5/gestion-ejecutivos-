@@ -35,7 +35,7 @@ export class EjecutivosPage implements OnInit {
     const client = this.selectedClient;
     return CLIENT_DETAIL_FIELDS.map(field => ({
       label: field.label,
-      value: client[field.key],
+      value: field.format ? field.format(client[field.key]) : client[field.key],
     })).filter(field => field.value !== null && field.value !== undefined && field.value !== '');
   }
 

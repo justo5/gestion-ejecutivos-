@@ -92,6 +92,7 @@ export class Clientes implements OnInit {
     edad: number | null;
     collectedBy: string;
     rubro: string;
+    iva: boolean | null;
     active: boolean;
     contactDay: string;
   } = {
@@ -103,6 +104,7 @@ export class Clientes implements OnInit {
     edad: null,
     collectedBy: '',
     rubro: '',
+    iva: null,
     active: true,
     contactDay: '',
   };
@@ -117,6 +119,7 @@ export class Clientes implements OnInit {
     edad: number | null;
     collectedBy: string;
     rubro: string;
+    iva: boolean | null;
     active: boolean;
     contactDay: string;
   } = {
@@ -129,6 +132,7 @@ export class Clientes implements OnInit {
     edad: null,
     collectedBy: '',
     rubro: '',
+    iva: null,
     active: true,
     contactDay: '',
   };
@@ -223,7 +227,7 @@ export class Clientes implements OnInit {
     // Campos tipados destacados, en su orden definido.
     const typed = CLIENT_DETAIL_FIELDS.map(field => ({
       label: field.label,
-      value: client[field.key],
+      value: field.format ? field.format(client[field.key]) : client[field.key],
     }));
 
     // Resto de columnas crudas del archivo importado (data) que no estén ya cubiertas.
@@ -379,6 +383,7 @@ export class Clientes implements OnInit {
       edad: c.edad ?? null,
       collectedBy: c.collectedBy ?? '',
       rubro: c.rubro ?? '',
+      iva: c.iva ?? null,
       active: c.active,
       contactDay: c.contactDay ?? '',
     };
@@ -426,6 +431,7 @@ export class Clientes implements OnInit {
       edad: parsedNumber(this.editClient.edad),
       collectedBy: trimmed(this.editClient.collectedBy),
       rubro: trimmed(this.editClient.rubro),
+      iva: this.editClient.iva,
       active: this.editClient.active,
       contactDay: this.editClient.contactDay || null,
     };
@@ -547,6 +553,7 @@ export class Clientes implements OnInit {
       edad: parsedNumber(this.newClient.edad),
       collectedBy: trimmed(this.newClient.collectedBy),
       rubro: trimmed(this.newClient.rubro),
+      iva: this.newClient.iva,
       active: this.newClient.active,
       contactDay: this.newClient.contactDay || null,
     };
@@ -566,6 +573,7 @@ export class Clientes implements OnInit {
           edad: null,
           collectedBy: '',
           rubro: '',
+          iva: null,
           active: true,
           contactDay: '',
         };

@@ -37,6 +37,8 @@ export interface Client {
   edad: number | null;
   collectedBy: string | null;
   rubro: string | null;
+  // Si el cliente factura con IVA. null = todavía no se especificó.
+  iva: boolean | null;
   active: boolean;
   contactDay: string | null;
   data: Record<string, unknown>;
@@ -58,7 +60,12 @@ export interface Client {
 
 // Campos estáticos del cliente que se muestran en el modal de detalle, en el
 // orden en que se renderizan. Cada uno mapea a una columna tipada de la tabla.
-export const CLIENT_DETAIL_FIELDS: { key: keyof Client; label: string }[] = [
+export const CLIENT_DETAIL_FIELDS: {
+  key: keyof Client;
+  label: string;
+  // Transforma el valor crudo del cliente antes de mostrarlo (ej. booleanos a "Sí"/"No").
+  format?: (value: unknown) => unknown;
+}[] = [
   { key: 'fanpage', label: 'Fan page' },
   { key: 'plan', label: 'Plan' },
   { key: 'country', label: 'País' },
@@ -66,6 +73,7 @@ export const CLIENT_DETAIL_FIELDS: { key: keyof Client; label: string }[] = [
   { key: 'edad', label: 'Edad' },
   { key: 'collectedBy', label: 'Quién cobra' },
   { key: 'rubro', label: 'Rubro' },
+  { key: 'iva', label: 'IVA', format: (value) => (value === true ? 'Sí' : value === false ? 'No' : value) },
   { key: 'contactDay', label: 'Día de contacto' },
 ];
 
@@ -397,6 +405,7 @@ export class ExecutivesService {
       edad: number | null;
       collectedBy: string | null;
       rubro: string | null;
+      iva: boolean | null;
       active: boolean;
       contactDay: string | null;
     },
@@ -417,6 +426,7 @@ export class ExecutivesService {
       edad: number | null;
       collectedBy: string | null;
       rubro: string | null;
+      iva: boolean | null;
       active: boolean;
       contactDay: string | null;
     },
