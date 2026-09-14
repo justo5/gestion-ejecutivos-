@@ -220,7 +220,7 @@ export class Cobros implements OnInit, OnDestroy {
             const entry: HistorialEntry = {
               clientId: client.id,
               executiveName: exec.name,
-              clientName: clientDisplayName(client),
+              clientName: client.name,
               fanpage: client.fanpage,
               plan: client.plan,
               dayNum,
