@@ -40,6 +40,7 @@ interface Row {
 interface LifeRow {
   row: Row;
   months: number;
+  days: number;
   churned: boolean;
 }
 
@@ -65,7 +66,7 @@ export interface ClientDetailRow {
 }
 
 // Tarjetas KPI que se pueden abrir para ver el detalle.
-export type DashboardCard = 'total' | 'mrr' | 'pending' | 'collected';
+export type DashboardCard = 'total' | 'mrr' | 'pending' | 'collected' | 'lifetime';
 
 // Grupo de un gráfico de barras (rubro, plan, ejecutivo…) con el detalle de
 // clientes que lo componen, para el acordeón que se abre al tocar el panel.
@@ -122,6 +123,9 @@ interface DashboardViewModel {
   // dados de baja, a diferencia del resto de las analíticas del dashboard.
   lifetimeRubroBars: BarItem[];
   lifetimeExecutiveBars: BarItem[];
+  // Tiempo de vida promedio general (todos los clientes con contactDay
+  // cargado, activos y dados de baja), en días, para la tarjeta KPI.
+  lifetimeAvgDays: number;
   // Crecimiento acumulado de clientes por ejecutivo, últimos 12 meses (una
   // línea por ejecutivo, misma escala de meses que revenueSeries). Para un
   // ejecutivo no admin, esto solo trae su propia línea (ver
@@ -149,6 +153,7 @@ interface DashboardViewModel {
   pendingClientRows: ClientDetailRow[];
   paidThisMonthRows: ClientDetailRow[];
   unpaidThisMonthRows: ClientDetailRow[];
+  lifetimeClientRows: ClientDetailRow[];
   // Detalle sin plegar (todos los grupos, no solo el top 8) de cada gráfico
   // de barras, con los clientes de cada grupo.
   statusGroups: GroupDetail[];
@@ -174,14 +179,30 @@ function monthsBetween(from: Date, to: Date): number {
   return Math.max(0, (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()));
 }
 
-// 14 -> "1 año 2 meses", 6 -> "6 meses". Se usa para el tiempo de vida, donde
-// un número de meses de dos dígitos se lee peor que la forma en años.
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+// Días completos entre dos fechas, mismo criterio que monthsBetween pero en
+// días: se usa para el tiempo de vida general y por ejecutivo, donde se pidió
+// la unidad en días en vez de "X años Y meses".
+function daysBetween(from: Date, to: Date): number {
+  return Math.max(0, Math.floor((to.getTime() - from.getTime()) / MS_PER_DAY));
+}
+
+// 14 -> "1 año 2 meses", 6 -> "6 meses". Se usa para el tiempo de vida por
+// rubro, donde un número de meses de dos dígitos se lee peor que la forma en
+// años.
 function formatLifetime(months: number): string {
   if (months < 12) return `${months} mes${months === 1 ? '' : 'es'}`;
   const years = Math.floor(months / 12);
   const restMonths = months % 12;
   const yearsLabel = `${years} año${years === 1 ? '' : 's'}`;
   return restMonths ? `${yearsLabel} ${restMonths} mes${restMonths === 1 ? '' : 'es'}` : yearsLabel;
+}
+
+// 1 -> "1 día", 45 -> "45 días". Se usa para el tiempo de vida general (KPI)
+// y por ejecutivo, siempre en días sin convertir a meses/años.
+function formatDays(days: number): string {
+  return `${days} día${days === 1 ? '' : 's'}`;
 }
 
 @Component({
@@ -209,6 +230,7 @@ export class DashboardPage implements OnInit {
     mrr: 'Cartera mensual',
     pending: 'Pendiente de cobro',
     collected: 'Porcentaje cobrado',
+    lifetime: 'Tiempo de vida promedio',
   };
 
   private static readonly BARS_TITLES: Record<BarsDimension, string> = {
@@ -418,8 +440,19 @@ export class DashboardPage implements OnInit {
       .map(r => {
         const start = new Date(r.client.contactDay + 'T00:00:00');
         const end = r.client.deletedAt ? new Date(r.client.deletedAt) : now;
-        return { row: r, months: monthsBetween(start, end), churned: !!r.client.deletedAt };
+        return {
+          row: r,
+          months: monthsBetween(start, end),
+          days: daysBetween(start, end),
+          churned: !!r.client.deletedAt,
+        };
       });
+
+    // Tiempo de vida promedio general (KPI), en días: mezcla activos y dados
+    // de baja igual que lifeRows.
+    const lifetimeAvgDays = lifeRows.length
+      ? Math.round(lifeRows.reduce((sum, lr) => sum + lr.days, 0) / lifeRows.length)
+      : 0;
 
     const monthLabels: string[] = [];
     const monthYms: string[] = [];
@@ -501,10 +534,12 @@ export class DashboardPage implements OnInit {
         false,
       ),
       // Tiempo de vida promedio: mezcla activos y dados de baja (ver
-      // LifeRow). Por ejecutivo tampoco se pliega, mismo criterio que
-      // executiveBars.
-      lifetimeRubroBars: this.buildAvgBars(lifeRows, lr => lr.row.client.rubro),
-      lifetimeExecutiveBars: this.buildAvgBars(lifeRows, lr => lr.row.view.executiveName, false),
+      // LifeRow). Por rubro se expresa en meses/años (formatLifetime); por
+      // ejecutivo, en días (pedido explícito), y tampoco se pliega, mismo
+      // criterio que executiveBars.
+      lifetimeRubroBars: this.buildAvgBars(lifeRows, lr => lr.row.client.rubro, lr => lr.months, formatLifetime),
+      lifetimeExecutiveBars: this.buildAvgBars(lifeRows, lr => lr.row.view.executiveName, lr => lr.days, formatDays, false),
+      lifetimeAvgDays,
       executiveGrowth,
       generalGrowth,
       executiveGoal,
@@ -528,8 +563,8 @@ export class DashboardPage implements OnInit {
       executiveGroups: this.buildGroupDetail(rows, r => r.view.executiveName, r => r.view.monthlyAmount,
         (value, count) => `${money(value)} · ${count} cliente${count === 1 ? '' : 's'}`,
         r => `${money(r.view.monthlyAmount)}/mes`),
-      lifetimeRubroGroups: this.buildAvgGroupDetail(lifeRows, lr => lr.row.client.rubro),
-      lifetimeExecutiveGroups: this.buildAvgGroupDetail(lifeRows, lr => lr.row.view.executiveName),
+      lifetimeRubroGroups: this.buildAvgGroupDetail(lifeRows, lr => lr.row.client.rubro, lr => lr.months, formatLifetime),
+      lifetimeExecutiveGroups: this.buildAvgGroupDetail(lifeRows, lr => lr.row.view.executiveName, lr => lr.days, formatDays),
 
       revenueMonthDetails,
       newClientsMonthDetails,
@@ -565,6 +600,12 @@ export class DashboardPage implements OnInit {
         .filter(r => r.view.paymentSeries[r.view.paymentSeries.length - 1] !== 1)
         .map(r => this.toRow(r, r.view.executiveName))
         .sort((a, b) => a.name.localeCompare(b.name)),
+      // Detalle de la tarjeta KPI de tiempo de vida: todos los clientes con
+      // contactDay cargado (activos y dados de baja), del más antiguo al más
+      // nuevo.
+      lifetimeClientRows: [...lifeRows]
+        .sort((a, b) => b.days - a.days)
+        .map(lr => this.toRow(lr.row, `${formatDays(lr.days)}${lr.churned ? ' · dado de baja' : ''}`)),
     };
   }
 
@@ -640,20 +681,24 @@ export class DashboardPage implements OnInit {
     }));
   }
 
-  // Igual que buildBars, pero el valor de cada grupo es un promedio (meses de
-  // vida) en vez de una suma: sumar "14 meses" + "8 meses" no dice nada. El
-  // grupo plegado en "Otros" también es un promedio, ponderado por cantidad
-  // de clientes del resto.
+  // Igual que buildBars, pero el valor de cada grupo es un promedio (tiempo
+  // de vida) en vez de una suma: sumar "14 meses" + "8 meses" no dice nada.
+  // El grupo plegado en "Otros" también es un promedio, ponderado por
+  // cantidad de clientes del resto. `valueFn` extrae la unidad a promediar
+  // (meses o días, según el panel) y `formatValue` la formatea para el texto
+  // secundario.
   private buildAvgBars(
     lifeRows: LifeRow[],
     keyFn: (row: LifeRow) => string | null,
+    valueFn: (row: LifeRow) => number,
+    formatValue: (value: number) => string,
     foldExtra = true,
   ): BarItem[] {
     const sums = new Map<string, number>();
     const counts = new Map<string, number>();
     lifeRows.forEach(lr => {
       const key = (keyFn(lr) ?? '').trim() || 'Sin dato';
-      sums.set(key, (sums.get(key) ?? 0) + lr.months);
+      sums.set(key, (sums.get(key) ?? 0) + valueFn(lr));
       counts.set(key, (counts.get(key) ?? 0) + 1);
     });
 
@@ -680,7 +725,7 @@ export class DashboardPage implements OnInit {
       return {
         label: e.key,
         value: avg,
-        secondary: `${formatLifetime(avg)} prom. · ${e.count} cliente${e.count === 1 ? '' : 's'}`,
+        secondary: `${formatValue(avg)} prom. · ${e.count} cliente${e.count === 1 ? '' : 's'}`,
         pct: Math.round((avg / max) * 100),
         color: e.key === 'Otros' ? OTHER_COLOR : SERIES_COLORS[i % SERIES_COLORS.length],
       };
@@ -800,9 +845,15 @@ export class DashboardPage implements OnInit {
   }
 
   // Igual que buildGroupDetail, pero para el tiempo de vida: el detalle de
-  // cada cliente muestra sus meses de vida (y si ya se dio de baja) en vez de
-  // un monto o una cantidad.
-  private buildAvgGroupDetail(lifeRows: LifeRow[], keyFn: (row: LifeRow) => string | null): GroupDetail[] {
+  // cada cliente muestra su tiempo de vida (y si ya se dio de baja) en vez de
+  // un monto o una cantidad. `valueFn`/`formatValue` son la misma unidad
+  // (meses o días) que usa buildAvgBars para este mismo panel.
+  private buildAvgGroupDetail(
+    lifeRows: LifeRow[],
+    keyFn: (row: LifeRow) => string | null,
+    valueFn: (row: LifeRow) => number,
+    formatValue: (value: number) => string,
+  ): GroupDetail[] {
     const groups = new Map<string, LifeRow[]>();
     lifeRows.forEach(lr => {
       const key = (keyFn(lr) ?? '').trim() || 'Sin dato';
@@ -814,18 +865,18 @@ export class DashboardPage implements OnInit {
       .map(([label, groupLifeRows]) => ({
         label,
         groupLifeRows,
-        avg: Math.round(groupLifeRows.reduce((sum, lr) => sum + lr.months, 0) / groupLifeRows.length),
+        avg: Math.round(groupLifeRows.reduce((sum, lr) => sum + valueFn(lr), 0) / groupLifeRows.length),
       }))
       .sort((a, b) => b.avg - a.avg);
 
     const max = Math.max(...entries.map(e => e.avg), 1);
     return entries.map((e, i) => ({
       label: e.label,
-      secondary: `${formatLifetime(e.avg)} prom. · ${e.groupLifeRows.length} cliente${e.groupLifeRows.length === 1 ? '' : 's'}`,
+      secondary: `${formatValue(e.avg)} prom. · ${e.groupLifeRows.length} cliente${e.groupLifeRows.length === 1 ? '' : 's'}`,
       pct: Math.round((e.avg / max) * 100),
       color: SERIES_COLORS[i % SERIES_COLORS.length],
       clients: e.groupLifeRows
-        .map(lr => this.toRow(lr.row, `${formatLifetime(lr.months)}${lr.churned ? ' · dado de baja' : ''}`))
+        .map(lr => this.toRow(lr.row, `${formatValue(valueFn(lr))}${lr.churned ? ' · dado de baja' : ''}`))
         .sort((a, b) => a.name.localeCompare(b.name)),
     }));
   }
@@ -851,6 +902,7 @@ export class DashboardPage implements OnInit {
       sexoBars: [],
       lifetimeRubroBars: [],
       lifetimeExecutiveBars: [],
+      lifetimeAvgDays: 0,
       executiveGrowth: [],
       generalGrowth,
       executiveGoal: this.buildChartGoal(goal),
@@ -861,6 +913,7 @@ export class DashboardPage implements OnInit {
       pendingClientRows: [],
       paidThisMonthRows: [],
       unpaidThisMonthRows: [],
+      lifetimeClientRows: [],
       statusGroups: [],
       rubroGroups: [],
       planGroups: [],

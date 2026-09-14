@@ -65,6 +65,12 @@
           <div class="stat-tile-value">{{ vm.collectedPct }}%</div>
           <div class="stat-tile-hint">clientes activos que ya pagaron este mes</div>
         </div>
+        <div class="stat-tile is-clickable" role="button" tabindex="0" (click)="openCard('lifetime')"
+          (keydown.enter)="openCard('lifetime')" (keydown.space)="openCard('lifetime')">
+          <div class="stat-tile-label"><span class="stat-tile-icon">⏱</span>Tiempo de vida promedio</div>
+          <div class="stat-tile-value">{{ vm.lifetimeAvgDays }} días</div>
+          <div class="stat-tile-hint">{{ vm.lifetimeClientRows.length }} cliente{{ vm.lifetimeClientRows.length === 1 ? '' : 's' }} · activos y dados de baja</div>
+        </div>
       </div>
 
       <div class="trend-grid">
@@ -241,6 +247,14 @@
               <div class="detail-modal-section">
                 <div class="detail-modal-section-title">Todavía no pagaron ({{ vm.unpaidThisMonthRows.length }})</div>
                 <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.unpaidThisMonthRows, emptyText: 'Todos los clientes activos ya pagaron.' }"></ng-container>
+              </div>
+            </ng-container>
+
+            <!-- Tiempo de vida promedio -->
+            <ng-container *ngSwitchCase="'lifetime'">
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Clientes con fecha de alta cargada ({{ vm.lifetimeClientRows.length }})</div>
+                <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.lifetimeClientRows, emptyText: 'Sin clientes con fecha de alta cargada.' }"></ng-container>
               </div>
             </ng-container>
 
