@@ -3,6 +3,7 @@ import { Client } from './executives';
 import { PlanConfig } from './config';
 import { ClientExtrasService } from './client-extras';
 import { ClientCardView, ClientNotification, ClientStatus, ClientTimelineEntry, StatTile } from '../models/client-view.model';
+import { clientDisplayName } from '../utils/client-display-name';
 
 // Arma la vista "rica" de un cliente a partir de datos reales (cobro, plan,
 // antigüedad) y completa con contenido derivado/mock estable (avatar,
@@ -116,7 +117,7 @@ export class ClientViewBuilder {
       client,
       executiveName,
       squad,
-      avatarInitials: initialsOf(client.name),
+      avatarInitials: initialsOf(clientDisplayName(client)),
       avatarColor: `hsl(${hue} 62% 46%)`,
       status,
       statusLabel: status === 'active' ? 'Verde' : status === 'warning' ? 'Amarillo' : 'Rojo',
@@ -185,7 +186,7 @@ export class ClientViewBuilder {
 
     return {
       clientId: client.id,
-      clientName: client.name,
+      clientName: clientDisplayName(client),
       fanpage: client.fanpage,
       executiveName,
       dueDate,

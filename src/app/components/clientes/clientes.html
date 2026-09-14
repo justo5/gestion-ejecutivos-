@@ -166,7 +166,7 @@
       <div class="detail-header">
         <div class="detail-header-top">
           <span class="detail-avatar" [style.background]="view.client.imageUrl ? 'transparent' : view.avatarColor">
-            <img *ngIf="view.client.imageUrl" [src]="view.client.imageUrl" [alt]="view.client.name" class="detail-avatar-img" />
+            <img *ngIf="view.client.imageUrl" [src]="view.client.imageUrl" [alt]="view.client | clientDisplayName" class="detail-avatar-img" />
             <ng-container *ngIf="!view.client.imageUrl">{{ view.avatarInitials }}</ng-container>
             <label class="detail-avatar-upload" title="Cambiar foto">
               <span aria-hidden="true">+</span>
@@ -176,7 +176,7 @@
 
           <div class="detail-header-info">
             <div class="detail-header-name-row">
-              <h3 class="detail-title">{{ view.client.name }}</h3>
+              <h3 class="detail-title">{{ view.client | clientDisplayName }}</h3>
 
               <div class="status-picker">
                 <button type="button" class="status-picker-btn" (click)="toggleStatusMenu()">

@@ -6,6 +6,7 @@ import { ChartGoal, LineSeries } from '../charts/multi-line-chart/multi-line-cha
 import { ConfigService, DashboardGoal, PlanConfig, formatGoalMonth, formatYearMonth } from '../../services/config';
 import { ClientViewBuilder } from '../../services/client-view-builder';
 import { ClientCardView, ClientStatus } from '../../models/client-view.model';
+import { clientDisplayName } from '../../utils/client-display-name';
 
 // Paleta categórica validada (8 tonos, orden fijo, contraste y separación CVD
 // chequeados contra la superficie oscura de la app con el validador de la
@@ -572,7 +573,7 @@ export class DashboardPage implements OnInit {
   private toRow(row: Row, secondary: string): ClientDetailRow {
     return {
       id: row.client.id,
-      name: row.client.name,
+      name: clientDisplayName(row.client),
       executiveName: row.view.executiveName,
       status: row.view.status,
       statusLabel: row.view.statusLabel,

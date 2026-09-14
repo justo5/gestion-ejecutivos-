@@ -23,7 +23,7 @@
           [class.is-active]="client.active"
           (click)="selectClient(client)"
         >
-          <span class="client-card-name">{{ client.name }}</span>
+          <span class="client-card-name">{{ client | clientDisplayName }}</span>
           <span class="client-card-status" [class.active]="client.active">
             {{ client.active ? 'Activo' : 'Inactivo' }}
           </span>
@@ -45,7 +45,7 @@
     <div class="detail-panel">
       <div class="detail-header">
         <div class="detail-header-info">
-          <h3 class="detail-title">{{ selectedClient.name }}</h3>
+          <h3 class="detail-title">{{ selectedClient | clientDisplayName }}</h3>
           <span class="detail-status" [class.active]="selectedClient.active">
             {{ selectedClient.active ? 'Activo' : 'Inactivo' }}
           </span>

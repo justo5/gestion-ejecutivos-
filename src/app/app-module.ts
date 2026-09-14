@@ -24,6 +24,7 @@ import { AreaChart } from './components/charts/area-chart/area-chart';
 import { MultiLineChart } from './components/charts/multi-line-chart/multi-line-chart';
 import { DonutChart } from './components/charts/donut-chart/donut-chart';
 import { ClientCard } from './components/client-card/client-card';
+import { ClientDisplayNamePipe } from './pipes/client-display-name-pipe';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { ClientCard } from './components/client-card/client-card';
     MultiLineChart,
     DonutChart,
     ClientCard,
+    ClientDisplayNamePipe,
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule],
   providers: [

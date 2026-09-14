@@ -29,7 +29,7 @@
           (click)="selectClient(client)"
           [class.is-active]="client.active"
         >
-          <span class="client-card-name">{{ client.name }}</span>
+          <span class="client-card-name">{{ client | clientDisplayName }}</span>
           <span class="client-card-status" [class.active]="client.active">
             {{ client.active ? 'Activo' : 'Inactivo' }}
           </span>
@@ -38,7 +38,7 @@
 
       <!-- Detalle del cliente seleccionado -->
       <div *ngIf="selectedClient" class="client-detail">
-        <h3 class="detail-title">{{ selectedClient.name }}</h3>
+        <h3 class="detail-title">{{ selectedClient | clientDisplayName }}</h3>
         <table class="detail-table" *ngIf="clientFields.length > 0">
           <tbody>
             <tr *ngFor="let field of clientFields">

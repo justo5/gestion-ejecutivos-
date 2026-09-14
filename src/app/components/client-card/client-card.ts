@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ClientCardView } from '../../models/client-view.model';
+import { clientDisplayName } from '../../utils/client-display-name';
 
 @Component({
   selector: 'app-client-card',
@@ -16,7 +17,7 @@ export class ClientCard {
   @Output() imageChanged = new EventEmitter<{ id: string; url: string }>();
 
   get name(): string {
-    return this.displayName || this.view.client.name;
+    return this.displayName || clientDisplayName(this.view.client);
   }
 
   onImageSelected(event: Event): void {

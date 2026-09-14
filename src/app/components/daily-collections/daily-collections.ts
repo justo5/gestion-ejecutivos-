@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ExecutivesService } from '../../services/executives';
+import { clientDisplayName } from '../../utils/client-display-name';
 
 export interface PendingCobro {
   clientId: string;
@@ -84,7 +85,7 @@ export class DailyCollections implements OnInit {
 
             const cobro: PendingCobro = {
               clientId: client.id,
-              fanpage: client.fanpage ?? client.name,
+              fanpage: clientDisplayName(client),
               clientName: client.name,
               executiveName: exec.name,
               contactDay: client.contactDay,

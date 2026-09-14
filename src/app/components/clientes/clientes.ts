@@ -7,6 +7,7 @@ import { ConfigService, PlanConfig, RubroConfig } from '../../services/config';
 import { ClientExtrasService } from '../../services/client-extras';
 import { ClientViewBuilder } from '../../services/client-view-builder';
 import { ClientCardView, ClientStatus, ClientTimelineEntry, TodoItem } from '../../models/client-view.model';
+import { clientDisplayName } from '../../utils/client-display-name';
 
 // Ventana de "próximos vencimientos" que se muestra en la línea de tiempo:
 // todo lo vencido entra sin importar cuánto atraso tenga, más lo que vaya a
@@ -160,6 +161,7 @@ export class Clientes implements OnInit {
         return rows.filter(
           row =>
             row.client.name.toLowerCase().includes(term) ||
+            clientDisplayName(row.client).toLowerCase().includes(term) ||
             row.executiveName.toLowerCase().includes(term)
         );
       })
@@ -241,16 +243,7 @@ export class Clientes implements OnInit {
   }
 
   cardName(client: Client): string {
-    if (client.fanpage && client.fanpage.trim()) return client.fanpage.trim();
-
-    // Fallback: la fanpage puede venir solo en las columnas crudas importadas.
-    const entry = Object.entries(client.data ?? {}).find(([label]) =>
-      /fan\s*page/i.test(label),
-    );
-    const fromData = entry ? String(entry[1] ?? '').trim() : '';
-    if (fromData) return fromData;
-
-    return client.name;
+    return clientDisplayName(client);
   }
 
   selectItem(item: ClientCardItem): void {

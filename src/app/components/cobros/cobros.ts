@@ -5,6 +5,7 @@ import { ExecutivesService } from '../../services/executives';
 import { ConfigService } from '../../services/config';
 import { CobrosService, CollectedBy } from '../../services/cobros';
 import { AuthService } from '../../services/auth';
+import { clientDisplayName } from '../../utils/client-display-name';
 
 export interface MonthDue {
   month: string;
@@ -147,7 +148,11 @@ export class Cobros implements OnInit, OnDestroy {
         for (const exec of filteredExecutives) {
           for (const client of exec.clients) {
             if (client.contactDay === null) continue;
-            if (searchLower && !client.name.toLowerCase().includes(searchLower)) continue;
+            if (
+              searchLower &&
+              !client.name.toLowerCase().includes(searchLower) &&
+              !clientDisplayName(client).toLowerCase().includes(searchLower)
+            ) continue;
             // Cliente dado de baja: se lo sigue mostrando en los meses hasta
             // el de la baja inclusive (no hay que perder el historial ya
             // cobrado), pero no genera cobros nuevos en meses posteriores.
@@ -215,7 +220,7 @@ export class Cobros implements OnInit, OnDestroy {
             const entry: HistorialEntry = {
               clientId: client.id,
               executiveName: exec.name,
-              clientName: client.name,
+              clientName: clientDisplayName(client),
               fanpage: client.fanpage,
               plan: client.plan,
               dayNum,
