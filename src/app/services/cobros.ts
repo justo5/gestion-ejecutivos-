@@ -10,6 +10,7 @@ export interface CobroRecord {
   paidMonths: string[];
   collectedInMonth: Record<string, string>;
   gastosByMonth: Record<string, number>;
+  ivaByMonth: Record<string, boolean>;
 }
 
 @Injectable({

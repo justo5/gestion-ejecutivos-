@@ -42,6 +42,10 @@ export interface HistorialEntry {
   collectedAmount: number;
   gastos: number;
   gastosByMonth: Record<string, number>;
+  // Recordatorio manual "facturar con IVA este mes". Es solo informativo: no
+  // interviene en ningún cálculo de montos ni totales.
+  iva: boolean;
+  ivaByMonth: Record<string, boolean>;
 }
 
 export interface HistorialGroup {
@@ -188,6 +192,7 @@ export class Cobros implements OnInit, OnDestroy {
 
             const rawCobro = client.cobro;
             const gastosByMonth = rawCobro?.gastosByMonth ?? {};
+            const ivaByMonth = rawCobro?.ivaByMonth ?? {};
             const paidMonths = rawCobro?.paidMonths ?? [];
             const collectedInMonth = rawCobro?.collectedInMonth ?? {};
 
@@ -243,6 +248,8 @@ export class Cobros implements OnInit, OnDestroy {
               collectedAmount,
               gastos: Number(gastosByMonth[selectedYearMonth] ?? 0) || 0,
               gastosByMonth,
+              iva: !!ivaByMonth[selectedYearMonth],
+              ivaByMonth,
             };
 
             if (!entriesMap.has(dayNum)) entriesMap.set(dayNum, []);
@@ -401,7 +408,7 @@ export class Cobros implements OnInit, OnDestroy {
       }
     }
 
-    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Gastos', 'Cobrado por', 'Estado', 'A favor de'];
+    const headers = ['Día', 'Cliente', 'Fanpage', 'Ejecutivo', 'Plan', 'Monto', 'Gastos', 'IVA', 'Cobrado por', 'Estado', 'A favor de'];
     const rows = allEntries.map(({ dayNum, entry }) => {
       let aFavorDe = '';
       if (entry.paid) {
@@ -416,6 +423,7 @@ export class Cobros implements OnInit, OnDestroy {
         entry.plan ?? '',
         entry.monto,
         entry.gastos,
+        entry.iva ? 'Sí' : 'No',
         entry.collectedBy ?? '',
         entry.paid ? 'Pagado' : 'Pendiente',
         aFavorDe,
@@ -622,6 +630,29 @@ export class Cobros implements OnInit, OnDestroy {
       error: () => {
         this.pendingSaves--;
         this.executivesService.setClientGastosByMonth(entry.clientId, prevGastosByMonth);
+      },
+    });
+  }
+
+  // Recordatorio manual de IVA: solo persiste el tilde, no toca ningún monto
+  // ni total (a diferencia de onGastosChange/onPaidChange).
+  onIvaChange(entry: HistorialEntry, checked: boolean): void {
+    if (checked === entry.iva) return;
+
+    const currentMonth = this.formatYearMonth(this.selectedDate$.value);
+    const newIvaByMonth = { ...entry.ivaByMonth, [currentMonth]: checked };
+
+    const prevIvaByMonth = this.executivesService.setClientIvaByMonth(entry.clientId, newIvaByMonth);
+
+    this.pendingSaves++;
+    this.cobrosService.updateRecord(entry.clientId, { ivaByMonth: newIvaByMonth }).subscribe({
+      next: () => {
+        this.pendingSaves--;
+        this.refreshData();
+      },
+      error: () => {
+        this.pendingSaves--;
+        this.executivesService.setClientIvaByMonth(entry.clientId, prevIvaByMonth);
       },
     });
   }

@@ -19,6 +19,9 @@ export interface CobroInfo {
   // impacte en el total del mes en que efectivamente entró la plata.
   collectedInMonth?: Record<string, string>;
   gastosByMonth?: Record<string, number>;
+  // Recordatorio manual de "facturar con IVA" por mes. Solo informativo, no
+  // afecta ningún cálculo de montos.
+  ivaByMonth?: Record<string, boolean>;
 }
 
 export interface Client {
@@ -197,6 +200,28 @@ export class ExecutivesService {
           const cobro: CobroInfo = client.cobro
             ? { ...client.cobro, gastosByMonth }
             : { planId: null, paidMonths: [], gastosByMonth };
+          return { ...client, cobro };
+        }),
+      };
+    });
+    this.executivesSubject.next(executives);
+    return previous;
+  }
+
+  // Igual que setClientGastosByMonth pero para el recordatorio de IVA.
+  // Devuelve el ivaByMonth previo para poder revertir si el PATCH falla.
+  setClientIvaByMonth(clientId: string, ivaByMonth: Record<string, boolean>): Record<string, boolean> {
+    let previous: Record<string, boolean> = {};
+    const executives = this.executivesSubject.value.map((exec) => {
+      if (!exec.clients.some((c) => c.id === clientId)) return exec;
+      return {
+        ...exec,
+        clients: exec.clients.map((client) => {
+          if (client.id !== clientId) return client;
+          previous = client.cobro?.ivaByMonth ?? {};
+          const cobro: CobroInfo = client.cobro
+            ? { ...client.cobro, ivaByMonth }
+            : { planId: null, paidMonths: [], ivaByMonth };
           return { ...client, cobro };
         }),
       };

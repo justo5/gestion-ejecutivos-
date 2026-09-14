@@ -75,6 +75,12 @@
             [value]="entry.gastos"
             (change)="onGastosChange(entry, $any($event.target).value)" />
         </td>
+        <td class="col-check">
+          <input type="checkbox" class="entry-check"
+            [checked]="entry.iva"
+            title="Recordatorio: facturar con IVA (no afecta los cálculos)"
+            (change)="onIvaChange(entry, $any($event.target).checked)" />
+        </td>
         <td>
           <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
           <span *ngIf="entry.collectedBy === 'agencia'" class="badge badge-agency">Agencia</span>
@@ -107,7 +113,7 @@
       <!-- Desglose mes a mes: sólo si viene arrastrando más de un mes y la tarjeta está expandida. -->
       <tr *ngIf="isExpanded(entry.clientId) && entry.owedMonths.length > 1" class="row-detail">
         <td></td>
-        <td colspan="9">
+        <td colspan="10">
           <div class="month-breakdown">
             <span class="month-breakdown-title">Meses adeudados</span>
             <div class="month-breakdown-item" *ngFor="let due of entry.monthBreakdown">
@@ -137,6 +143,7 @@
             <th>Plan</th>
             <th>Monto</th>
             <th>Gastos</th>
+            <th>IVA</th>
             <th>Cobrado por</th>
             <th>Estado</th>
             <th>Pagado</th>
@@ -154,7 +161,7 @@
           <!-- Divisor próximos cobros -->
           <ng-container *ngIf="vm.upcomingGroups.length > 0">
             <tr class="divider-row">
-              <td colspan="10">
+              <td colspan="11">
                 <span class="upcoming-label">Próximos cobros</span>
               </td>
             </tr>
@@ -167,7 +174,7 @@
 
           <!-- Estado vacío -->
           <tr *ngIf="vm.groups.length === 0 && vm.upcomingGroups.length === 0">
-            <td colspan="10" class="empty-msg">Sin cobros para este mes</td>
+            <td colspan="11" class="empty-msg">Sin cobros para este mes</td>
           </tr>
 
         </tbody>
