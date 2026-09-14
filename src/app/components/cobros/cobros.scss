@@ -328,6 +328,10 @@
   text-align: center;
 }
 
+.col-iva {
+  text-align: center;
+}
+
 .col-gastos {
   white-space: nowrap;
 }
@@ -395,6 +399,16 @@
 .badge-upcoming {
   background: var(--naranja-bg);
   color: var(--naranja-light);
+}
+
+.badge-iva-yes {
+  background: var(--verde-bg);
+  color: var(--verde);
+}
+
+.badge-iva-no {
+  background: var(--rojo-bg);
+  color: var(--rojo);
 }
 
 .text-muted {

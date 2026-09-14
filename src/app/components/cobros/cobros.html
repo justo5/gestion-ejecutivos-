@@ -76,11 +76,10 @@
             [value]="entry.gastos"
             (change)="onGastosChange(entry, $any($event.target).value)" />
         </td>
-        <td class="col-check">
-          <input type="checkbox" class="entry-check"
-            [checked]="entry.iva"
-            title="Recordatorio: facturar con IVA (no afecta los cálculos)"
-            (change)="onIvaChange(entry, $any($event.target).checked)" />
+        <td class="col-iva">
+          <span *ngIf="entry.clientIva === true" class="badge badge-iva-yes">Sí</span>
+          <span *ngIf="entry.clientIva === false" class="badge badge-iva-no">No</span>
+          <span *ngIf="entry.clientIva === null" class="text-muted">-</span>
         </td>
         <td>
           <span *ngIf="entry.collectedBy === 'ejecutivo'" class="badge badge-exec">Ejecutivo</span>
