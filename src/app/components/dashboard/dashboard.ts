@@ -66,7 +66,7 @@ export interface ClientDetailRow {
 }
 
 // Tarjetas KPI que se pueden abrir para ver el detalle.
-export type DashboardCard = 'total' | 'mrr' | 'pending' | 'collected' | 'lifetime';
+export type DashboardCard = 'total' | 'mrr' | 'pending' | 'collected' | 'lifetime' | 'churnPct';
 
 // Grupo de un gráfico de barras (rubro, plan, ejecutivo…) con el detalle de
 // clientes que lo componen, para el acordeón que se abre al tocar el panel.
@@ -87,7 +87,8 @@ export type BarsDimension =
   | 'country'
   | 'sexo'
   | 'lifetimeRubro'
-  | 'lifetimeExecutive';
+  | 'lifetimeExecutive'
+  | 'churnExecutive';
 
 // Un mes de uno de los gráficos de tendencia, con el detalle de clientes que
 // lo explican (quién pagó ese mes / quién arrancó ese mes).
@@ -112,6 +113,13 @@ interface DashboardViewModel {
   newClientsSeries: number[];
   // Bajas de clientes (soft delete) por mes, mismo eje de meses que arriba.
   churnSeries: number[];
+  // Porcentaje de bajas grupal (KPI): clientes dados de baja / total de
+  // clientes que pasaron alguna vez (activos + dados de baja), en el scope
+  // visible (toda la empresa para admin, cartera propia para un ejecutivo no
+  // admin, igual que el resto de las analíticas del dashboard salvo
+  // generalGrowth).
+  churnPct: number;
+  churnedClients: number;
   statusBars: BarItem[];
   rubroBars: BarItem[];
   planBars: BarItem[];
@@ -123,6 +131,10 @@ interface DashboardViewModel {
   // dados de baja, a diferencia del resto de las analíticas del dashboard.
   lifetimeRubroBars: BarItem[];
   lifetimeExecutiveBars: BarItem[];
+  // Porcentaje de bajas individual: mismo cálculo que churnPct pero por
+  // ejecutivo (dados de baja / (activos + dados de baja) de ese ejecutivo).
+  // No se pliega en "Otros", mismo criterio que executiveBars.
+  churnExecutiveBars: BarItem[];
   // Tiempo de vida promedio general (todos los clientes con contactDay
   // cargado, activos y dados de baja), en días, para la tarjeta KPI.
   lifetimeAvgDays: number;
@@ -154,6 +166,9 @@ interface DashboardViewModel {
   paidThisMonthRows: ClientDetailRow[];
   unpaidThisMonthRows: ClientDetailRow[];
   lifetimeClientRows: ClientDetailRow[];
+  // Detalle de la tarjeta KPI de porcentaje de bajas: clientes dados de baja,
+  // del más reciente al más antiguo.
+  churnClientRows: ClientDetailRow[];
   // Detalle sin plegar (todos los grupos, no solo el top 8) de cada gráfico
   // de barras, con los clientes de cada grupo.
   statusGroups: GroupDetail[];
@@ -164,6 +179,10 @@ interface DashboardViewModel {
   sexoGroups: GroupDetail[];
   lifetimeRubroGroups: GroupDetail[];
   lifetimeExecutiveGroups: GroupDetail[];
+  // Detalle del panel de porcentaje de bajas por ejecutivo: por cada
+  // ejecutivo, los clientes que dio de baja (no todos sus clientes, a
+  // diferencia del resto de los *Groups).
+  churnExecutiveGroups: GroupDetail[];
   // Detalle mes a mes de los gráficos de tendencia.
   revenueMonthDetails: MonthDetail[];
   newClientsMonthDetails: MonthDetail[];
@@ -231,6 +250,7 @@ export class DashboardPage implements OnInit {
     pending: 'Pendiente de cobro',
     collected: 'Porcentaje cobrado',
     lifetime: 'Tiempo de vida promedio',
+    churnPct: 'Porcentaje de bajas',
   };
 
   private static readonly BARS_TITLES: Record<BarsDimension, string> = {
@@ -242,6 +262,7 @@ export class DashboardPage implements OnInit {
     sexo: 'Por sexo',
     lifetimeRubro: 'Tiempo de vida promedio · por rubro',
     lifetimeExecutive: 'Tiempo de vida promedio · por ejecutivo',
+    churnExecutive: 'Porcentaje de bajas · por ejecutivo',
   };
 
   private static readonly CHART_TITLES: Record<ChartKind, string> = {
@@ -321,6 +342,7 @@ export class DashboardPage implements OnInit {
       case 'sexo': return vm.sexoGroups;
       case 'lifetimeRubro': return vm.lifetimeRubroGroups;
       case 'lifetimeExecutive': return vm.lifetimeExecutiveGroups;
+      case 'churnExecutive': return vm.churnExecutiveGroups;
       default: return [];
     }
   }
@@ -498,6 +520,13 @@ export class DashboardPage implements OnInit {
       });
     }
 
+    // Porcentaje de bajas grupal: dados de baja / total de clientes que
+    // pasaron alguna vez por el scope visible (activos + dados de baja).
+    const everClients = rows.length + churnRows.length;
+    const churnPct = everClients ? Math.round((churnRows.length / everClients) * 100) : 0;
+    const churnExecutiveBars = this.buildChurnBars(rows, churnRows);
+    const churnExecutiveGroups = this.buildChurnGroupDetail(rows, churnRows);
+
     const executiveGrowth = this.buildExecutiveGrowth(rows, monthYms);
     const executiveGoal = this.buildChartGoal(goal);
     const generalGoal = this.buildChartGoal(goal, executiveGrowth.length);
@@ -514,6 +543,8 @@ export class DashboardPage implements OnInit {
       revenueSeries,
       newClientsSeries,
       churnSeries,
+      churnPct,
+      churnedClients: churnRows.length,
       statusBars,
       rubroBars: this.buildBars(rows, r => r.client.rubro, () => 1, count => `${count} cliente${count === 1 ? '' : 's'}`),
       countryBars: this.buildBars(rows, r => r.client.country, () => 1, count => `${count} cliente${count === 1 ? '' : 's'}`),
@@ -539,6 +570,7 @@ export class DashboardPage implements OnInit {
       // criterio que executiveBars.
       lifetimeRubroBars: this.buildAvgBars(lifeRows, lr => lr.row.client.rubro, lr => lr.months, formatLifetime),
       lifetimeExecutiveBars: this.buildAvgBars(lifeRows, lr => lr.row.view.executiveName, lr => lr.days, formatDays, false),
+      churnExecutiveBars,
       lifetimeAvgDays,
       executiveGrowth,
       generalGrowth,
@@ -565,6 +597,7 @@ export class DashboardPage implements OnInit {
         r => `${money(r.view.monthlyAmount)}/mes`),
       lifetimeRubroGroups: this.buildAvgGroupDetail(lifeRows, lr => lr.row.client.rubro, lr => lr.months, formatLifetime),
       lifetimeExecutiveGroups: this.buildAvgGroupDetail(lifeRows, lr => lr.row.view.executiveName, lr => lr.days, formatDays),
+      churnExecutiveGroups,
 
       revenueMonthDetails,
       newClientsMonthDetails,
@@ -606,6 +639,10 @@ export class DashboardPage implements OnInit {
       lifetimeClientRows: [...lifeRows]
         .sort((a, b) => b.days - a.days)
         .map(lr => this.toRow(lr.row, `${formatDays(lr.days)}${lr.churned ? ' · dado de baja' : ''}`)),
+      // Clientes dados de baja, del más reciente al más antiguo.
+      churnClientRows: [...churnRows]
+        .sort((a, b) => new Date(b.client.deletedAt!).getTime() - new Date(a.client.deletedAt!).getTime())
+        .map(r => this.toRow(r, this.formatChurnDate(r.client.deletedAt!))),
     };
   }
 
@@ -730,6 +767,76 @@ export class DashboardPage implements OnInit {
         color: e.key === 'Otros' ? OTHER_COLOR : SERIES_COLORS[i % SERIES_COLORS.length],
       };
     });
+  }
+
+  // Porcentaje de bajas por ejecutivo: dados de baja / (activos + dados de
+  // baja) de ese ejecutivo. A diferencia de buildAvgBars el valor ya es un
+  // porcentaje (0-100), así que `pct` se usa directo para el ancho de la
+  // barra en vez de escalar contra el máximo del grupo: una barra al 10%
+  // debe verse angosta, no "la más grande de este panel". No se pliega en
+  // "Otros", mismo criterio que executiveBars.
+  private buildChurnBars(rows: Row[], churnRows: Row[]): BarItem[] {
+    const totalByExec = new Map<string, number>();
+    const churnByExec = new Map<string, number>();
+    rows.forEach(r => {
+      const key = (r.view.executiveName ?? '').trim() || 'Sin dato';
+      totalByExec.set(key, (totalByExec.get(key) ?? 0) + 1);
+    });
+    churnRows.forEach(r => {
+      const key = (r.view.executiveName ?? '').trim() || 'Sin dato';
+      totalByExec.set(key, (totalByExec.get(key) ?? 0) + 1);
+      churnByExec.set(key, (churnByExec.get(key) ?? 0) + 1);
+    });
+
+    const entries = [...totalByExec.entries()].map(([key, total]) => {
+      const churned = churnByExec.get(key) ?? 0;
+      const churnPct = total ? Math.round((churned / total) * 100) : 0;
+      return { key, total, churned, churnPct };
+    });
+    entries.sort((a, b) => b.churnPct - a.churnPct);
+
+    return entries.map((e, i) => ({
+      label: e.key,
+      value: e.churnPct,
+      secondary: `${e.churnPct}% · ${e.churned}/${e.total} cliente${e.total === 1 ? '' : 's'}`,
+      pct: e.churnPct,
+      color: SERIES_COLORS[i % SERIES_COLORS.length],
+    }));
+  }
+
+  // Detalle del panel de porcentaje de bajas por ejecutivo: a diferencia de
+  // buildGroupDetail, `clients` no lista todos los clientes del ejecutivo
+  // sino solo los que dio de baja (lo relevante para este panel).
+  private buildChurnGroupDetail(rows: Row[], churnRows: Row[]): GroupDetail[] {
+    const totalByExec = new Map<string, number>();
+    const churnedRowsByExec = new Map<string, Row[]>();
+    rows.forEach(r => {
+      const key = (r.view.executiveName ?? '').trim() || 'Sin dato';
+      totalByExec.set(key, (totalByExec.get(key) ?? 0) + 1);
+    });
+    churnRows.forEach(r => {
+      const key = (r.view.executiveName ?? '').trim() || 'Sin dato';
+      totalByExec.set(key, (totalByExec.get(key) ?? 0) + 1);
+      if (!churnedRowsByExec.has(key)) churnedRowsByExec.set(key, []);
+      churnedRowsByExec.get(key)!.push(r);
+    });
+
+    const entries = [...totalByExec.entries()].map(([key, total]) => {
+      const churnedList = churnedRowsByExec.get(key) ?? [];
+      const churnPct = total ? Math.round((churnedList.length / total) * 100) : 0;
+      return { key, total, churnedList, churnPct };
+    });
+    entries.sort((a, b) => b.churnPct - a.churnPct);
+
+    return entries.map((e, i) => ({
+      label: e.key,
+      secondary: `${e.churnPct}% · ${e.churnedList.length}/${e.total} cliente${e.total === 1 ? '' : 's'}`,
+      pct: e.churnPct,
+      color: SERIES_COLORS[i % SERIES_COLORS.length],
+      clients: e.churnedList
+        .map(r => this.toRow(r, this.formatChurnDate(r.client.deletedAt!)))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    }));
   }
 
   // Objetivo ya formateado para pasarle a un gráfico de crecimiento. El
@@ -894,6 +1001,8 @@ export class DashboardPage implements OnInit {
       revenueSeries: [],
       newClientsSeries: [],
       churnSeries: [],
+      churnPct: 0,
+      churnedClients: 0,
       statusBars: [],
       rubroBars: [],
       planBars: [],
@@ -902,6 +1011,7 @@ export class DashboardPage implements OnInit {
       sexoBars: [],
       lifetimeRubroBars: [],
       lifetimeExecutiveBars: [],
+      churnExecutiveBars: [],
       lifetimeAvgDays: 0,
       executiveGrowth: [],
       generalGrowth,
@@ -914,6 +1024,7 @@ export class DashboardPage implements OnInit {
       paidThisMonthRows: [],
       unpaidThisMonthRows: [],
       lifetimeClientRows: [],
+      churnClientRows: [],
       statusGroups: [],
       rubroGroups: [],
       planGroups: [],
@@ -922,6 +1033,7 @@ export class DashboardPage implements OnInit {
       sexoGroups: [],
       lifetimeRubroGroups: [],
       lifetimeExecutiveGroups: [],
+      churnExecutiveGroups: [],
       revenueMonthDetails: [],
       newClientsMonthDetails: [],
       churnMonthDetails: [],
