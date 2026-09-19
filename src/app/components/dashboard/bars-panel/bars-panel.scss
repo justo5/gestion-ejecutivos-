@@ -1,0 +1,60 @@
+@use '../shared' as s;
+
+// Como item de grilla el host se estira a la altura de la fila; el panel
+// interno lo llena para que todos los de una misma fila queden parejos.
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.bars-panel {
+  flex: 1;
+  padding: 16px 18px;
+  @include s.surface;
+  @include s.clickable-card;
+}
+
+.panel-header {
+  @include s.caption(12px);
+}
+
+.bar-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar-row {
+  display: grid;
+  // Los nombres de ejecutivo suelen ser dos palabras ("Gonzalo De Andrade");
+  // con 0.85fr contra 2fr del track quedaban truncados casi siempre. Le
+  // damos al label más peso que al track (que es solo un adorno visual, el
+  // valor real ya está en bar-value) para que la mayoría de los nombres
+  // entren enteros.
+  grid-template-columns: auto minmax(90px, 1.3fr) minmax(40px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+@include s.bar-dot;
+@include s.bar-track;
+
+.bar-label {
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-value {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.bars-empty {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}

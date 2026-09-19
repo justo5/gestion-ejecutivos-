@@ -1,0 +1,10 @@
+<div class="group-accordion" *ngFor="let i of reversedIndexes()">
+  <button type="button" class="group-row month-row" (click)="toggle(i)">
+    <span class="group-label">{{ monthLabels[i] }}</span>
+    <span class="group-secondary">{{ details[i].valueLabel }}</span>
+    <span class="group-chevron" [class.is-open]="expandedIndex === i">›</span>
+  </button>
+  <div class="group-detail" *ngIf="expandedIndex === i">
+    <app-dashboard-client-rows [list]="details[i].clients" [emptyText]="emptyText"></app-dashboard-client-rows>
+  </div>
+</div>

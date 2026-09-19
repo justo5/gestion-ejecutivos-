@@ -1,0 +1,6 @@
+<div class="bars-panel is-clickable" role="button" tabindex="0"
+  (click)="onOpen()" (keydown.enter)="onOpen()" (keydown.space)="onOpen()">
+  <div class="panel-header">{{ title }}</div>
+  <app-donut-chart *ngIf="items.length; else noDonut" [items]="items" [format]="format" [centerLabel]="centerLabel"></app-donut-chart>
+  <ng-template #noDonut><p class="bars-empty">Sin datos suficientes.</p></ng-template>
+</div>

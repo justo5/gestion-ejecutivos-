@@ -1,0 +1,34 @@
+<div class="trend-grid">
+  <app-dashboard-trend-panel
+    title="Cartera cobrada · últimos 12 meses"
+    color="#afd42a"
+    label="dashboard-ingresos"
+    [data]="vm.revenueSeries"
+    [currentLabel]="money(vm.revenueSeries[vm.revenueSeries.length - 1]) + ' este mes'"
+    [rangeLabel]="vm.monthLabels[vm.monthLabels.length - 1]"
+    [clickable]="true"
+    (panelOpen)="chartOpen.emit('revenue')"
+  ></app-dashboard-trend-panel>
+
+  <app-dashboard-trend-panel
+    title="Clientes nuevos · últimos 12 meses"
+    color="#1e9adb"
+    label="dashboard-nuevos"
+    [data]="vm.newClientsSeries"
+    [currentLabel]="vm.newClientsSeries[vm.newClientsSeries.length - 1] + ' este mes'"
+    [rangeLabel]="vm.monthLabels[vm.monthLabels.length - 1]"
+    [clickable]="true"
+    (panelOpen)="chartOpen.emit('newClients')"
+  ></app-dashboard-trend-panel>
+
+  <app-dashboard-trend-panel
+    title="Bajas de clientes · últimos 12 meses"
+    color="#e66767"
+    label="dashboard-bajas"
+    [data]="vm.churnSeries"
+    [currentLabel]="vm.churnSeries[vm.churnSeries.length - 1] + ' este mes'"
+    [rangeLabel]="vm.monthLabels[vm.monthLabels.length - 1]"
+    [clickable]="true"
+    (panelOpen)="chartOpen.emit('churn')"
+  ></app-dashboard-trend-panel>
+</div>

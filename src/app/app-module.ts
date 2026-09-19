@@ -14,6 +14,19 @@ import { EjecutivosPage } from './components/ejecutivos-page/ejecutivos-page';
 import { Cobros } from './components/cobros/cobros';
 import { Clientes } from './components/clientes/clientes';
 import { DashboardPage } from './components/dashboard/dashboard';
+import { DashboardKpiGrid } from './components/dashboard/kpi-grid/kpi-grid';
+import { DashboardTrendGrid } from './components/dashboard/trend-grid/trend-grid';
+import { DashboardTrendPanel } from './components/dashboard/trend-panel/trend-panel';
+import { DashboardExecutiveGrowthPanel } from './components/dashboard/executive-growth-panel/executive-growth-panel';
+import { DashboardDistributionGrid } from './components/dashboard/distribution-grid/distribution-grid';
+import { DashboardBarsPanel } from './components/dashboard/bars-panel/bars-panel';
+import { DashboardDonutPanel } from './components/dashboard/donut-panel/donut-panel';
+import { DashboardDetailModal } from './components/dashboard/detail-modal/detail-modal';
+import { DashboardCardModal } from './components/dashboard/card-modal/card-modal';
+import { DashboardBarsModal } from './components/dashboard/bars-modal/bars-modal';
+import { DashboardChartModal } from './components/dashboard/chart-modal/chart-modal';
+import { DashboardClientRows } from './components/dashboard/client-rows/client-rows';
+import { DashboardMonthAccordion } from './components/dashboard/month-accordion/month-accordion';
 import { ConfigPage } from './components/config-page/config-page';
 import { Perfil } from './components/perfil/perfil';
 import { Login } from './components/login/login';
@@ -38,6 +51,19 @@ import { ClientDisplayNamePipe } from './pipes/client-display-name-pipe';
     Cobros,
     Clientes,
     DashboardPage,
+    DashboardKpiGrid,
+    DashboardTrendGrid,
+    DashboardTrendPanel,
+    DashboardExecutiveGrowthPanel,
+    DashboardDistributionGrid,
+    DashboardBarsPanel,
+    DashboardDonutPanel,
+    DashboardDetailModal,
+    DashboardCardModal,
+    DashboardBarsModal,
+    DashboardChartModal,
+    DashboardClientRows,
+    DashboardMonthAccordion,
     ConfigPage,
     Perfil,
     Login,

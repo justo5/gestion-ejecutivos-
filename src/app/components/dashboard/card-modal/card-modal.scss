@@ -1,0 +1,9 @@
+@use '../shared' as s;
+
+.detail-modal-section + .detail-modal-section {
+  margin-top: 4px;
+}
+
+.detail-modal-section-title {
+  @include s.caption(8px);
+}

@@ -1,0 +1,48 @@
+@use '../shared' as s;
+
+:host {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.stat-tile {
+  padding: 14px 16px;
+  @include s.surface;
+
+  &.tone-warn .stat-tile-value { color: var(--naranja); }
+  &.tone-bad .stat-tile-value { color: var(--rojo); }
+  &.tone-ok .stat-tile-value { color: var(--verde); }
+
+  @include s.clickable-card;
+}
+
+.stat-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  @include s.caption;
+}
+
+.stat-tile-icon {
+  font-size: 0.85rem;
+}
+
+.stat-tile-value {
+  margin-top: 6px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  color: var(--text);
+}
+
+.stat-tile-hint {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}

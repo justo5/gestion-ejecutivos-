@@ -1,0 +1,13 @@
+@use '../shared' as s;
+
+// Ver bars-panel: el host se estira en la grilla y el panel lo llena.
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-panel {
+  flex: 1;
+}
+
+@include s.chart-panel;

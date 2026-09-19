@@ -1,0 +1,24 @@
+<div class="chart-panel">
+  <div class="chart-panel-header">
+    <span>Crecimiento de clientes por ejecutivo · últimos 12 meses</span>
+  </div>
+
+  <div class="chart-panel-body growth-panel-body">
+    <app-multi-line-chart
+      [series]="series"
+      [monthLabels]="monthLabels"
+      [goal]="goal"
+      [height]="200"
+    ></app-multi-line-chart>
+  </div>
+  <div class="chart-panel-range">
+    <span>{{ monthLabels[monthLabels.length - 1] }}</span>
+  </div>
+  <div class="growth-legend">
+    <span class="growth-legend-item" *ngFor="let s of series">
+      <span class="bar-dot" [style.background]="s.color"></span>
+      <span class="growth-legend-label">{{ s.label }}</span>
+      <strong>{{ s.data[s.data.length - 1] }}</strong>
+    </span>
+  </div>
+</div>

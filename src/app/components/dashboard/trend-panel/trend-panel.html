@@ -1,0 +1,16 @@
+<div class="chart-panel" [class.is-clickable]="clickable" [attr.role]="clickable ? 'button' : null"
+  [attr.tabindex]="clickable ? 0 : null" (click)="onOpen()" (keydown.enter)="onOpen()" (keydown.space)="onOpen()">
+  <div class="chart-panel-header">
+    <span>{{ title }}</span>
+    <span class="chart-panel-current">
+      <span class="chart-panel-dot" [style.background]="color"></span>
+      {{ currentLabel }}
+    </span>
+  </div>
+  <div class="chart-panel-body">
+    <app-area-chart [data]="data" [color]="color" [label]="label" [goal]="goal"></app-area-chart>
+  </div>
+  <div class="chart-panel-range">
+    <span>{{ rangeLabel }}</span>
+  </div>
+</div>

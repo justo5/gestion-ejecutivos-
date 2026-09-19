@@ -1,0 +1,169 @@
+// Estilos compartidos entre los componentes del dashboard. Como cada
+// componente tiene su CSS encapsulado, lo que se repetía en varios (hover de
+// tarjeta clickeable, título en versalitas, barras, acordeón) vive acá como
+// mixin y cada componente incluye solo lo que usa.
+
+@mixin surface {
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+@mixin clickable-card {
+  &.is-clickable {
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+
+    &:hover, &:focus-visible {
+      border-color: var(--primary, var(--text-muted));
+      transform: translateY(-1px);
+    }
+    &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  }
+}
+
+@mixin caption($margin-bottom: 0) {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: $margin-bottom;
+}
+
+@mixin bar-dot {
+  .bar-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+@mixin bar-track {
+  .bar-track {
+    display: block;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    display: block;
+    height: 100%;
+    min-width: 3px;
+    border-radius: 0 5px 5px 0;
+  }
+}
+
+// Panel de un gráfico de área (cartera cobrada, clientes nuevos, etc.).
+@mixin chart-panel {
+  .chart-panel {
+    padding: 16px 18px;
+    @include surface;
+    @include clickable-card;
+  }
+
+  .chart-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    @include caption(10px);
+  }
+
+  .chart-panel-current {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: none;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: normal;
+  }
+
+  .chart-panel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .chart-panel-body {
+    height: 140px;
+  }
+
+  .chart-panel-range {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    color: var(--text-faint);
+  }
+}
+
+// Acordeón de grupos (paneles de barras) y meses (gráficos de tendencia): el
+// modal de detalle abierto desde cada panel/gráfico del dashboard.
+@mixin accordion {
+  .group-accordion + .group-accordion {
+    border-top: 1px solid var(--border);
+  }
+
+  .group-row {
+    width: 100%;
+    display: grid;
+    // Mismo criterio que .bar-row: más peso al nombre que al track adorno.
+    grid-template-columns: auto minmax(90px, 1.3fr) minmax(40px, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+
+    &:hover {
+      background: var(--bg);
+    }
+
+    // Filas de mes (gráficos de tendencia) no tienen punto ni barra de
+    // progreso, solo etiqueta + valor + flecha.
+    &.month-row {
+      grid-template-columns: minmax(64px, 1fr) auto auto;
+    }
+  }
+
+  .group-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .group-secondary {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .group-chevron {
+    display: inline-block;
+    color: var(--text-faint);
+    transition: transform 0.15s ease;
+
+    &.is-open {
+      transform: rotate(90deg);
+    }
+  }
+
+  .group-detail {
+    padding: 0 4px 10px 30px;
+  }
+}

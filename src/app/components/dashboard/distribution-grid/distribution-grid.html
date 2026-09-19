@@ -1,0 +1,17 @@
+<div class="bars-grid">
+  <app-dashboard-donut-panel title="Semáforo de campañas" [items]="vm.statusBars" dim="status" format="count" centerLabel="clientes" (panelOpen)="barsOpen.emit($event)"></app-dashboard-donut-panel>
+  <app-dashboard-donut-panel title="Por rubro" [items]="vm.rubroBars" dim="rubro" format="count" centerLabel="clientes" (panelOpen)="barsOpen.emit($event)"></app-dashboard-donut-panel>
+  <app-dashboard-donut-panel title="Por plan" [items]="vm.planBars" dim="plan" format="money" centerLabel="cartera" (panelOpen)="barsOpen.emit($event)"></app-dashboard-donut-panel>
+  <!-- Por ejecutivo no se pliega en "Otros" (queremos ver a todos): con
+       muchas porciones finas una torta deja de leerse, sigue en barras. -->
+  <app-dashboard-bars-panel title="Por ejecutivo" [bars]="vm.executiveBars" dim="executive" (panelOpen)="barsOpen.emit($event)"></app-dashboard-bars-panel>
+  <app-dashboard-donut-panel title="Por país" [items]="vm.countryBars" dim="country" format="count" centerLabel="clientes" (panelOpen)="barsOpen.emit($event)"></app-dashboard-donut-panel>
+  <app-dashboard-donut-panel title="Por sexo" [items]="vm.sexoBars" dim="sexo" format="count" centerLabel="clientes" (panelOpen)="barsOpen.emit($event)"></app-dashboard-donut-panel>
+  <!-- Tiempo de vida promedio: es un promedio, no una parte de un
+       todo, así que va en barras (como "Por ejecutivo") y no en torta. -->
+  <app-dashboard-bars-panel title="Tiempo de vida promedio · por rubro" [bars]="vm.lifetimeRubroBars" dim="lifetimeRubro" (panelOpen)="barsOpen.emit($event)"></app-dashboard-bars-panel>
+  <app-dashboard-bars-panel title="Tiempo de vida promedio · por ejecutivo" [bars]="vm.lifetimeExecutiveBars" dim="lifetimeExecutive" (panelOpen)="barsOpen.emit($event)"></app-dashboard-bars-panel>
+  <!-- Porcentaje de bajas individual: mismo criterio que "Por ejecutivo"
+       y tiempo de vida por ejecutivo, no se pliega en "Otros". -->
+  <app-dashboard-bars-panel title="Porcentaje de bajas · por ejecutivo" [bars]="vm.churnExecutiveBars" dim="churnExecutive" (panelOpen)="barsOpen.emit($event)"></app-dashboard-bars-panel>
+</div>

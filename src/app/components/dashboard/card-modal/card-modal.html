@@ -1,0 +1,71 @@
+<app-dashboard-detail-modal [title]="title" (dismiss)="dismiss.emit()">
+  <ng-container [ngSwitch]="card">
+
+    <!-- Clientes totales -->
+    <ng-container *ngSwitchCase="'total'">
+      <app-dashboard-bars-panel title="Semáforo de campañas" [bars]="vm.statusBars"></app-dashboard-bars-panel>
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Activos ({{ vm.activeClients }})</div>
+        <app-dashboard-client-rows [list]="vm.activeClientRows" emptyText="Sin clientes activos."></app-dashboard-client-rows>
+      </div>
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Inactivos ({{ vm.inactiveClients }})</div>
+        <app-dashboard-client-rows [list]="vm.inactiveClientRows" emptyText="Sin clientes inactivos."></app-dashboard-client-rows>
+      </div>
+    </ng-container>
+
+    <!-- Cartera mensual -->
+    <ng-container *ngSwitchCase="'mrr'">
+      <app-dashboard-bars-panel title="Por plan" [bars]="vm.planBars"></app-dashboard-bars-panel>
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Clientes activos que aportan a la cartera</div>
+        <app-dashboard-client-rows [list]="vm.payingClientRows" emptyText="Sin clientes con plan activo."></app-dashboard-client-rows>
+      </div>
+    </ng-container>
+
+    <!-- Pendiente de cobro -->
+    <ng-container *ngSwitchCase="'pending'">
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Clientes con meses vencidos ({{ vm.pendingClientRows.length }})</div>
+        <app-dashboard-client-rows [list]="vm.pendingClientRows" emptyText="Nadie tiene deuda pendiente. 🎉"></app-dashboard-client-rows>
+      </div>
+    </ng-container>
+
+    <!-- Porcentaje cobrado -->
+    <ng-container *ngSwitchCase="'collected'">
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Ya pagaron este mes ({{ vm.paidThisMonthRows.length }})</div>
+        <app-dashboard-client-rows [list]="vm.paidThisMonthRows" emptyText="Todavía nadie pagó este mes."></app-dashboard-client-rows>
+      </div>
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Todavía no pagaron ({{ vm.unpaidThisMonthRows.length }})</div>
+        <app-dashboard-client-rows [list]="vm.unpaidThisMonthRows" emptyText="Todos los clientes activos ya pagaron."></app-dashboard-client-rows>
+      </div>
+    </ng-container>
+
+    <!-- Tiempo de vida promedio -->
+    <ng-container *ngSwitchCase="'lifetime'">
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Clientes con fecha de alta cargada ({{ vm.lifetimeClientRows.length }})</div>
+        <app-dashboard-client-rows [list]="vm.lifetimeClientRows" emptyText="Sin clientes con fecha de alta cargada."></app-dashboard-client-rows>
+      </div>
+    </ng-container>
+
+    <!-- Porcentaje de bajas -->
+    <ng-container *ngSwitchCase="'churnPct'">
+      <app-dashboard-bars-panel title="Por ejecutivo" [bars]="vm.churnExecutiveBars"></app-dashboard-bars-panel>
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Clientes dados de baja ({{ vm.churnClientRows.length }})</div>
+        <app-dashboard-client-rows [list]="vm.churnClientRows" emptyText="Sin clientes dados de baja."></app-dashboard-client-rows>
+      </div>
+      <!-- Desglose mensual (mes actual arriba): % de bajas de cada mes
+           sobre los clientes que había al arrancar ese mes. -->
+      <div class="detail-modal-section">
+        <div class="detail-modal-section-title">Porcentaje de bajas por mes</div>
+        <app-dashboard-month-accordion [monthLabels]="vm.monthLabels" [details]="vm.churnPctMonthDetails"
+          emptyText="Sin bajas este mes."></app-dashboard-month-accordion>
+      </div>
+    </ng-container>
+
+  </ng-container>
+</app-dashboard-detail-modal>

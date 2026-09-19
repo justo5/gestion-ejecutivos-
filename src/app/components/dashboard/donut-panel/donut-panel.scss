@@ -1,0 +1,22 @@
+@use '../shared' as s;
+
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.bars-panel {
+  flex: 1;
+  padding: 16px 18px;
+  @include s.surface;
+  @include s.clickable-card;
+}
+
+.panel-header {
+  @include s.caption(12px);
+}
+
+.bars-empty {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}

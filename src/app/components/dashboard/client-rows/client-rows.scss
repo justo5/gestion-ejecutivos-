@@ -1,0 +1,49 @@
+.detail-client-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.detail-client-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+
+  &:hover {
+    background: var(--bg);
+  }
+}
+
+.detail-client-name {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-client-exec {
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
+}
+
+.detail-client-secondary {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.bars-empty {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}

@@ -1,0 +1,8 @@
+<app-dashboard-detail-modal [title]="title" [wide]="true" (dismiss)="dismiss.emit()">
+  <div class="chart-modal-chart">
+    <app-area-chart [data]="series" [color]="color" [label]="'dashboard-modal-' + chart"></app-area-chart>
+  </div>
+
+  <app-dashboard-month-accordion [monthLabels]="vm.monthLabels" [details]="monthDetails"
+    emptyText="Sin clientes este mes."></app-dashboard-month-accordion>
+</app-dashboard-detail-modal>

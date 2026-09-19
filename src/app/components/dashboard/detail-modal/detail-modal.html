@@ -1,0 +1,12 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel detail-modal-panel" [class.chart-modal-panel]="wide">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ title }}</h3>
+      <button type="button" class="modal-close" (click)="dismiss.emit()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <div class="detail-modal-body">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

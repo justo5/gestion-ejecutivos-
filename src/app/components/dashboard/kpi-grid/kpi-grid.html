@@ -1,0 +1,44 @@
+<div class="kpi-grid">
+  <div class="stat-tile is-clickable" role="button" tabindex="0" (click)="cardOpen.emit('total')"
+    (keydown.enter)="cardOpen.emit('total')" (keydown.space)="cardOpen.emit('total')">
+    <div class="stat-tile-label"><span class="stat-tile-icon">👥</span>Clientes totales</div>
+    <div class="stat-tile-value">{{ vm.totalClients }}</div>
+    <div class="stat-tile-hint">{{ vm.activeClients }} activos · {{ vm.inactiveClients }} inactivos</div>
+  </div>
+  <div class="stat-tile is-clickable" role="button" tabindex="0" (click)="cardOpen.emit('mrr')"
+    (keydown.enter)="cardOpen.emit('mrr')" (keydown.space)="cardOpen.emit('mrr')">
+    <div class="stat-tile-label"><span class="stat-tile-icon">💳</span>Cartera mensual</div>
+    <div class="stat-tile-value">{{ money(vm.mrr) }}</div>
+    <div class="stat-tile-hint">suma de planes activos</div>
+  </div>
+  <div class="stat-tile is-clickable" [class.tone-warn]="vm.pendingTotal > 0" role="button" tabindex="0"
+    (click)="cardOpen.emit('pending')" (keydown.enter)="cardOpen.emit('pending')" (keydown.space)="cardOpen.emit('pending')">
+    <div class="stat-tile-label"><span class="stat-tile-icon">⏳</span>Pendiente de cobro</div>
+    <div class="stat-tile-value">{{ money(vm.pendingTotal) }}</div>
+    <div class="stat-tile-hint">meses vencidos sin pagar</div>
+  </div>
+  <div
+    class="stat-tile is-clickable"
+    [class.tone-ok]="vm.collectedPct >= 70"
+    [class.tone-warn]="vm.collectedPct >= 40 && vm.collectedPct < 70"
+    [class.tone-bad]="vm.collectedPct < 40"
+    role="button" tabindex="0"
+    (click)="cardOpen.emit('collected')" (keydown.enter)="cardOpen.emit('collected')" (keydown.space)="cardOpen.emit('collected')"
+  >
+    <div class="stat-tile-label"><span class="stat-tile-icon">❤</span>Porcentaje cobrado</div>
+    <div class="stat-tile-value">{{ vm.collectedPct }}%</div>
+    <div class="stat-tile-hint">clientes activos que ya pagaron este mes</div>
+  </div>
+  <div class="stat-tile is-clickable" role="button" tabindex="0" (click)="cardOpen.emit('lifetime')"
+    (keydown.enter)="cardOpen.emit('lifetime')" (keydown.space)="cardOpen.emit('lifetime')">
+    <div class="stat-tile-label"><span class="stat-tile-icon">⏱</span>Tiempo de vida promedio</div>
+    <div class="stat-tile-value">{{ vm.lifetimeAvgDays }} días</div>
+    <div class="stat-tile-hint">{{ vm.lifetimeClientRows.length }} cliente{{ vm.lifetimeClientRows.length === 1 ? '' : 's' }} · activos y dados de baja</div>
+  </div>
+  <div class="stat-tile is-clickable" [class.tone-warn]="vm.churnPct > 0" role="button" tabindex="0"
+    (click)="cardOpen.emit('churnPct')" (keydown.enter)="cardOpen.emit('churnPct')" (keydown.space)="cardOpen.emit('churnPct')">
+    <div class="stat-tile-label"><span class="stat-tile-icon">📉</span>Porcentaje de bajas</div>
+    <div class="stat-tile-value">{{ vm.churnPct }}%</div>
+    <div class="stat-tile-hint">{{ vm.churnedClients }} de {{ vm.totalClients + vm.churnedClients }} clientes</div>
+  </div>
+</div>

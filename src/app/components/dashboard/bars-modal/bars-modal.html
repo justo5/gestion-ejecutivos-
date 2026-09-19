@@ -1,0 +1,14 @@
+<app-dashboard-detail-modal [title]="title" (dismiss)="dismiss.emit()">
+  <div class="group-accordion" *ngFor="let g of groups">
+    <button type="button" class="group-row" (click)="toggleGroup(g.label)">
+      <span class="bar-dot" [style.background]="g.color"></span>
+      <span class="group-label">{{ g.label }}</span>
+      <span class="bar-track"><span class="bar-fill" [style.width.%]="g.pct" [style.background]="g.color"></span></span>
+      <span class="group-secondary">{{ g.secondary }}</span>
+      <span class="group-chevron" [class.is-open]="expandedGroupLabel === g.label">›</span>
+    </button>
+    <div class="group-detail" *ngIf="expandedGroupLabel === g.label">
+      <app-dashboard-client-rows [list]="g.clients" emptyText="Sin clientes en este grupo."></app-dashboard-client-rows>
+    </div>
+  </div>
+</app-dashboard-detail-modal>
