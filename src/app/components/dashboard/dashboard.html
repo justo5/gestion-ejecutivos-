@@ -274,6 +274,21 @@
                 <div class="detail-modal-section-title">Clientes dados de baja ({{ vm.churnClientRows.length }})</div>
                 <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.churnClientRows, emptyText: 'Sin clientes dados de baja.' }"></ng-container>
               </div>
+              <!-- Desglose mensual (mes actual arriba): % de bajas de cada mes
+                   sobre los clientes que había al arrancar ese mes. -->
+              <div class="detail-modal-section">
+                <div class="detail-modal-section-title">Porcentaje de bajas por mes</div>
+                <div class="group-accordion" *ngFor="let i of reversedMonthIndexes(vm)">
+                  <button type="button" class="group-row month-row" (click)="toggleMonth(i)">
+                    <span class="group-label">{{ vm.monthLabels[i] }}</span>
+                    <span class="group-secondary">{{ vm.churnPctMonthDetails[i].valueLabel }}</span>
+                    <span class="group-chevron" [class.is-open]="expandedMonthIndex === i">›</span>
+                  </button>
+                  <div class="group-detail" *ngIf="expandedMonthIndex === i">
+                    <ng-container *ngTemplateOutlet="clientRows; context: { list: vm.churnPctMonthDetails[i].clients, emptyText: 'Sin bajas este mes.' }"></ng-container>
+                  </div>
+                </div>
+              </div>
             </ng-container>
 
           </div>

@@ -187,6 +187,9 @@ interface DashboardViewModel {
   revenueMonthDetails: MonthDetail[];
   newClientsMonthDetails: MonthDetail[];
   churnMonthDetails: MonthDetail[];
+  // Porcentaje de bajas de cada mes (bajas del mes / clientes que había al
+  // arrancar ese mes), para el desglose mensual de la tarjeta KPI.
+  churnPctMonthDetails: MonthDetail[];
 }
 
 function money(value: number): string {
@@ -296,10 +299,12 @@ export class DashboardPage implements OnInit {
 
   openCard(card: DashboardCard): void {
     this.selectedCard = card;
+    this.expandedMonthIndex = null;
   }
 
   closeCard(): void {
     this.selectedCard = null;
+    this.expandedMonthIndex = null;
   }
 
   onBackdropClick(event: MouseEvent): void {
@@ -484,6 +489,7 @@ export class DashboardPage implements OnInit {
     const revenueMonthDetails: MonthDetail[] = [];
     const newClientsMonthDetails: MonthDetail[] = [];
     const churnMonthDetails: MonthDetail[] = [];
+    const churnPctMonthDetails: MonthDetail[] = [];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       monthLabels.push(d.toLocaleDateString('es-AR', { month: 'short' }));
@@ -512,11 +518,29 @@ export class DashboardPage implements OnInit {
 
       const churnedRows = churnRows.filter(r => formatYearMonth(new Date(r.client.deletedAt!)) === ym);
       churnSeries.push(churnedRows.length);
+      // % de bajas del mes = bajas / clientes que había al arrancar el mes
+      // (dados de alta antes de ese mes, o sin contactDay, y que no se habían
+      // dado de baja todavía). Mismo criterio de "ya estaba" que el
+      // crecimiento por ejecutivo.
+      const clientsAtStart = [...rows, ...churnRows].filter(r => {
+        const startYm = (r.client.contactDay ?? '').slice(0, 7);
+        if (startYm && startYm >= ym) return false;
+        return !r.client.deletedAt || formatYearMonth(new Date(r.client.deletedAt)) >= ym;
+      }).length;
+      const monthChurnPct = clientsAtStart ? (churnedRows.length / clientsAtStart) * 100 : null;
+      const monthChurnPctLabel = monthChurnPct === null
+        ? '—'
+        : `${monthChurnPct.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`;
+      const churnedClientRows = churnedRows
+        .map(r => this.toRow(r, this.formatChurnDate(r.client.deletedAt!)))
+        .sort((a, b) => a.name.localeCompare(b.name));
       churnMonthDetails.push({
         valueLabel: `${churnedRows.length} cliente${churnedRows.length === 1 ? '' : 's'}`,
-        clients: churnedRows
-          .map(r => this.toRow(r, this.formatChurnDate(r.client.deletedAt!)))
-          .sort((a, b) => a.name.localeCompare(b.name)),
+        clients: churnedClientRows,
+      });
+      churnPctMonthDetails.push({
+        valueLabel: `${monthChurnPctLabel} · ${churnedRows.length}/${clientsAtStart} cliente${clientsAtStart === 1 ? '' : 's'}`,
+        clients: churnedClientRows,
       });
     }
 
@@ -602,6 +626,7 @@ export class DashboardPage implements OnInit {
       revenueMonthDetails,
       newClientsMonthDetails,
       churnMonthDetails,
+      churnPctMonthDetails,
 
       // Detalle por cliente de cada tarjeta KPI, para el modal que se abre
       // al tocarlas.
@@ -1037,6 +1062,7 @@ export class DashboardPage implements OnInit {
       revenueMonthDetails: [],
       newClientsMonthDetails: [],
       churnMonthDetails: [],
+      churnPctMonthDetails: [],
     };
   }
 }
