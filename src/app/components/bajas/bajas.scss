@@ -1,0 +1,227 @@
+.bajas-page {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.bajas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.search-input {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  min-width: 260px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+}
+
+.bajas-hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.baja-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.baja-item {
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--rojo);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+}
+
+.baja-main {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.baja-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  width: 100%;
+}
+
+.baja-main .baja-title {
+  width: auto;
+}
+
+.baja-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.baja-date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--rojo);
+}
+
+.baja-executive {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.baja-reason {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  &.is-empty {
+    color: var(--text-faint);
+    font-style: italic;
+  }
+}
+
+.baja-confirm-text {
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.baja-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.baja-edit-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.baja-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &.baja-field-grow {
+    flex: 1;
+    min-width: 240px;
+  }
+}
+
+.baja-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.baja-input {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+}
+
+.edit-btn {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: var(--primary-light); }
+}
+
+.save-btn {
+  padding: 0.35rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.remove-confirm-btn {
+  padding: 0.3rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--rojo);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: var(--rojo-dark); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.cancel-btn {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: var(--surface-2); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.remove-btn {
+  border: none;
+  background: transparent;
+  color: var(--rojo);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+
+  &:hover { color: var(--rojo-dark); }
+}
+
+.row-error {
+  width: 100%;
+  margin: 0;
+  color: var(--rojo);
+  font-size: 0.82rem;
+}

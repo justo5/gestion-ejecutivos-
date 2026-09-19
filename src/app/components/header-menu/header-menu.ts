@@ -5,6 +5,7 @@ export type HeaderMenuAction =
   | 'ejecutivos'
   | 'cobros'
   | 'clientes'
+  | 'bajas'
   | 'configuracion'
   | 'perfil';
 
@@ -31,6 +32,7 @@ export class HeaderMenu {
     { label: 'Ejecutivos', action: 'ejecutivos', icon: 'users' },
     { label: 'Resumen de Cobros', action: 'cobros', icon: 'receipt' },
     { label: 'Clientes', action: 'clientes', icon: 'user' },
+    { label: 'Bajas', action: 'bajas', icon: 'user-minus' },
     { label: 'Configuración', action: 'configuracion', icon: 'gear' },
     { label: 'Perfil', action: 'perfil', icon: 'profile' }
   ];

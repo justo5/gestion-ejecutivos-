@@ -27,6 +27,7 @@ export class App {
     ejecutivos: '/ejecutivos',
     cobros: '/cobros',
     clientes: '/clientes',
+    bajas: '/bajas',
     configuracion: '/config',
     perfil: '/perfil',
   };

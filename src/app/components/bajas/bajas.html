@@ -1,0 +1,77 @@
+<section class="bajas-page">
+  <div class="bajas-header">
+    <h2>Bajas</h2>
+    <input type="text" class="search-input" placeholder="Buscar cliente, ejecutivo o motivo..."
+      (input)="onSearch($any($event.target).value)" />
+  </div>
+
+  <ng-container *ngIf="filteredRows$ | async as rows">
+    <p class="bajas-hint" *ngIf="rows.length === 0">No hay bajas para mostrar.</p>
+
+    <ul class="baja-list" *ngIf="rows.length > 0">
+      <li class="baja-item" *ngFor="let item of rows">
+
+        <!-- Vista normal -->
+        <ng-container *ngIf="editingId !== item.client.id && confirmRemoveId !== item.client.id">
+          <div class="baja-main">
+            <div class="baja-title">
+              <span class="baja-name">{{ cardName(item.client) }}</span>
+              <span class="baja-date">Baja: {{ dateLabel(item.deletedAt) }}</span>
+            </div>
+            <span class="baja-executive">{{ item.executiveName }}</span>
+            <p class="baja-reason" *ngIf="item.client.deletedReason">{{ item.client.deletedReason }}</p>
+            <p class="baja-reason is-empty" *ngIf="!item.client.deletedReason">Sin motivo cargado.</p>
+          </div>
+          <div class="baja-actions">
+            <button type="button" class="edit-btn" (click)="startEdit(item)">Editar</button>
+            <button type="button" class="remove-btn" (click)="askRemove(item)" aria-label="Eliminar baja">×</button>
+          </div>
+        </ng-container>
+
+        <!-- Modo edición: fecha + motivo -->
+        <ng-container *ngIf="editingId === item.client.id">
+          <div class="baja-title">
+            <span class="baja-name">{{ cardName(item.client) }}</span>
+            <span class="baja-executive">{{ item.executiveName }}</span>
+          </div>
+          <div class="baja-edit-fields">
+            <label class="baja-field">
+              <span class="baja-label">Fecha de baja</span>
+              <input type="date" class="baja-input" [(ngModel)]="editDate" [max]="today" [disabled]="saving" />
+            </label>
+            <label class="baja-field baja-field-grow">
+              <span class="baja-label">Motivo de la baja</span>
+              <textarea class="baja-input" rows="3" maxlength="500" [(ngModel)]="editReason" [disabled]="saving"
+                placeholder="Ej. dejó de pautar por presupuesto, cerró el negocio…"></textarea>
+            </label>
+          </div>
+          <div class="baja-actions">
+            <button type="button" class="save-btn" (click)="saveEdit(item)" [disabled]="saving">
+              {{ saving ? 'Guardando…' : 'Guardar' }}
+            </button>
+            <button type="button" class="cancel-btn" (click)="cancelEdit()" [disabled]="saving">Cancelar</button>
+          </div>
+          <p class="row-error" *ngIf="editError">{{ editError }}</p>
+        </ng-container>
+
+        <!-- Confirmación de eliminación de la baja -->
+        <ng-container *ngIf="confirmRemoveId === item.client.id">
+          <div class="baja-main">
+            <span class="baja-confirm-text">
+              ¿Eliminar la baja de <strong>{{ cardName(item.client) }}</strong>?
+              El cliente vuelve a estar activo en Clientes y Cobros.
+            </span>
+          </div>
+          <div class="baja-actions">
+            <button type="button" class="remove-confirm-btn" (click)="confirmRemove(item)" [disabled]="removing">
+              {{ removing ? 'Eliminando…' : 'Sí, eliminar baja' }}
+            </button>
+            <button type="button" class="cancel-btn" (click)="cancelRemove()" [disabled]="removing">Cancelar</button>
+          </div>
+          <p class="row-error" *ngIf="removeError">{{ removeError }}</p>
+        </ng-container>
+
+      </li>
+    </ul>
+  </ng-container>
+</section>

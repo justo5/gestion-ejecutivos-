@@ -49,6 +49,8 @@ export interface Client {
   // aparecer en Clientes ni generar cobros nuevos, pero su historial de
   // meses anteriores a esta fecha se sigue mostrando en Cobros.
   deletedAt?: string | null;
+  // Motivo de la baja (texto libre). Solo tiene sentido si deletedAt no es nulo.
+  deletedReason?: string | null;
   // Ficha extendida (notas, override de estado/link, to do): persiste en el
   // backend, no en localStorage. Puede no venir en payloads viejos (import),
   // por eso son opcionales/nullable.
@@ -436,6 +438,16 @@ export class ExecutivesService {
 
   deleteClient(clientId: string): Observable<void> {
     return this.http.delete<void>(`/api/clients/${clientId}`).pipe(tap(() => this.refresh()));
+  }
+
+  // Edita la fecha ('YYYY-MM-DD') y/o el motivo de una baja ya existente.
+  updateBaja(clientId: string, payload: { deletedAt?: string; deletedReason?: string | null }): Observable<Client> {
+    return this.http.patch<Client>(`/api/clients/${clientId}/baja`, payload).pipe(tap(() => this.refresh()));
+  }
+
+  // Elimina la baja: el cliente vuelve a estar vigente (activo en Clientes y Cobros).
+  removeBaja(clientId: string): Observable<void> {
+    return this.http.delete<void>(`/api/clients/${clientId}/baja`).pipe(tap(() => this.refresh()));
   }
 
   updateAdAccountId(clientId: string, adAccountId: string | null): Observable<Client> {
