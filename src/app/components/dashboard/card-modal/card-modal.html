@@ -53,11 +53,6 @@
 
     <!-- Porcentaje de bajas -->
     <ng-container *ngSwitchCase="'churnPct'">
-      <app-dashboard-bars-panel title="Por ejecutivo" [bars]="vm.churnExecutiveBars"></app-dashboard-bars-panel>
-      <div class="detail-modal-section">
-        <div class="detail-modal-section-title">Clientes dados de baja ({{ vm.churnClientRows.length }})</div>
-        <app-dashboard-client-rows [list]="vm.churnClientRows" emptyText="Sin clientes dados de baja."></app-dashboard-client-rows>
-      </div>
       <!-- Desglose mensual (mes actual arriba): % de bajas de cada mes
            sobre los clientes que había al arrancar ese mes. -->
       <div class="detail-modal-section">
