@@ -24,7 +24,7 @@
           </div>
           <div class="baja-actions">
             <button type="button" class="edit-btn" (click)="startEdit(item)">Editar</button>
-            <button type="button" class="remove-btn" (click)="askRemove(item)" aria-label="Eliminar baja">×</button>
+            <button type="button" class="remove-btn" (click)="askRemove(item)" aria-label="Eliminar baja" title="Reactivar o eliminar cliente">×</button>
           </div>
         </ng-container>
 
@@ -54,19 +54,38 @@
           <p class="row-error" *ngIf="editError">{{ editError }}</p>
         </ng-container>
 
-        <!-- Confirmación de eliminación de la baja -->
+        <!-- Eliminar la baja: elegir entre reactivar o borrar definitivamente -->
         <ng-container *ngIf="confirmRemoveId === item.client.id">
-          <div class="baja-main">
+          <div class="baja-main" *ngIf="removeStep === 'choose'">
             <span class="baja-confirm-text">
-              ¿Eliminar la baja de <strong>{{ cardName(item.client) }}</strong>?
-              El cliente vuelve a estar activo en Clientes y Cobros.
+              ¿Qué querés hacer con la baja de <strong>{{ cardName(item.client) }}</strong>?
             </span>
+            <ul class="baja-options">
+              <li><strong>Reactivar:</strong> el cliente vuelve a aparecer en Clientes y Cobros.</li>
+              <li><strong>Eliminar definitivamente:</strong> para clientes mal cargados o que no llegaron a entrar.</li>
+            </ul>
           </div>
-          <div class="baja-actions">
-            <button type="button" class="remove-confirm-btn" (click)="confirmRemove(item)" [disabled]="removing">
-              {{ removing ? 'Eliminando…' : 'Sí, eliminar baja' }}
+          <div class="baja-actions" *ngIf="removeStep === 'choose'">
+            <button type="button" class="restore-btn" (click)="confirmRestore(item)" [disabled]="removing">
+              {{ removing ? 'Reactivando…' : 'Reactivar cliente' }}
+            </button>
+            <button type="button" class="remove-confirm-btn" (click)="askPermanentRemove()" [disabled]="removing">
+              Eliminar definitivamente
             </button>
             <button type="button" class="cancel-btn" (click)="cancelRemove()" [disabled]="removing">Cancelar</button>
+          </div>
+
+          <div class="baja-main" *ngIf="removeStep === 'permanent'">
+            <span class="baja-confirm-text">
+              Vas a eliminar a <strong>{{ cardName(item.client) }}</strong> del sistema junto con todo su
+              historial de cobros y sus tareas. <strong>Esto no se puede deshacer.</strong>
+            </span>
+          </div>
+          <div class="baja-actions" *ngIf="removeStep === 'permanent'">
+            <button type="button" class="remove-confirm-btn" (click)="confirmPermanentRemove(item)" [disabled]="removing">
+              {{ removing ? 'Eliminando…' : 'Sí, eliminar definitivamente' }}
+            </button>
+            <button type="button" class="cancel-btn" (click)="backToChoose()" [disabled]="removing">Volver</button>
           </div>
           <p class="row-error" *ngIf="removeError">{{ removeError }}</p>
         </ng-container>

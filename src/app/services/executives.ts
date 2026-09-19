@@ -445,9 +445,15 @@ export class ExecutivesService {
     return this.http.patch<Client>(`/api/clients/${clientId}/baja`, payload).pipe(tap(() => this.refresh()));
   }
 
-  // Elimina la baja: el cliente vuelve a estar vigente (activo en Clientes y Cobros).
+  // Deshace la baja: el cliente vuelve a estar vigente (activo en Clientes y Cobros).
   removeBaja(clientId: string): Observable<void> {
     return this.http.delete<void>(`/api/clients/${clientId}/baja`).pipe(tap(() => this.refresh()));
+  }
+
+  // Borra el cliente de forma definitiva (con su historial de cobros y to do).
+  // Irreversible; el backend solo lo permite sobre clientes ya dados de baja.
+  deleteClientPermanently(clientId: string): Observable<void> {
+    return this.http.delete<void>(`/api/clients/${clientId}/permanent`).pipe(tap(() => this.refresh()));
   }
 
   updateAdAccountId(clientId: string, adAccountId: string | null): Observable<Client> {

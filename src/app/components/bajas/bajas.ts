@@ -12,7 +12,7 @@ export interface BajaItem {
 
 // Sección "Bajas": clientes dados de baja (soft delete), con su motivo. Desde
 // acá se puede cargar/editar el motivo, corregir la fecha de baja y eliminar la
-// baja (lo que devuelve al cliente a Clientes y Cobros).
+// baja: reactivando al cliente o borrándolo definitivamente del sistema.
 @Component({
   selector: 'app-bajas',
   standalone: false,
@@ -35,6 +35,8 @@ export class Bajas implements OnInit {
   editError = '';
 
   confirmRemoveId: string | null = null;
+  // 'choose': reactivar o borrar. 'permanent': confirmación del borrado definitivo.
+  removeStep: 'choose' | 'permanent' = 'choose';
   removing = false;
   removeError = '';
 
@@ -137,31 +139,58 @@ export class Bajas implements OnInit {
       });
   }
 
-  // --- Eliminar la baja (reactiva al cliente) ---
+  // --- Eliminar la baja: reactivar al cliente o borrarlo definitivamente ---
 
   askRemove(item: BajaItem): void {
     this.confirmRemoveId = item.client.id;
+    this.removeStep = 'choose';
     this.removeError = '';
     this.editingId = null;
   }
 
   cancelRemove(): void {
     this.confirmRemoveId = null;
+    this.removeStep = 'choose';
     this.removeError = '';
   }
 
-  confirmRemove(item: BajaItem): void {
+  // Pasa a la confirmación del borrado definitivo (irreversible).
+  askPermanentRemove(): void {
+    this.removeStep = 'permanent';
+    this.removeError = '';
+  }
+
+  backToChoose(): void {
+    this.removeStep = 'choose';
+    this.removeError = '';
+  }
+
+  // El cliente vuelve a estar activo en Clientes y Cobros.
+  confirmRestore(item: BajaItem): void {
+    this.runRemoval(this.executivesService.removeBaja(item.client.id), 'No se pudo reactivar el cliente. Intentá de nuevo.');
+  }
+
+  // El cliente se borra del sistema junto con su historial de cobros.
+  confirmPermanentRemove(item: BajaItem): void {
+    this.runRemoval(
+      this.executivesService.deleteClientPermanently(item.client.id),
+      'No se pudo eliminar el cliente. Intentá de nuevo.',
+    );
+  }
+
+  private runRemoval(request: Observable<void>, errorMessage: string): void {
     this.removing = true;
     this.removeError = '';
-    this.executivesService.removeBaja(item.client.id).subscribe({
+    request.subscribe({
       next: () => {
         this.removing = false;
         this.confirmRemoveId = null;
+        this.removeStep = 'choose';
         this.cdr.markForCheck();
       },
       error: () => {
         this.removing = false;
-        this.removeError = 'No se pudo eliminar la baja. Intentá de nuevo.';
+        this.removeError = errorMessage;
         this.cdr.markForCheck();
       },
     });

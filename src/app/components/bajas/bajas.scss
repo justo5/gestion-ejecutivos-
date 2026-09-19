@@ -109,6 +109,16 @@
   color: var(--text);
 }
 
+.baja-options {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 .baja-actions {
   display: flex;
   align-items: center;
@@ -168,6 +178,19 @@
 
 .save-btn {
   padding: 0.35rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.restore-btn {
+  padding: 0.3rem 0.75rem;
   border: none;
   border-radius: 6px;
   background: linear-gradient(135deg, var(--primary-dark), var(--primary));
