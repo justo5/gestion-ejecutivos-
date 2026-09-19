@@ -477,6 +477,43 @@ export class ExecutivesService {
     });
   }
 
+  // --- CRUD de ejecutivos (solo admin) ---
+
+  // email + password (opcionales, van juntos) crean además el usuario con el
+  // que el ejecutivo inicia sesión.
+  createExecutive(payload: {
+    name: string;
+    squad: string | null;
+    email?: string;
+    password?: string;
+  }): Observable<Executive> {
+    return this.http.post<Executive>('/api/executives', payload).pipe(tap(() => this.refresh()));
+  }
+
+  updateExecutive(id: string, payload: { name: string; squad: string | null }): Observable<Executive> {
+    return this.http.patch<Executive>(`/api/executives/${id}`, payload).pipe(tap(() => this.refresh()));
+  }
+
+  // El backend rechaza (409) borrar un ejecutivo que todavía tiene clientes.
+  deleteExecutive(id: string): Observable<void> {
+    return this.http.delete<void>(`/api/executives/${id}`).pipe(tap(() => this.refresh()));
+  }
+
+  // Traspasa clientes puntuales (clientIds) o, si se omite, toda la cartera
+  // del ejecutivo `fromId` al ejecutivo `targetExecutiveId`.
+  transferClients(
+    fromId: string,
+    targetExecutiveId: string,
+    clientIds?: string[],
+  ): Observable<{ transferred: number }> {
+    return this.http
+      .post<{ transferred: number }>(`/api/executives/${fromId}/transfer-clients`, {
+        targetExecutiveId,
+        ...(clientIds && { clientIds }),
+      })
+      .pipe(tap(() => this.refresh()));
+  }
+
   clear(): void {
     this.columnOptionsSubject.next([]);
   }

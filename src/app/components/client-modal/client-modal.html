@@ -21,6 +21,40 @@
 
     <div class="modal-body">
 
+      <!-- Traspaso de clientes -->
+      <div *ngIf="!selectedClient && executive.clients.length > 0" class="transfer-bar">
+        <label class="select-all">
+          <input type="checkbox" [checked]="allSelected" (change)="toggleAll()" />
+          Seleccionar todos
+        </label>
+
+        <ng-container *ngIf="selectedIds.size > 0">
+          <span class="selected-count">{{ selectedIds.size }} seleccionado{{ selectedIds.size === 1 ? '' : 's' }}</span>
+
+          <ng-container *ngIf="!confirmingTransfer">
+            <select class="transfer-select" [(ngModel)]="targetId" aria-label="Ejecutivo de destino">
+              <option value="">Traspasar a…</option>
+              <option *ngFor="let target of targets" [value]="target.id">{{ target.name }}</option>
+            </select>
+            <button type="button" class="transfer-btn" [disabled]="!targetId" (click)="askTransfer()">Traspasar</button>
+          </ng-container>
+
+          <ng-container *ngIf="confirmingTransfer">
+            <span class="transfer-confirm-text">
+              ¿Traspasar {{ selectedIds.size }} cliente{{ selectedIds.size === 1 ? '' : 's' }} a <strong>{{ targetName }}</strong>?
+            </span>
+            <button type="button" class="transfer-btn" [disabled]="transferring" (click)="confirmTransfer()">
+              {{ transferring ? 'Traspasando…' : 'Confirmar' }}
+            </button>
+            <button type="button" class="transfer-cancel" [disabled]="transferring" (click)="cancelTransfer()">Cancelar</button>
+          </ng-container>
+        </ng-container>
+      </div>
+      <p *ngIf="!selectedClient && transferMessage" class="transfer-success">{{ transferMessage }}</p>
+      <p *ngIf="!selectedClient && transferError" class="transfer-error">{{ transferError }}</p>
+
+      <p *ngIf="!selectedClient && executive.clients.length === 0" class="empty-msg">Este ejecutivo no tiene clientes.</p>
+
       <!-- Grid de tarjetas -->
       <div *ngIf="!selectedClient" class="clients-grid">
         <div
@@ -28,7 +62,16 @@
           *ngFor="let client of executive.clients"
           (click)="selectClient(client)"
           [class.is-active]="client.active"
+          [class.is-selected]="isSelected(client)"
         >
+          <input
+            type="checkbox"
+            class="client-select"
+            [checked]="isSelected(client)"
+            (click)="$event.stopPropagation()"
+            (change)="toggleSelected(client)"
+            aria-label="Seleccionar cliente"
+          />
           <span class="client-card-name">{{ client | clientDisplayName }}</span>
           <span class="client-card-status" [class.active]="client.active">
             {{ client.active ? 'Activo' : 'Inactivo' }}

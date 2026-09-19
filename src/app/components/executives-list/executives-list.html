@@ -1,12 +1,13 @@
 <ng-container *ngIf="executives$ | async as executives">
   <section class="list-section">
-    <div *ngIf="executives.length === 0" class="list-empty">
-      <div class="empty-icon">👥</div>
-      <p>Carga un archivo para ver los ejecutivos aquí.</p>
+    <div class="list-header">
+      <h2 *ngIf="executives.length > 0">Ejecutivos <span class="badge">{{ executives.length }}</span></h2>
+      <button type="button" class="new-btn" (click)="openCreate()">+ Nuevo ejecutivo</button>
     </div>
 
-    <div *ngIf="executives.length > 0" class="list-header">
-      <h2>Ejecutivos <span class="badge">{{ executives.length }}</span></h2>
+    <div *ngIf="executives.length === 0" class="list-empty">
+      <div class="empty-icon">👥</div>
+      <p>Todavía no hay ejecutivos. Creá el primero con el botón de arriba.</p>
     </div>
 
     <div class="cards-grid">
@@ -15,6 +16,8 @@
         [executive]="exec"
         (imageChanged)="onImageChanged($event)"
         (cardClicked)="openModal($event)"
+        (editClicked)="openEdit($event)"
+        (deleteClicked)="askDelete($event)"
       ></app-executive-card>
     </div>
   </section>
@@ -24,3 +27,39 @@
   [executive]="selectedExecutive"
   (closed)="closeModal()"
 ></app-client-modal>
+
+<app-executive-form-modal
+  *ngIf="showForm"
+  [executive]="formExecutive"
+  (closed)="closeForm()"
+></app-executive-form-modal>
+
+<!-- Confirmación de eliminación -->
+<div class="modal-backdrop" *ngIf="executiveToDelete" (click)="onDeleteBackdropClick($event)">
+  <div class="confirm-panel">
+    <h3 class="confirm-title">Eliminar ejecutivo</h3>
+    <p class="confirm-body">
+      ¿Eliminar a <strong>{{ executiveToDelete.name }}</strong>?
+      <ng-container *ngIf="executiveToDelete.clientCount === 0">
+        También se elimina su usuario de acceso, si tiene.
+      </ng-container>
+    </p>
+    <p class="confirm-warning" *ngIf="executiveToDelete.clients.length > 0">
+      Todavía tiene {{ executiveToDelete.clients.length }}
+      cliente{{ executiveToDelete.clients.length === 1 ? '' : 's' }} (incluidas bajas). Abrí su tarjeta y
+      traspasalos a otro ejecutivo antes de eliminarlo.
+    </p>
+    <p class="confirm-error" *ngIf="deleteError">{{ deleteError }}</p>
+    <div class="confirm-actions">
+      <button type="button" class="cancel-btn" (click)="cancelDelete()" [disabled]="deleting">Cancelar</button>
+      <button
+        type="button"
+        class="delete-btn"
+        (click)="confirmDelete()"
+        [disabled]="deleting || executiveToDelete.clients.length > 0"
+      >
+        {{ deleting ? 'Eliminando…' : 'Sí, eliminar' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -7,6 +7,7 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { ExecutiveCard } from './components/executive-card/executive-card';
 import { ExecutivesList } from './components/executives-list/executives-list';
+import { ExecutiveFormModal } from './components/executive-form-modal/executive-form-modal';
 import { ClientModal } from './components/client-modal/client-modal';
 import { DailyCollections } from './components/daily-collections/daily-collections';
 import { HeaderMenu } from './components/header-menu/header-menu';
@@ -45,6 +46,7 @@ import { ClientDisplayNamePipe } from './pipes/client-display-name-pipe';
     App,
     ExecutiveCard,
     ExecutivesList,
+    ExecutiveFormModal,
     ClientModal,
     DailyCollections,
     HeaderMenu,

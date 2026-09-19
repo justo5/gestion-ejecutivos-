@@ -1,4 +1,9 @@
 <article class="card" (click)="onCardClick()">
+  <div class="card-actions">
+    <button type="button" class="card-action" title="Editar ejecutivo" aria-label="Editar ejecutivo" (click)="onEditClick($event)">✎</button>
+    <button type="button" class="card-action danger" title="Eliminar ejecutivo" aria-label="Eliminar ejecutivo" (click)="onDeleteClick($event)">🗑</button>
+  </div>
+
   <div class="card-avatar">
     <img *ngIf="executive.imageUrl" [src]="executive.imageUrl" [alt]="executive.name" class="card-img" />
     <div *ngIf="!executive.imageUrl" class="card-initials">{{ getInitials() }}</div>

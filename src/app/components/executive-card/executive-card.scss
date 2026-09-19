@@ -13,6 +13,7 @@
   justify-content: space-between;
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
+  position: relative;
 
   &:hover {
     transform: translateY(-4px);
@@ -136,4 +137,30 @@
   width: 1px;
   height: 28px;
   background: var(--border);
+}
+
+.card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.card-action {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0;
+
+  &:hover { color: var(--text); border-color: var(--border-strong); }
+  &.danger:hover { color: var(--rojo); border-color: var(--rojo); }
 }

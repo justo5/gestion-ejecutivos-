@@ -11,9 +11,21 @@ export class ExecutiveCard {
   @Input() executive!: Executive;
   @Output() imageChanged = new EventEmitter<{ id: string; url: string }>();
   @Output() cardClicked = new EventEmitter<Executive>();
+  @Output() editClicked = new EventEmitter<Executive>();
+  @Output() deleteClicked = new EventEmitter<Executive>();
 
   onCardClick(): void {
     this.cardClicked.emit(this.executive);
+  }
+
+  onEditClick(event: Event): void {
+    event.stopPropagation();
+    this.editClicked.emit(this.executive);
+  }
+
+  onDeleteClick(event: Event): void {
+    event.stopPropagation();
+    this.deleteClicked.emit(this.executive);
   }
 
   onImageSelected(event: Event): void {

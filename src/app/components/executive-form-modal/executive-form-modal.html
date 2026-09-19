@@ -1,0 +1,47 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ isEdit ? 'Editar ejecutivo' : 'Nuevo ejecutivo' }}</h3>
+      <button type="button" class="modal-close" (click)="close()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <form class="exec-form" (ngSubmit)="submit()">
+      <label class="form-field">
+        <span class="form-label">Nombre<span class="required-mark">*</span></span>
+        <input class="form-input" name="name" type="text" [(ngModel)]="name" autocomplete="off" required />
+      </label>
+
+      <label class="form-field">
+        <span class="form-label">Squad</span>
+        <input class="form-input" name="squad" type="text" [(ngModel)]="squad" autocomplete="off" />
+      </label>
+
+      <ng-container *ngIf="!isEdit">
+        <label class="form-checkbox">
+          <input type="checkbox" name="createAccess" [(ngModel)]="createAccess" />
+          Crear acceso para que pueda iniciar sesión
+        </label>
+
+        <ng-container *ngIf="createAccess">
+          <label class="form-field">
+            <span class="form-label">Email<span class="required-mark">*</span></span>
+            <input class="form-input" name="email" type="email" [(ngModel)]="email" autocomplete="off" />
+          </label>
+          <label class="form-field">
+            <span class="form-label">Contraseña<span class="required-mark">*</span></span>
+            <input class="form-input" name="password" type="password" [(ngModel)]="password" autocomplete="new-password" />
+          </label>
+        </ng-container>
+      </ng-container>
+
+      <p class="form-error" *ngIf="error">{{ error }}</p>
+
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" (click)="close()" [disabled]="submitting">Cancelar</button>
+        <button type="submit" class="form-submit" [disabled]="submitting">
+          {{ submitting ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear ejecutivo' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

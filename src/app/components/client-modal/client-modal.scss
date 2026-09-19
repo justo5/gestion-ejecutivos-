@@ -126,6 +126,7 @@
 }
 
 .client-card {
+  position: relative;
   background: var(--bg);
   border: 2px solid var(--border);
   border-radius: 12px;
@@ -145,6 +146,102 @@
   &.is-active {
     border-color: var(--verde-dark);
   }
+
+  &.is-selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+}
+
+.client-select {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+// --- Traspaso ---
+
+.transfer-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selected-count {
+  color: var(--text-muted);
+}
+
+.transfer-select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-left: auto;
+}
+
+.transfer-confirm-text {
+  margin-left: auto;
+
+  strong { color: var(--primary); }
+}
+
+.transfer-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+
+  &:disabled { background: var(--surface-2); color: var(--text-muted); cursor: not-allowed; }
+}
+
+.transfer-cancel {
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.transfer-success {
+  font-size: 0.85rem;
+  color: var(--verde);
+  margin-bottom: 16px;
+}
+
+.transfer-error {
+  font-size: 0.85rem;
+  color: var(--rojo);
+  margin-bottom: 16px;
+}
+
+.empty-msg {
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .client-card-name {
