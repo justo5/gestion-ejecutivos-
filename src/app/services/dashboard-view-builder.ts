@@ -361,6 +361,7 @@ export class DashboardViewBuilder {
       status: row.view.status,
       statusLabel: row.view.statusLabel,
       secondary,
+      link: row.client.linkOverride ?? null,
     };
   }
 

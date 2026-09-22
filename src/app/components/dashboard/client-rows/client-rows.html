@@ -1,9 +1,19 @@
 <ul class="detail-client-list" *ngIf="list.length; else noClientRows">
-  <li class="detail-client-row" *ngFor="let c of list">
-    <app-status-dot [status]="c.status"></app-status-dot>
-    <span class="detail-client-name" [attr.title]="c.name">{{ c.name }}</span>
-    <span class="detail-client-exec">{{ c.executiveName }}</span>
-    <span class="detail-client-secondary">{{ c.secondary }}</span>
+  <li class="detail-client-row" [class.has-link]="c.link" *ngFor="let c of list">
+    <ng-container *ngIf="c.link; else plainRow">
+      <a class="detail-client-link" [href]="c.link" target="_blank" rel="noopener noreferrer" [attr.title]="c.name">
+        <app-status-dot [status]="c.status"></app-status-dot>
+        <span class="detail-client-name">{{ c.name }}</span>
+        <span class="detail-client-exec">{{ c.executiveName }}</span>
+        <span class="detail-client-secondary">{{ c.secondary }}</span>
+      </a>
+    </ng-container>
+    <ng-template #plainRow>
+      <app-status-dot [status]="c.status"></app-status-dot>
+      <span class="detail-client-name" [attr.title]="c.name">{{ c.name }}</span>
+      <span class="detail-client-exec">{{ c.executiveName }}</span>
+      <span class="detail-client-secondary">{{ c.secondary }}</span>
+    </ng-template>
   </li>
 </ul>
 <ng-template #noClientRows><p class="bars-empty">{{ emptyText }}</p></ng-template>

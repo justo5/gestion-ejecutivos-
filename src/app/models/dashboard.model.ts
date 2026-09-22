@@ -20,6 +20,7 @@ export interface ClientDetailRow {
   status: ClientStatus;
   statusLabel: string;
   secondary: string;
+  link?: string | null;
 }
 
 // Tarjetas KPI que se pueden abrir para ver el detalle.
