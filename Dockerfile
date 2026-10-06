@@ -1,22 +1,11 @@
-# Stage 1: Build
-FROM node:22-alpine AS builder
-
+FROM node:24-alpine AS build
 WORKDIR /app
-
-RUN corepack enable && corepack prepare yarn@1.22.22 --activate
-
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
-
+RUN corepack enable
 COPY . .
-RUN yarn build --configuration production
+RUN yarn install --frozen-lockfile
+RUN yarn build
 
-# Stage 2: Serve
-FROM nginx:alpine
-
-COPY --from=builder /app/dist/gestion-juniors/browser /usr/share/nginx/html
+FROM nginx:alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
+COPY --from=build /app/dist/gestion-juniors/browser /usr/share/nginx/html
 EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]

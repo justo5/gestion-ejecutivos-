@@ -1,13 +1,18 @@
 services:
   gestion-juniors:
-    build: .
+    build:
+      context: .
     container_name: gestion-juniors
     restart: unless-stopped
-    ports:
-      - "8090:80"
+    # Sin puertos: entra solo por nginx-proxy-manager (npm_network).
+    # gestion-ejecutivos-net hace falta para el proxy /api -> backend:3000.
     networks:
+      - npm_network
       - gestion-ejecutivos-net
 
 networks:
+  npm_network:
+    external: true
+    name: mi-red-nginx
   gestion-ejecutivos-net:
     external: true
