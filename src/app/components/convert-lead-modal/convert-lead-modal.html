@@ -1,0 +1,53 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="convert-lead-title">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <h2 class="modal-title" id="convert-lead-title">Convertir en cliente</h2>
+        <span class="modal-subtitle">{{ fullName }}</span>
+      </div>
+      <button class="modal-close" (click)="close()" [disabled]="converting" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <form class="modal-body" (ngSubmit)="convert()">
+      <label class="field">
+        <span class="field-label">Ejecutivo</span>
+        <select class="field-input" name="executiveId" [(ngModel)]="executiveId" [disabled]="converting" required>
+          <option value="">Elegí un ejecutivo…</option>
+          <option *ngFor="let exec of executives" [value]="exec.id">{{ exec.name }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Plan</span>
+        <select class="field-input" name="planId" [(ngModel)]="planId" [disabled]="converting">
+          <option [ngValue]="null">Sin plan</option>
+          <option *ngFor="let plan of plans" [ngValue]="plan.id">{{ plan.name }}</option>
+        </select>
+        <span class="field-hint">En la landing eligió: {{ lead.planName }}</span>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Rubro</span>
+        <select class="field-input" name="rubro" [ngModel]="rubro" (ngModelChange)="onRubroChange($event)" [disabled]="converting">
+          <option *ngFor="let option of rubroOptions" [value]="option">
+            {{ option }}{{ option === leadOnlyRubro ? ' (del formulario)' : '' }}
+          </option>
+        </select>
+      </label>
+
+      <p class="field-hint">
+        Se crea el cliente activo con el contacto como fanpage, y el WhatsApp e inversión quedan en sus datos.
+        Si elegís un plan, se crea también su cobro.
+      </p>
+
+      <p class="form-error" *ngIf="error">{{ error }}</p>
+
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" (click)="close()" [disabled]="converting">Cancelar</button>
+        <button type="submit" class="save-btn" [disabled]="converting || !executiveId">
+          {{ converting ? 'Convirtiendo…' : 'Convertir en cliente' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

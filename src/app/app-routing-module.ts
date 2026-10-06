@@ -4,6 +4,7 @@ import { EjecutivosPage } from './components/ejecutivos-page/ejecutivos-page';
 import { Cobros } from './components/cobros/cobros';
 import { Clientes } from './components/clientes/clientes';
 import { Bajas } from './components/bajas/bajas';
+import { Solicitudes } from './components/solicitudes/solicitudes';
 import { DashboardPage } from './components/dashboard/dashboard';
 import { ConfigPage } from './components/config-page/config-page';
 import { Perfil } from './components/perfil/perfil';
@@ -18,6 +19,7 @@ const routes: Routes = [
   { path: 'cobros', component: Cobros, canActivate: [authGuard] },
   { path: 'clientes', component: Clientes, canActivate: [authGuard] },
   { path: 'bajas', component: Bajas, canActivate: [authGuard] },
+  { path: 'solicitudes', component: Solicitudes, canActivate: [authGuard] },
   { path: 'config', component: ConfigPage, canActivate: [adminGuard] },
   { path: 'perfil', component: Perfil, canActivate: [authGuard] },
 ];

@@ -5,7 +5,8 @@
         <img class="app-brand-mark" src="logo.png" alt="Vamos Bien" width="32" height="32" />
         <h1 class="app-logo">Gestión Juniors</h1>
       </div>
-      <app-header-menu [isAdmin]="isAdmin" (select)="onMenuSelect($event)"></app-header-menu>
+      <app-header-menu [isAdmin]="isAdmin" [newLeadsCount]="(newLeadsCount$ | async) ?? 0"
+        (select)="onMenuSelect($event)"></app-header-menu>
     </header>
   </ng-container>
   <main class="app-main">

@@ -15,6 +15,8 @@ import { EjecutivosPage } from './components/ejecutivos-page/ejecutivos-page';
 import { Cobros } from './components/cobros/cobros';
 import { Clientes } from './components/clientes/clientes';
 import { Bajas } from './components/bajas/bajas';
+import { Solicitudes } from './components/solicitudes/solicitudes';
+import { ConvertLeadModal } from './components/convert-lead-modal/convert-lead-modal';
 import { DashboardPage } from './components/dashboard/dashboard';
 import { DashboardKpiGrid } from './components/dashboard/kpi-grid/kpi-grid';
 import { DashboardTrendGrid } from './components/dashboard/trend-grid/trend-grid';
@@ -54,6 +56,8 @@ import { ClientDisplayNamePipe } from './pipes/client-display-name-pipe';
     Cobros,
     Clientes,
     Bajas,
+    Solicitudes,
+    ConvertLeadModal,
     DashboardPage,
     DashboardKpiGrid,
     DashboardTrendGrid,

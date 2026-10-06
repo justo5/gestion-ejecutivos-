@@ -1,0 +1,113 @@
+<section class="solicitudes-page">
+  <div class="solicitudes-header">
+    <h2>Solicitudes</h2>
+    <div class="filters">
+      <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()" aria-label="Filtrar por estado">
+        <option value="">Todos los estados</option>
+        <option *ngFor="let status of allStatuses" [value]="status">{{ statusLabels[status] }}</option>
+      </select>
+      <select *ngIf="isAdmin" class="filter-select" [(ngModel)]="executiveFilter" (ngModelChange)="applyFilters()"
+        aria-label="Filtrar por ejecutivo">
+        <option value="">Todos los ejecutivos</option>
+        <option *ngFor="let exec of executives$ | async" [value]="exec.id">{{ exec.name }}</option>
+      </select>
+    </div>
+  </div>
+
+  <ng-container *ngIf="leads$ | async as leads">
+    <p class="solicitudes-hint" *ngIf="leads.length === 0">No hay solicitudes para mostrar.</p>
+
+    <ul class="lead-list" *ngIf="leads.length > 0">
+      <li class="lead-item" *ngFor="let lead of leads; trackBy: trackById" [attr.data-status]="lead.status">
+        <div class="lead-title">
+          <span class="lead-name">{{ fullName(lead) }}</span>
+          <span class="lead-date">{{ dateLabel(lead.externalCreatedAt) }}</span>
+          <span class="lead-status" [attr.data-status]="lead.status">{{ statusLabels[lead.status] }}</span>
+        </div>
+
+        <dl class="lead-fields">
+          <div class="lead-field">
+            <dt>WhatsApp</dt>
+            <dd>
+              <a *ngIf="whatsappHref(lead) as href" [href]="href" target="_blank" rel="noopener noreferrer">{{ lead.whatsapp }}</a>
+              <span *ngIf="!whatsappHref(lead)">{{ lead.whatsapp }}</span>
+            </dd>
+          </div>
+          <div class="lead-field">
+            <dt>Contacto</dt>
+            <dd>
+              <a *ngIf="contactoHref(lead) as href" [href]="href" target="_blank" rel="noopener noreferrer">{{ lead.contacto }}</a>
+              <span *ngIf="!contactoHref(lead)">{{ lead.contacto }}</span>
+            </dd>
+          </div>
+          <div class="lead-field">
+            <dt>Rubro</dt>
+            <dd>{{ lead.rubro }}</dd>
+          </div>
+          <div class="lead-field">
+            <dt>Inversión</dt>
+            <dd>{{ inversionLabel(lead) }}</dd>
+          </div>
+          <div class="lead-field">
+            <dt>Plan</dt>
+            <dd>
+              {{ lead.plan?.name ?? lead.planName }}
+              <span class="lead-muted" *ngIf="!lead.plan">(no coincide con ningún plan)</span>
+            </dd>
+          </div>
+          <div class="lead-field">
+            <dt>Ejecutivo</dt>
+            <dd>
+              <select *ngIf="isAdmin && lead.status !== 'convertido'; else executiveText" class="row-select"
+                [ngModel]="lead.executiveId ?? ''" (ngModelChange)="onExecutiveChange(lead, $event)"
+                [disabled]="savingId === lead.id" aria-label="Asignar ejecutivo">
+                <option value="">Sin asignar</option>
+                <option *ngFor="let exec of executives$ | async" [value]="exec.id">{{ exec.name }}</option>
+              </select>
+              <ng-template #executiveText>
+                <span [class.lead-muted]="!lead.executive">{{ lead.executive?.name ?? 'Sin asignar' }}</span>
+              </ng-template>
+            </dd>
+          </div>
+        </dl>
+
+        <!-- Notas -->
+        <ng-container *ngIf="editingNotesId !== lead.id">
+          <p class="lead-notes" *ngIf="lead.notes">{{ lead.notes }}</p>
+        </ng-container>
+        <div class="notes-edit" *ngIf="editingNotesId === lead.id">
+          <textarea class="notes-input" rows="3" maxlength="5000" [(ngModel)]="notesDraft"
+            [disabled]="savingId === lead.id" placeholder="Ej. le escribí por WhatsApp, quiere arrancar el mes que viene…"></textarea>
+          <div class="lead-actions">
+            <button type="button" class="save-btn" (click)="saveNotes(lead)" [disabled]="savingId === lead.id">
+              {{ savingId === lead.id ? 'Guardando…' : 'Guardar' }}
+            </button>
+            <button type="button" class="cancel-btn" (click)="cancelNotes()" [disabled]="savingId === lead.id">Cancelar</button>
+          </div>
+        </div>
+
+        <div class="lead-actions" *ngIf="editingNotesId !== lead.id">
+          <select *ngIf="lead.status !== 'convertido'" class="row-select" [ngModel]="lead.status"
+            (ngModelChange)="onStatusChange(lead, $event)" [disabled]="savingId === lead.id" aria-label="Estado">
+            <option *ngFor="let status of editableStatuses" [value]="status">{{ statusLabels[status] }}</option>
+          </select>
+          <button type="button" class="edit-btn" (click)="startNotes(lead)">
+            {{ lead.notes ? 'Editar notas' : 'Agregar nota' }}
+          </button>
+          <button *ngIf="isAdmin && lead.status !== 'convertido'" type="button" class="convert-btn" (click)="openConvert(lead)">
+            Convertir en cliente
+          </button>
+        </div>
+
+        <p class="row-error" *ngIf="rowErrors[lead.id]">{{ rowErrors[lead.id] }}</p>
+      </li>
+    </ul>
+  </ng-container>
+</section>
+
+<app-convert-lead-modal
+  *ngIf="convertingLead"
+  [lead]="convertingLead"
+  [executives]="(executives$ | async) ?? []"
+  (closed)="closeConvert()">
+</app-convert-lead-modal>

@@ -6,6 +6,7 @@ export type HeaderMenuAction =
   | 'cobros'
   | 'clientes'
   | 'bajas'
+  | 'solicitudes'
   | 'configuracion'
   | 'perfil';
 
@@ -23,6 +24,9 @@ interface MenuItem {
 })
 export class HeaderMenu {
   @Input() isAdmin = false;
+  // Solicitudes de la landing en estado "nuevo": se muestra en el ítem del
+  // menú y como aviso en el botón, porque el menú está cerrado casi siempre.
+  @Input() newLeadsCount = 0;
   @Output() select = new EventEmitter<HeaderMenuAction>();
 
   open = false;
@@ -33,6 +37,7 @@ export class HeaderMenu {
     { label: 'Resumen de Cobros', action: 'cobros', icon: 'receipt' },
     { label: 'Clientes', action: 'clientes', icon: 'user' },
     { label: 'Bajas', action: 'bajas', icon: 'user-minus' },
+    { label: 'Solicitudes', action: 'solicitudes', icon: 'inbox' },
     { label: 'Configuración', action: 'configuracion', icon: 'gear' },
     { label: 'Perfil', action: 'perfil', icon: 'profile' }
   ];

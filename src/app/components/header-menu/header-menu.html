@@ -10,6 +10,7 @@
     <span class="hamburger-bar"></span>
     <span class="hamburger-bar"></span>
     <span class="hamburger-bar"></span>
+    <span class="hamburger-badge" *ngIf="newLeadsCount > 0 && !open" aria-hidden="true">{{ newLeadsCount }}</span>
   </button>
 
   <nav class="menu-dropdown" *ngIf="open" role="menu">
@@ -21,6 +22,8 @@
       (click)="onItemClick(item.action)">
       <span class="menu-icon" [attr.data-icon]="item.icon"></span>
       <span class="menu-label">{{ item.label }}</span>
+      <span class="menu-count" *ngIf="item.action === 'solicitudes' && newLeadsCount > 0"
+        [attr.aria-label]="newLeadsCount + ' nuevas'">{{ newLeadsCount }}</span>
     </button>
   </nav>
 </div>

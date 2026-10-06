@@ -1,7 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { HeaderMenuAction } from './components/header-menu/header-menu';
 import { AuthService } from './services/auth';
+import { LeadsService } from './services/leads';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +15,18 @@ import { AuthService } from './services/auth';
 export class App {
   protected readonly title = signal('gestion-juniors');
 
-  constructor(private auth: AuthService, private router: Router) {}
+  readonly newLeadsCount$: Observable<number>;
+
+  constructor(private auth: AuthService, private router: Router, private leadsService: LeadsService) {
+    this.newLeadsCount$ = this.leadsService.newCount$;
+    // El contador de solicitudes nuevas del menú se actualiza en cada cambio
+    // de página: alcanza para enterarse de lo que entró sin hacer polling.
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        if (this.auth.isAuthenticated()) this.leadsService.refreshNewCount();
+      });
+  }
 
   get isAuthenticated(): boolean {
     return this.auth.isAuthenticated();
@@ -28,6 +42,7 @@ export class App {
     cobros: '/cobros',
     clientes: '/clientes',
     bajas: '/bajas',
+    solicitudes: '/solicitudes',
     configuracion: '/config',
     perfil: '/perfil',
   };
