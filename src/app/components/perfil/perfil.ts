@@ -70,6 +70,12 @@ export class Perfil implements OnInit {
     return this.auth.isAdmin();
   }
 
+  // Solo un ejecutivo carga tareas automáticas propias; el admin edita las de
+  // la agencia desde Configuración.
+  get hasExecutive(): boolean {
+    return !this.isAdmin && !!this.profile?.executiveId;
+  }
+
   // Objetivo ya formateado para mostrar en el resumen (fuera del editor).
   get goalMonthLabel(): string | null {
     return this.currentGoal ? formatGoalMonth(this.currentGoal.targetMonth) : null;

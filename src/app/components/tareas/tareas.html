@@ -1,0 +1,170 @@
+<section class="tareas-page">
+  @if (store.status() === 'offline' || store.error()) {
+    <div class="notice" role="alert">
+      <span class="notice-text">
+        @if (store.status() === 'offline') {
+          No se pudieron cargar las tareas. Revisá la conexión.
+        } @else {
+          {{ store.error() }}
+        }
+      </span>
+      @if (store.status() === 'offline') {
+        <button type="button" class="cancel-btn" (click)="store.load()">Reintentar</button>
+      } @else {
+        <button type="button" class="icon-btn" aria-label="Cerrar aviso" (click)="store.dismissError()">&times;</button>
+      }
+    </div>
+  }
+
+  <button type="button" class="sidebar-toggle" [attr.aria-expanded]="sidebarOpen" (click)="sidebarOpen = !sidebarOpen">
+    <span aria-hidden="true">☰</span>
+    <span class="sidebar-toggle-name">{{ store.selectedName() }}</span>
+    <span class="sidebar-toggle-day">{{ store.viewingToday() ? 'Hoy' : formatShort(store.today()) }}</span>
+  </button>
+
+  <div class="layout">
+    <aside class="sidebar" [class.is-open]="sidebarOpen">
+      <header class="sidebar-header">
+        <h2 class="sidebar-title">Tareas</h2>
+        <a class="icon-btn" [routerLink]="automaticLink" fragment="tareas-automaticas"
+          [title]="isAdmin ? 'Tareas automáticas de la agencia' : 'Tus tareas automáticas'"
+          aria-label="Configurar tareas automáticas">⚙</a>
+      </header>
+
+      <div class="day-picker" [class.is-custom]="!store.viewingToday()">
+        <button type="button" class="icon-btn" title="Día anterior" aria-label="Día anterior" (click)="shiftDay(-1)">‹</button>
+        <button type="button" class="day-pick" title="Calendario: elegí el día en el que estás parado"
+          (click)="calendarOpen = true">
+          <span aria-hidden="true">📅</span>
+          {{ store.viewingToday() ? 'Hoy' : 'Viendo' }} · {{ formatShort(store.today()) }}
+        </button>
+        <button type="button" class="icon-btn" title="Día siguiente" aria-label="Día siguiente" (click)="shiftDay(1)">›</button>
+        @if (!store.viewingToday()) {
+          <button type="button" class="icon-btn" title="Volver a hoy" aria-label="Volver a hoy"
+            (click)="store.setViewDate(null)">↶</button>
+        }
+      </div>
+
+      <button type="button" class="folder" [class.active]="store.selectedId() === GENERAL_ID"
+        [title]="isAdmin ? 'Todas las tareas: las de la agencia y las de todos los clientes' : 'Todas las tareas: las tuyas y las de tus clientes'"
+        (click)="select(GENERAL_ID)">
+        <span class="avatar is-general" aria-hidden="true">📥</span>
+        <span class="folder-name">General</span>
+        @if (store.pendingCounts()[GENERAL_ID]; as count) {
+          <span class="count">{{ count }}</span>
+        }
+      </button>
+
+      <div class="section-header">Clientes</div>
+      @if (showSearch) {
+        <input class="folder-search" type="search" placeholder="Buscar cliente…" aria-label="Buscar cliente"
+          [value]="search()" (input)="search.set($any($event.target).value)" />
+      }
+
+      <nav class="folders">
+        @for (folder of filteredFolders(); track folder.id) {
+          <button type="button" class="folder" [class.active]="store.selectedId() === folder.id" (click)="select(folder.id)">
+            <span class="avatar" [style.background]="folderColor(folder.id)" aria-hidden="true">{{ folderInitial(folder.name) }}</span>
+            <span class="folder-text">
+              <span class="folder-name">{{ folder.name }}</span>
+              @if (isAdmin) {
+                <span class="folder-meta">{{ folder.executiveName }}</span>
+              }
+            </span>
+            @if (hasAutomatic(folder)) {
+              <span class="auto" [title]="'Tareas automáticas del ' + folder.planName">↻</span>
+            }
+            @if (store.pendingCounts()[folder.id]; as count) {
+              <span class="count">{{ count }}</span>
+            }
+          </button>
+        } @empty {
+          <p class="folders-empty">
+            {{ store.status() === 'loading' ? 'Cargando…' : search() ? 'Ningún cliente coincide.' : 'Todavía no hay clientes.' }}
+          </p>
+        }
+      </nav>
+
+      @if (store.selectedFolder() || store.upcoming().length) {
+        <footer class="current">
+          <div class="current-name">{{ store.selectedName() }}</div>
+          @if (store.selectedFolder(); as folder) {
+            <div class="current-plan">
+              <span class="current-plan-name">{{ folder.planName ?? 'Sin plan' }}</span>
+              <span class="current-plan-cycle">{{ cycleLabel(folder) }}</span>
+              @for (line of selectedPlanTasks(); track $index) {
+                <span class="current-plan-task">↻ {{ line }}</span>
+              }
+            </div>
+          }
+          @if (store.upcoming().length) {
+            <button type="button" class="current-item" title="Tareas con fecha que todavía no aparecen en el tablero"
+              (click)="list = 'upcoming'">
+              <span aria-hidden="true">🗓</span>
+              <span class="current-item-label">Próximas</span>
+              <span class="count">{{ store.upcoming().length }}</span>
+            </button>
+          }
+        </footer>
+      }
+    </aside>
+
+    <div class="board" cdkDropListGroup>
+      <div class="columns">
+        @for (column of priorities; track column) {
+          <app-task-column [column]="column" (edit)="openEdit($event)" (remove)="confirmTask = $event"
+            (addDetailed)="openNew($event)"></app-task-column>
+        }
+      </div>
+
+      <div class="closed">
+        @for (column of closedColumns; track column) {
+          <div class="zone" [class]="'zone zone-' + column" cdkDropList [id]="'list-' + column" [cdkDropListData]="column"
+            (cdkDropListDropped)="dropOnClosed($event, column)">
+            <button type="button" class="zone-body" (click)="list = column">
+              <span class="zone-icon" aria-hidden="true">{{ COLUMN_META[column].icon }}</span>
+              <span class="zone-text">
+                <span class="zone-label">{{ COLUMN_META[column].label }}</span>
+                <span class="zone-hint">{{ CLOSED_HINTS[column] }}</span>
+                <span class="zone-drop">Soltá acá</span>
+              </span>
+              <span class="count">{{ count(column) }}</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+@if (list) {
+  <app-task-list-modal [kind]="list" (closed)="list = null" (edit)="openEdit($event)"
+    (remove)="confirmTask = $event"></app-task-list-modal>
+}
+
+@if (calendarOpen) {
+  <app-task-calendar-modal (closed)="calendarOpen = false"></app-task-calendar-modal>
+}
+
+@if (form) {
+  <app-task-form-modal [heading]="form.heading" [folderName]="form.folderName" [initial]="form.initial"
+    (saved)="saveForm($event)" (closed)="form = null"></app-task-form-modal>
+}
+
+@if (confirmTask) {
+  <div class="modal-backdrop" (click)="onConfirmBackdrop($event)">
+    <div class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title"
+      aria-describedby="confirm-message">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <h2 class="modal-title" id="confirm-title">Eliminar tarea</h2>
+          <span class="modal-subtitle" id="confirm-message">¿Eliminar "{{ confirmTask.title }}"? No se puede deshacer.</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" (click)="confirmTask = null">Cancelar</button>
+        <button type="button" class="danger-btn" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

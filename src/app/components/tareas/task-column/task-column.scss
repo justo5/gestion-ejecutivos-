@@ -1,0 +1,295 @@
+@use '../shared' as s;
+
+@include s.buttons;
+
+:host {
+  @include s.priority-vars;
+  --col: var(--prio-yellow);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 360px;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--col);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+:host(.col-red) { --col: var(--prio-red); }
+:host(.col-green) { --col: var(--prio-green); }
+
+.col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 8px;
+}
+
+.col-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--col) 20%, transparent);
+  color: var(--col);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.col-title {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.col-count {
+  min-width: 24px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.quick-add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 10px 8px;
+  padding: 2px 4px 2px 10px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+
+  &:focus-within { border-style: solid; border-color: var(--col); }
+}
+
+.quick-add-plus { color: var(--text-faint); }
+
+.quick-add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 2px;
+  border: none;
+  background: transparent;
+  font-size: 0.88rem;
+
+  &:focus { outline: none; }
+}
+
+.task-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 80px;
+  padding: 2px 10px 12px;
+  overflow-y: auto;
+}
+
+.task {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 6px 10px 10px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--col);
+  border-radius: 10px;
+  background: var(--surface-2);
+  cursor: grab;
+  transition: border-color 0.15s;
+
+  // El color va en la tarjeta (no solo en la columna) porque al arrastrarla se
+  // clona fuera del componente.
+  &.p-red { --col: var(--rojo); }
+  &.p-yellow { --col: var(--naranja); }
+  &.p-green { --col: var(--verde); }
+
+  &:hover { border-color: var(--border-strong); border-left-color: var(--col); }
+  &:active { cursor: grabbing; }
+}
+
+.task-check {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: transparent;
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  &:hover { border-color: var(--verde); color: var(--verde); }
+}
+
+.task-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.task-client {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--folder);
+  font-size: 0.72rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-client-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--folder);
+}
+
+.task-title {
+  font-size: 0.9rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.task-notes {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  white-space: pre-line;
+}
+
+.task-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  &.due-overdue { background: var(--rojo-bg); color: var(--rojo); }
+  &.due-today { background: var(--naranja-bg); color: var(--naranja); }
+  &.due-soon { color: var(--text); }
+}
+
+.task-menu {
+  flex-shrink: 0;
+  opacity: 0.6;
+
+  .task:hover &, &[aria-expanded='true'] { opacity: 1; }
+}
+
+.task-placeholder {
+  min-height: 52px;
+  border: 2px dashed var(--border-strong);
+  border-radius: 10px;
+  background: transparent;
+}
+
+.empty {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 80px;
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+.menu {
+  position: fixed;
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 220px;
+  padding: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.menu-item {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.86rem;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover { background: var(--primary-light); color: var(--primary); }
+  &.is-danger:hover { background: var(--rojo-bg); color: var(--rojo); }
+}
+
+.menu-sep {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.menu-filter {
+  margin-bottom: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+
+  &:focus { outline: none; border-color: var(--primary); }
+}
+
+.menu-folders {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.menu-empty {
+  padding: 8px 10px;
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
+// Mientras se arrastra, la tarjeta vive fuera del componente (en el body):
+// por eso estos estilos van con ::ng-deep.
+::ng-deep .cdk-drag-preview.task {
+  box-shadow: var(--shadow);
+  cursor: grabbing;
+}
+
+::ng-deep .cdk-drag-animating,
+.task-list.cdk-drop-list-dragging .task:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// En celular las columnas van una debajo de otra: sin alto mínimo, que una
+// columna vacía no ocupe media pantalla.
+@media (max-width: 700px) {
+  :host { min-height: 0; }
+  .task-list { min-height: 56px; }
+  .empty { min-height: 56px; }
+}

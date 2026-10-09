@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { CollectedBy } from './cobros';
-import { ClientStatus, TodoItem } from '../models/client-view.model';
+import { ClientStatus } from '../models/client-view.model';
 
 const IMAGES_SHEET_URL =
   'https://docs.google.com/spreadsheets/d/1DgsNhUycGp_-sZBioKlBOP9gZ-RZ_Efwxz-T7nc0f0A/export?format=csv';
@@ -51,13 +51,12 @@ export interface Client {
   deletedAt?: string | null;
   // Motivo de la baja (texto libre). Solo tiene sentido si deletedAt no es nulo.
   deletedReason?: string | null;
-  // Ficha extendida (notas, override de estado/link, to do): persiste en el
-  // backend, no en localStorage. Puede no venir en payloads viejos (import),
+  // Ficha extendida (notas, override de estado/link): persiste en el
+  // backend, no en localStorage. El To Do vive en el tablero de Tareas. Puede no venir en payloads viejos (import),
   // por eso son opcionales/nullable.
   notes?: string | null;
   statusOverride?: ClientStatus | null;
   linkOverride?: string | null;
-  todos?: TodoItem[];
 }
 
 // Campos estáticos del cliente que se muestran en el modal de detalle, en el

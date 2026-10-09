@@ -735,7 +735,7 @@
   flex: 1;
 }
 
-// --- To Do ---
+// --- To Do (pendientes del tablero de Tareas) ---
 
 .todo-input-row {
   display: flex;
@@ -752,6 +752,7 @@
 }
 
 .todo-item {
+  --prio: var(--naranja);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -759,6 +760,10 @@
   border-radius: 12px;
   background: var(--bg);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--prio);
+
+  &.p-red { --prio: var(--rojo); }
+  &.p-green { --prio: var(--verde); }
 }
 
 .todo-check {
@@ -766,29 +771,37 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 2px solid var(--border-strong);
   background: none;
-  color: #fff;
+  color: transparent;
   font-size: 0.7rem;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  &.is-done {
-    background: var(--primary);
-    border-color: var(--primary);
+  &:hover {
+    border-color: var(--verde);
+    color: var(--verde);
   }
 }
 
 .todo-text {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   font-size: 0.88rem;
   color: var(--text);
+  overflow-wrap: anywhere;
+}
 
-  &.is-done {
-    color: var(--text-muted);
-    text-decoration: line-through;
-  }
+.todo-due {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+
+  &.due-overdue { color: var(--rojo); }
+  &.due-today { color: var(--naranja); }
 }
 
 .todo-delete {
@@ -807,10 +820,26 @@
   }
 }
 
+.todo-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .todo-counter {
-  text-align: right;
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.todo-board-link {
+  margin-left: auto;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
 }
 
 // --- Notas ---

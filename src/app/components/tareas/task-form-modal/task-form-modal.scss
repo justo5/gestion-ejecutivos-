@@ -1,0 +1,26 @@
+@use '../shared' as s;
+
+@include s.modal(460px);
+@include s.fields;
+@include s.buttons;
+
+.date-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  .field-input { flex: 1; min-width: 0; }
+}
+
+.chip {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &:hover { color: var(--text); background: var(--surface-2); }
+}

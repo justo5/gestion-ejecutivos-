@@ -42,6 +42,7 @@ import { MultiLineChart } from './components/charts/multi-line-chart/multi-line-
 import { DonutChart } from './components/charts/donut-chart/donut-chart';
 import { ClientCard } from './components/client-card/client-card';
 import { ClientDisplayNamePipe } from './pipes/client-display-name-pipe';
+import { PlanTasksEditor } from './components/plan-tasks-editor/plan-tasks-editor';
 
 @NgModule({
   declarations: [
@@ -82,6 +83,7 @@ import { ClientDisplayNamePipe } from './pipes/client-display-name-pipe';
     DonutChart,
     ClientCard,
     ClientDisplayNamePipe,
+    PlanTasksEditor,
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule],
   providers: [

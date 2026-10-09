@@ -224,3 +224,13 @@
   font-size: 0.75rem;
   color: var(--rojo);
 }
+
+.perfil-tasks {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}

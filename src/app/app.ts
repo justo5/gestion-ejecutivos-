@@ -43,6 +43,7 @@ export class App {
     clientes: '/clientes',
     bajas: '/bajas',
     solicitudes: '/solicitudes',
+    tareas: '/tareas',
     configuracion: '/config',
     perfil: '/perfil',
   };

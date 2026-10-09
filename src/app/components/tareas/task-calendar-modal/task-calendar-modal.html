@@ -1,0 +1,41 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="task-calendar-title">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <h2 class="modal-title" id="task-calendar-title">Calendario · {{ store.selectedName() }}</h2>
+        <span class="modal-subtitle">La pelotita marca los días con tareas pendientes. Tocá un día para ver su tablero.</span>
+      </div>
+      <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="month-nav">
+        <button type="button" class="icon-btn" aria-label="Mes anterior" (click)="shiftMonth(-1)">‹</button>
+        <span class="month-label">{{ monthLabel }}</span>
+        <button type="button" class="icon-btn" aria-label="Mes siguiente" (click)="shiftMonth(1)">›</button>
+      </div>
+
+      <div class="grid">
+        @for (name of WEEKDAYS; track name) {
+          <span class="weekday">{{ name }}</span>
+        }
+        @for (day of days(); track day.date) {
+          <button type="button" class="day" [class.outside]="!day.inMonth" [class.today]="day.date === store.realToday()"
+            [class.selected]="day.date === store.today()" [attr.aria-label]="day.label"
+            [attr.aria-current]="day.date === store.realToday() ? 'date' : null" [title]="day.label"
+            (click)="pick(day.date)">
+            {{ day.day }}
+            @if (day.count) {
+              <span class="dot" [attr.data-priority]="day.priority">{{ day.count }}</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="cancel-btn" (click)="pick(store.realToday())">Ir a hoy</button>
+      <button type="button" class="cancel-btn" (click)="closed.emit()">Cerrar</button>
+    </div>
+  </div>
+</div>

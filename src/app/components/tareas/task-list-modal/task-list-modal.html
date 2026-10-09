@@ -1,0 +1,51 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="task-list-title">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <h2 class="modal-title" id="task-list-title">{{ texts.heading }} · {{ store.selectedName() }}</h2>
+        <span class="modal-subtitle">
+          {{ tasks.length }} {{ tasks.length === 1 ? 'tarea' : 'tareas' }}. {{ texts.hint }}
+        </span>
+      </div>
+      <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      @if (tasks.length) {
+        <ul class="list">
+          @for (task of tasks; track task.id) {
+            <li class="item">
+              <span class="dot" [class]="'dot p-' + task.priority"></span>
+              <div class="item-body">
+                <span class="item-title" [class.is-discarded]="kind === 'discarded'">{{ task.title }}</span>
+                <span class="item-meta">
+                  @if (folderOf(task); as folder) {
+                    {{ folder }}
+                  }
+                  @if (kind === 'upcoming' && task.dueDate) {
+                    @if (folderOf(task)) { · }
+                    {{ task.recurrenceKey ? '↻ ' : '' }}{{ long(task.dueDate) }}
+                  }
+                </span>
+              </div>
+              @if (kind === 'upcoming') {
+                <button type="button" class="icon-btn" title="Editar" aria-label="Editar" (click)="edit.emit(task)">✎</button>
+              } @else {
+                <button type="button" class="icon-btn" title="Volver a pendientes" aria-label="Volver a pendientes"
+                  (click)="restore(task)">↶</button>
+              }
+              <button type="button" class="icon-btn is-danger" title="Eliminar" aria-label="Eliminar"
+                (click)="remove.emit(task)">🗑</button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="empty">{{ texts.empty }}</p>
+      }
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="cancel-btn" (click)="closed.emit()">Cerrar</button>
+    </div>
+  </div>
+</div>

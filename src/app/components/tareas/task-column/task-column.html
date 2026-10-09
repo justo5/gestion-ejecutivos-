@@ -1,0 +1,75 @@
+<header class="col-header">
+  <span class="col-icon" aria-hidden="true">{{ meta.icon }}</span>
+  <span class="col-title">{{ meta.label }}</span>
+  <span class="col-count">{{ tasks.length }}</span>
+</header>
+
+<div class="quick-add">
+  <span class="quick-add-plus" aria-hidden="true">+</span>
+  <input
+    #newTask
+    class="quick-add-input"
+    placeholder="Agregar tarea"
+    [attr.aria-label]="'Nueva tarea en ' + meta.label"
+    maxlength="500"
+    (keydown.enter)="quickAdd(newTask)"
+    (keydown.escape)="newTask.value = ''; newTask.blur()" />
+  <button type="button" class="icon-btn" title="Agregar con fecha o notas" aria-label="Agregar con fecha o notas"
+    (click)="addWithDetails(newTask)">📅</button>
+  <button type="button" class="icon-btn" title="Agregar" aria-label="Agregar" (click)="quickAdd(newTask)">↵</button>
+</div>
+
+<div class="task-list" cdkDropList [id]="'list-' + column" [cdkDropListData]="column" (cdkDropListDropped)="drop($event)">
+  @for (task of tasks; track task.id) {
+    <div class="task" cdkDrag [class]="'p-' + task.priority" (dblclick)="edit.emit(task)">
+      <button type="button" class="task-check" title="Marcar como hecha" aria-label="Marcar como hecha"
+        (click)="store.sendTo(task.id, 'done')" (dblclick)="$event.stopPropagation()">✓</button>
+      <div class="task-body">
+        @if (client(task); as c) {
+          <div class="task-client" [style.--folder]="c.color"><span class="task-client-dot"></span>{{ c.name }}</div>
+        }
+        <div class="task-title">{{ task.title }}</div>
+        @if (task.notes) {
+          <div class="task-notes">{{ task.notes }}</div>
+        }
+        @if (due(task); as d) {
+          <div class="task-due" [class]="'due-' + d.status" [attr.title]="d.long">
+            <span aria-hidden="true">{{ task.recurrenceKey ? '↻' : '📅' }}</span>{{ d.label }}
+          </div>
+        }
+      </div>
+      <button #menuBtn type="button" class="icon-btn task-menu" aria-label="Opciones de la tarea"
+        [attr.aria-expanded]="menu()?.task?.id === task.id"
+        (click)="$event.stopPropagation(); openMenu(task, menuBtn)" (mousedown)="$event.stopPropagation()"
+        (dblclick)="$event.stopPropagation()">⋯</button>
+      <div class="task-placeholder" *cdkDragPlaceholder></div>
+    </div>
+  } @empty {
+    <div class="empty">Sin tareas</div>
+  }
+</div>
+
+@if (menu(); as m) {
+  <div class="menu" role="menu" [style.top.px]="m.top" [style.left.px]="m.left" (click)="$event.stopPropagation()">
+    @if (m.mode === 'main') {
+      <button type="button" role="menuitem" class="menu-item" (click)="run('edit')">✎ Editar</button>
+      <button type="button" role="menuitem" class="menu-item" (click)="run('done')">✓ Marcar como hecha</button>
+      <button type="button" role="menuitem" class="menu-item" (click)="run('discarded')">✕ Descartar</button>
+      <button type="button" role="menuitem" class="menu-item" (click)="showFolders()">↪ Mover a carpeta…</button>
+      <hr class="menu-sep" />
+      <button type="button" role="menuitem" class="menu-item is-danger" (click)="run('remove')">🗑 Eliminar</button>
+    } @else {
+      <input class="menu-filter" placeholder="Buscar carpeta…" aria-label="Buscar carpeta"
+        [value]="folderFilter()" (input)="folderFilter.set($any($event.target).value)" />
+      <div class="menu-folders">
+        @for (f of menuFolders(); track f.id) {
+          <button type="button" role="menuitem" class="menu-item" (click)="moveToFolder(f.id)">
+            {{ f.id === GENERAL_ID ? '📥' : '📁' }} {{ f.name }}
+          </button>
+        } @empty {
+          <span class="menu-empty">No hay otra carpeta con ese nombre.</span>
+        }
+      </div>
+    }
+  </div>
+}

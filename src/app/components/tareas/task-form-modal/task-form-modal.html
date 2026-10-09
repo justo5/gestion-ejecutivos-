@@ -1,0 +1,38 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)" (keydown.escape)="closed.emit()">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="task-form-title">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <h2 class="modal-title" id="task-form-title">{{ heading }}</h2>
+        <span class="modal-subtitle" *ngIf="folderName">En {{ folderName }}</span>
+      </div>
+      <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <form class="modal-body" id="task-form" (ngSubmit)="save()">
+      <label class="field">
+        <span class="field-label">Tarea</span>
+        <input #titleInput class="field-input" name="title" [(ngModel)]="title" maxlength="500" required />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Notas</span>
+        <textarea class="field-input" name="notes" rows="4" [(ngModel)]="notes"></textarea>
+      </label>
+
+      <div class="field">
+        <label class="field-label" for="task-form-date">Fecha</label>
+        <div class="date-row">
+          <input id="task-form-date" type="date" class="field-input" name="dueDate" [(ngModel)]="dueDate" />
+          <button type="button" class="chip" (click)="setDate(tomorrow)">Mañana</button>
+          <button type="button" class="chip" *ngIf="dueDate" (click)="setDate('')">Quitar</button>
+        </div>
+        <p class="field-hint" *ngIf="appearsOn">Va a aparecer en el tablero el {{ appearsOn }}; hasta entonces, en Próximas.</p>
+      </div>
+    </form>
+
+    <div class="modal-actions">
+      <button type="button" class="cancel-btn" (click)="closed.emit()">Cancelar</button>
+      <button type="submit" form="task-form" class="save-btn" [disabled]="!title.trim()">Guardar</button>
+    </div>
+  </div>
+</div>

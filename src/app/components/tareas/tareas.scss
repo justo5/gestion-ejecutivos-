@@ -1,0 +1,386 @@
+@use 'shared' as s;
+
+@include s.modal(420px);
+@include s.buttons;
+
+.tareas-page {
+  @include s.priority-vars;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(253, 144, 15, 0.4);
+  border-radius: 10px;
+  background: var(--naranja-bg);
+  color: var(--naranja-light);
+  font-size: 0.88rem;
+}
+
+.notice-text { flex: 1; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+// --- Panel izquierdo ---
+
+.sidebar {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100vh - 110px);
+  padding: 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 6px;
+}
+
+.sidebar-title { font-size: 1.15rem; }
+
+a.icon-btn { text-decoration: none; }
+
+.day-picker {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 6px;
+  padding: 2px 4px;
+  border-radius: 8px;
+  color: var(--text-muted);
+
+  &.is-custom {
+    color: var(--naranja-light);
+    background: var(--naranja-bg);
+    box-shadow: 0 0 0 1px rgba(253, 144, 15, 0.4);
+  }
+}
+
+.day-pick {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.86rem;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover { color: var(--text); }
+}
+
+.section-header {
+  margin: 10px 6px 4px;
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.folder-search {
+  margin: 0 2px 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+
+  &:focus { outline: none; border-color: var(--primary); }
+}
+
+.folders {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 60px;
+  overflow-y: auto;
+}
+
+.folders-empty {
+  padding: 10px 6px;
+  color: var(--text-faint);
+  font-size: 0.82rem;
+}
+
+.folder {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-align: left;
+
+  &:hover { background: var(--surface-2); color: var(--text); }
+  &.active { background: var(--primary-light); color: var(--text); }
+}
+
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: #111;
+  font-size: 0.78rem;
+  font-weight: 800;
+
+  &.is-general { background: var(--surface-2); font-size: 0.85rem; }
+}
+
+.folder-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.folder-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-meta {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auto {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+.count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.current {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 10px 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.current-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.current-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.current-plan-name { color: var(--text); font-weight: 600; }
+
+.current-plan-task {
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+
+.current-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.85rem;
+
+  &:hover { background: var(--border-strong); }
+}
+
+.current-item-label {
+  flex: 1;
+  text-align: left;
+}
+
+// --- Tablero ---
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+// Hecho y Descartar: zonas para soltar, sin lista de tareas.
+.closed {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.zone {
+  --zone: var(--verde);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color 0.15s, background 0.15s;
+
+  &.zone-discarded { --zone: var(--text-muted); }
+
+  // Mientras se arrastra una tarea encima.
+  &.cdk-drop-list-receiving {
+    border-color: var(--zone);
+  }
+
+  &.cdk-drop-list-dragging {
+    border-style: solid;
+    border-color: var(--zone);
+    background: color-mix(in srgb, var(--zone) 14%, var(--surface));
+
+    .zone-hint { display: none; }
+    .zone-drop { display: inline; }
+  }
+
+  // La tarjeta soltada no se muestra en la zona.
+  .cdk-drag-placeholder { display: none; }
+}
+
+.zone-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.zone-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--zone) 18%, transparent);
+  color: var(--zone);
+  font-weight: 800;
+}
+
+.zone-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.zone-label { font-weight: 700; }
+
+.zone-hint,
+.zone-drop {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.zone-drop {
+  display: none;
+  color: var(--zone);
+  font-weight: 600;
+}
+
+// En pantallas chicas el panel izquierdo se abre con este botón.
+.sidebar-toggle {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.sidebar-toggle-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-toggle-day { color: var(--text-muted); font-size: 0.82rem; }
+
+@media (max-width: 900px) {
+  .sidebar-toggle { display: flex; }
+
+  .layout { grid-template-columns: minmax(0, 1fr); }
+
+  .sidebar {
+    position: static;
+    display: none;
+    max-height: 70vh;
+
+    &.is-open { display: flex; }
+  }
+}
+
+@media (max-width: 700px) {
+  .columns { grid-template-columns: minmax(0, 1fr); }
+  .closed { gap: 10px; }
+  .zone-hint { display: none; }
+}

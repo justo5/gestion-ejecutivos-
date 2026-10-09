@@ -20,12 +20,19 @@ const routes: Routes = [
   { path: 'clientes', component: Clientes, canActivate: [authGuard] },
   { path: 'bajas', component: Bajas, canActivate: [authGuard] },
   { path: 'solicitudes', component: Solicitudes, canActivate: [authGuard] },
+  {
+    path: 'tareas',
+    loadChildren: () => import('./components/tareas/tareas-module').then((m) => m.TareasModule),
+    canActivate: [authGuard],
+  },
   { path: 'config', component: ConfigPage, canActivate: [adminGuard] },
   { path: 'perfil', component: Perfil, canActivate: [authGuard] },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  // anchorScrolling: el ⚙ del tablero de tareas lleva a #tareas-automaticas
+  // dentro de Configuración o Perfil.
+  imports: [RouterModule.forRoot(routes, { anchorScrolling: 'enabled' })],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

@@ -79,3 +79,9 @@
     </div>
   </div>
 </section>
+
+<!-- Tareas automáticas propias del ejecutivo (las de la agencia las configura
+     el admin en Configuración). -->
+<section class="perfil-tasks" *ngIf="hasExecutive">
+  <app-plan-tasks-editor></app-plan-tasks-editor>
+</section>

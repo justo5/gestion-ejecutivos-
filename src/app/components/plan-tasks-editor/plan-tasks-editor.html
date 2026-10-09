@@ -1,0 +1,75 @@
+<section class="editor" id="tareas-automaticas">
+  <h2>{{ isAdmin ? 'Tareas automáticas' : 'Mis tareas automáticas' }}</h2>
+  <p class="hint">
+    Se generan solas en el tablero de <a routerLink="/tareas">Tareas</a> (cada mes, cada semana o todos los días) y
+    aparecen en Amarillo el día de su fecha.
+    @if (isAdmin) {
+      Aplican a los clientes de todos los ejecutivos; cada ejecutivo puede sumar las suyas desde su perfil.
+    } @else {
+      Las tuyas se suman a las de la agencia y aplican solo a tu cartera.
+    }
+    En las mensuales, los días se cuentan desde el día de inicio de cobro del cliente: si arrancó el 10/9, cada ciclo
+    va del 10 al 10, el Día 1 es el 10/9 y el Vencimiento, el 10/10. Escribí <code>{{ MONTH }}</code> en el título para
+    poner el nombre del mes.
+  </p>
+
+  @if (loading()) {
+    <p class="hint">Cargando…</p>
+  } @else {
+    @for (section of sections(); track section.key) {
+      <div class="section">
+        <h3 class="section-title">{{ section.label }}</h3>
+        <p class="section-hint">{{ section.hint }}</p>
+
+        @for (task of section.agency; track task.id) {
+          <div class="readonly-row" title="La configuró el administrador">
+            <span class="badge">Agencia</span>
+            <span class="readonly-when">{{ when(task) }}</span>
+            <span class="readonly-title">{{ task.title }}</span>
+          </div>
+        }
+
+        @for (row of section.rows; track row.id) {
+          <div class="row">
+            <select class="input repeat" aria-label="Cada cuánto se repite" [ngModel]="row.repeat"
+              (ngModelChange)="setRepeat(row, $event)">
+              @for (repeat of REPEAT_IDS; track repeat) {
+                <option [ngValue]="repeat">{{ REPEATS[repeat] }}</option>
+              }
+            </select>
+            @if (row.repeat !== 'daily') {
+              <select class="input day" [attr.aria-label]="row.repeat === 'weekly' ? 'Día de la semana' : 'Día del ciclo'"
+                [(ngModel)]="row.day">
+                @for (day of daysOf(row.repeat); track day) {
+                  <option [ngValue]="day">{{ dayLabel(row.repeat, day) }}</option>
+                }
+              </select>
+            }
+            <input class="input title" placeholder="Título de la tarea" aria-label="Título de la tarea" maxlength="500"
+              [id]="'plan-task-' + row.id" [(ngModel)]="row.title" (keydown.enter)="save()" />
+            <button type="button" class="remove-btn" aria-label="Quitar tarea" (click)="remove(row)">×</button>
+          </div>
+        } @empty {
+          @if (!section.agency.length) {
+            <p class="empty">Sin tareas.</p>
+          }
+        }
+
+        <button type="button" class="add-btn" (click)="add(section)">+ Agregar tarea</button>
+      </div>
+    }
+
+    <p class="hint">Al guardar se recalculan las tareas que todavía no llegaron a su fecha; las que ya aparecieron no se tocan.</p>
+    <div class="actions">
+      <button type="button" class="save-btn" [disabled]="!changed() || saving()" (click)="save()">
+        {{ saving() ? 'Guardando…' : 'Guardar tareas automáticas' }}
+      </button>
+      @if (saved()) {
+        <span class="saved-msg">Guardado ✓</span>
+      }
+    </div>
+  }
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+</section>

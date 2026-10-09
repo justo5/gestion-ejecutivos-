@@ -10,12 +10,6 @@ import { Client } from '../services/executives';
 export type ClientStatus = 'active' | 'warning' | 'critical';
 export type NotifType = 'success' | 'info' | 'alert' | 'error';
 
-export interface TodoItem {
-  id: string;
-  text: string;
-  done: boolean;
-}
-
 export interface ClientNotification {
   type: NotifType;
   text: string;

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CLIENT_DETAIL_FIELDS, Client, Executive, ExecutivesService } from '../../services/executives';
@@ -6,7 +6,10 @@ import { AuthService } from '../../services/auth';
 import { ConfigService, PlanConfig, RubroConfig } from '../../services/config';
 import { ClientExtrasService } from '../../services/client-extras';
 import { ClientViewBuilder } from '../../services/client-view-builder';
-import { ClientCardView, ClientStatus, ClientTimelineEntry, TodoItem } from '../../models/client-view.model';
+import { ClientCardView, ClientStatus, ClientTimelineEntry } from '../../models/client-view.model';
+import { Task } from '../../models/task.model';
+import { TaskStore } from '../../services/tasks';
+import { DueInfo, dueInfo } from '../../utils/task-dates';
 import { clientDisplayName } from '../../utils/client-display-name';
 
 // Ventana de "próximos vencimientos" que se muestra en la línea de tiempo:
@@ -71,12 +74,20 @@ export class Clientes implements OnInit {
   deleteSubmitting = false;
   deleteError = '';
 
-  // --- Ficha del cliente: resumen / to do / notas (todo local, sin backend) ---
+  // --- Ficha del cliente: resumen / to do / notas ---
   readonly statusOptions = STATUS_OPTIONS;
   activeTab: DetailTab = 'resumen';
   statusMenuOpen = false;
 
   newTodoText = '';
+  // El To Do de la ficha son las pendientes de hoy de la carpeta del cliente
+  // en el tablero de Tareas. Signal + computed (y no un getter) para que la
+  // lista no sea un array nuevo en cada detección de cambios.
+  private readonly selectedClientId = signal<string | null>(null);
+  readonly selectedTodos = computed(() => {
+    const id = this.selectedClientId();
+    return id ? this.taskStore.pendingOf(id) : [];
+  });
   notesDraft = '';
   notesSaved = false;
 
@@ -143,6 +154,7 @@ export class Clientes implements OnInit {
     private configService: ConfigService,
     private extras: ClientExtrasService,
     private viewBuilder: ClientViewBuilder,
+    private taskStore: TaskStore,
   ) {}
 
   get isAdmin(): boolean {
@@ -180,6 +192,7 @@ export class Clientes implements OnInit {
 
     this.executivesService.refresh();
     this.configService.refresh();
+    this.taskStore.ensureLoaded();
   }
 
   // Vencidos (sin importar hace cuánto) + próximos vencimientos dentro de
@@ -262,6 +275,7 @@ export class Clientes implements OnInit {
     this.notesDraft = this.extras.get(item.client.id).notes ?? '';
     this.notesSaved = false;
     this.newTodoText = '';
+    this.selectedClientId.set(item.client.id);
   }
 
   // --- Vista enriquecida (avatar, estado, salud de pago, historial) ---
@@ -271,7 +285,7 @@ export class Clientes implements OnInit {
   }
 
   pendingTodosFor(clientId: string): number {
-    return this.extras.get(clientId).todos.filter(t => !t.done).length;
+    return this.taskStore.pendingTodayCounts()[clientId] ?? 0;
   }
 
   onImageChanged(event: { id: string; url: string }): void {
@@ -303,14 +317,6 @@ export class Clientes implements OnInit {
     return this.selectedItem ? this.viewFor(this.selectedItem) : null;
   }
 
-  get selectedTodos(): TodoItem[] {
-    return this.selectedItem ? this.extras.get(this.selectedItem.client.id).todos : [];
-  }
-
-  get selectedDoneTodosCount(): number {
-    return this.selectedTodos.filter(t => t.done).length;
-  }
-
   toggleStatusMenu(): void {
     this.statusMenuOpen = !this.statusMenuOpen;
   }
@@ -322,9 +328,11 @@ export class Clientes implements OnInit {
     this.statusMenuOpen = false;
   }
 
+  // Va a Amarillo, sin fecha, en la carpeta del cliente.
   addTodo(): void {
-    if (!this.selectedItem) return;
-    this.extras.addTodo(this.selectedItem.client.id, this.newTodoText);
+    const title = this.newTodoText.trim();
+    if (!this.selectedItem || !title) return;
+    this.taskStore.addTask('yellow', title, '', null, this.selectedItem.client.id);
     this.newTodoText = '';
   }
 
@@ -332,14 +340,20 @@ export class Clientes implements OnInit {
     if (event.key === 'Enter') this.addTodo();
   }
 
-  toggleTodo(todoId: string): void {
-    if (!this.selectedItem) return;
-    this.extras.toggleTodo(this.selectedItem.client.id, todoId);
+  completeTodo(taskId: string): void {
+    this.taskStore.sendTo(taskId, 'done');
   }
 
-  deleteTodo(todoId: string): void {
-    if (!this.selectedItem) return;
-    this.extras.deleteTodo(this.selectedItem.client.id, todoId);
+  deleteTodo(taskId: string): void {
+    this.taskStore.deleteTask(taskId);
+  }
+
+  todoDue(task: Task): DueInfo | null {
+    return task.dueDate ? dueInfo(task.dueDate, this.taskStore.realToday()) : null;
+  }
+
+  trackTodo(_: number, task: Task): string {
+    return task.id;
   }
 
   saveNotes(): void {
@@ -479,6 +493,7 @@ export class Clientes implements OnInit {
 
   closeDetail(): void {
     this.selectedItem = null;
+    this.selectedClientId.set(null);
     this.editMode = false;
     this.editError = '';
     this.editSuccess = '';

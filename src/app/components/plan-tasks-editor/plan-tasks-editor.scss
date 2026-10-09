@@ -1,0 +1,148 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+
+  a { color: var(--primary); }
+
+  code {
+    padding: 0 4px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    font-size: 0.82rem;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.section-title { font-size: 1rem; }
+
+.section-hint {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.88rem;
+
+  &:focus { outline: none; border-color: var(--primary); }
+
+  &.repeat { width: 150px; }
+  &.day { width: 130px; }
+  &.title { flex: 1; min-width: 200px; }
+}
+
+.readonly-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.readonly-when { color: var(--text-faint); }
+
+.readonly-title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+.remove-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+
+  &:hover { background: var(--rojo-bg); color: var(--rojo); }
+}
+
+.add-btn {
+  align-self: flex-start;
+  padding: 0.35rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  &:hover { background: var(--primary-light); }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.save-btn {
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.saved-msg {
+  color: var(--verde);
+  font-size: 0.85rem;
+}
+
+.error {
+  color: var(--rojo);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .input.repeat, .input.day { flex: 1; width: auto; }
+  .input.title { order: -1; flex-basis: 100%; }
+}
