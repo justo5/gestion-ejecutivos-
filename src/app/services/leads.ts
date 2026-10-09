@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { PlanConfig } from './config';
 
 export type LeadStatus = 'nuevo' | 'contactado' | 'convertido' | 'descartado';
-export type LeadInversion = 'menos-300' | '300-700' | '700-1500' | 'mas-1500';
+export type LeadInversion = 'cero' | 'menos-300' | '300-700' | '700-1500' | 'mas-1500';
 
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   nuevo: 'Nuevo',
@@ -18,6 +18,7 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
 export const EDITABLE_LEAD_STATUSES: LeadStatus[] = ['nuevo', 'contactado', 'descartado'];
 
 export const LEAD_INVERSION_LABELS: Record<LeadInversion, string> = {
+  cero: 'Nada',
   'menos-300': 'Menos de USD 300',
   '300-700': 'USD 300 a 700',
   '700-1500': 'USD 700 a 1.500',
