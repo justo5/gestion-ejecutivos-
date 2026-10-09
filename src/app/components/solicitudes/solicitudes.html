@@ -2,16 +2,20 @@
   <div class="solicitudes-header">
     <h2>Solicitudes</h2>
     <div class="filters">
-      <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()" aria-label="Filtrar por estado">
-        <option value="">Todos los estados</option>
-        <option *ngFor="let status of allStatuses" [value]="status">{{ statusLabels[status] }}</option>
-      </select>
       <select *ngIf="isAdmin" class="filter-select" [(ngModel)]="executiveFilter" (ngModelChange)="applyFilters()"
         aria-label="Filtrar por ejecutivo">
         <option value="">Todos los ejecutivos</option>
         <option *ngFor="let exec of executives$ | async" [value]="exec.id">{{ exec.name }}</option>
       </select>
     </div>
+  </div>
+
+  <div class="status-tabs" role="tablist" aria-label="Filtrar por estado">
+    <button *ngFor="let status of allStatuses" type="button" class="status-tab" role="tab"
+      [class.active]="statusFilter === status" [attr.aria-selected]="statusFilter === status"
+      (click)="selectStatus(status)">{{ statusLabels[status] }}</button>
+    <button type="button" class="status-tab" role="tab" [class.active]="statusFilter === ''"
+      [attr.aria-selected]="statusFilter === ''" (click)="selectStatus('')">Todos</button>
   </div>
 
   <ng-container *ngIf="leads$ | async as leads">

@@ -37,7 +37,7 @@ export class Solicitudes implements OnInit {
   readonly allStatuses = Object.keys(LEAD_STATUS_LABELS) as LeadStatus[];
   readonly isAdmin: boolean;
 
-  statusFilter: LeadStatus | '' = '';
+  statusFilter: LeadStatus | '' = 'nuevo';
   executiveFilter = '';
 
   // Estado por id de solicitud (no por fila), así el refresh que sigue a cada
@@ -75,6 +75,12 @@ export class Solicitudes implements OnInit {
       this.executivesService.refresh();
       this.configService.refresh();
     }
+  }
+
+  selectStatus(status: LeadStatus | ''): void {
+    if (this.statusFilter === status) return;
+    this.statusFilter = status;
+    this.applyFilters();
   }
 
   applyFilters(): void {
