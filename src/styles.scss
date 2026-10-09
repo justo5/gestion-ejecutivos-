@@ -117,3 +117,9 @@ input::placeholder, textarea::placeholder {
     &:hover:not(:disabled) { background: var(--border-strong); color: var(--text); }
   }
 }
+
+// El tablero de tareas usa todo el ancho de la pantalla (el resto de las
+// páginas queda limitado por el max-width de .app-main).
+.app-main:has(.tareas-page) {
+  max-width: none;
+}
