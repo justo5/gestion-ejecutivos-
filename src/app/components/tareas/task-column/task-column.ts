@@ -57,9 +57,14 @@ export class TaskColumn {
   }
 
   // En General (que muestra todo) se indica de qué cliente es cada tarea, con su color.
-  client(task: Task): { name: string; color: string } | null {
+  client(task: Task): { name: string; color: string; imageUrl: string | null } | null {
     if (!this.store.showsAll() || task.folderId === GENERAL_ID) return null;
-    return { name: this.store.nameOf(task.folderId), color: folderColor(task.folderId) };
+    const folder = this.store.folders().find((f) => f.id === task.folderId);
+    return {
+      name: this.store.nameOf(task.folderId),
+      color: folderColor(task.folderId),
+      imageUrl: folder?.imageUrl ?? null,
+    };
   }
 
   due(task: Task): DueInfo | null {

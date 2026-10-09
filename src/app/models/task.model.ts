@@ -31,7 +31,9 @@ export interface TaskFolder {
   name: string;
   executiveName: string;
   planId: number | null;
+  // El mismo plan que se ve en Cobros.
   planName: string | null;
+  imageUrl: string | null;
   // Inicio del ciclo de cobro (y de las automáticas); null si el cliente no
   // está activo o no tiene día de inicio.
   cycleStart: string | null;

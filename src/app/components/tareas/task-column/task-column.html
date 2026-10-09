@@ -26,7 +26,14 @@
         (click)="store.sendTo(task.id, 'done')" (dblclick)="$event.stopPropagation()">✓</button>
       <div class="task-body">
         @if (client(task); as c) {
-          <div class="task-client" [style.--folder]="c.color"><span class="task-client-dot"></span>{{ c.name }}</div>
+          <div class="task-client" [style.--folder]="c.color">
+            @if (c.imageUrl) {
+              <img class="task-client-img" [src]="c.imageUrl" alt="" loading="lazy" />
+            } @else {
+              <span class="task-client-dot"></span>
+            }
+            {{ c.name }}
+          </div>
         }
         <div class="task-title">{{ task.title }}</div>
         @if (task.notes) {

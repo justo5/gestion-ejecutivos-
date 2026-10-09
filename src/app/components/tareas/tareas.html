@@ -64,7 +64,13 @@
       <nav class="folders">
         @for (folder of filteredFolders(); track folder.id) {
           <button type="button" class="folder" [class.active]="store.selectedId() === folder.id" (click)="select(folder.id)">
-            <span class="avatar" [style.background]="folderColor(folder.id)" aria-hidden="true">{{ folderInitial(folder.name) }}</span>
+            <span class="avatar" [style.background]="folderColor(folder.id)" aria-hidden="true">
+              @if (folder.imageUrl) {
+                <img class="avatar-img" [src]="folder.imageUrl" alt="" loading="lazy" />
+              } @else {
+                {{ folderInitial(folder.name) }}
+              }
+            </span>
             <span class="folder-text">
               <span class="folder-name">{{ folder.name }}</span>
               @if (isAdmin) {
@@ -87,7 +93,18 @@
 
       @if (store.selectedFolder() || store.upcoming().length) {
         <footer class="current">
-          <div class="current-name">{{ store.selectedName() }}</div>
+          <div class="current-head">
+            @if (store.selectedFolder(); as folder) {
+              <span class="avatar is-large" [style.background]="folderColor(folder.id)" aria-hidden="true">
+                @if (folder.imageUrl) {
+                  <img class="avatar-img" [src]="folder.imageUrl" alt="" />
+                } @else {
+                  {{ folderInitial(folder.name) }}
+                }
+              </span>
+            }
+            <div class="current-name">{{ store.selectedName() }}</div>
+          </div>
           @if (store.selectedFolder(); as folder) {
             <div class="current-plan">
               <span class="current-plan-name">{{ folder.planName ?? 'Sin plan' }}</span>
