@@ -31,7 +31,11 @@ export interface Client {
   // Cuenta de Meta Ads del cliente (ej. "act_123456789012345"), usada para
   // traer sus campañas. Ver services/campaigns.ts.
   adAccountId: string | null;
+  // Plan vigente hoy. Para el plan de un mes puntual usar planForMonth
+  // (utils/client-plan.ts), que tiene en cuenta planHistory.
   plan: string | null;
+  // yearMonth desde el que rige cada plan. null = el plan nunca cambió.
+  planHistory?: Record<string, string | null> | null;
   country: string | null;
   sexo: string | null;
   edad: number | null;

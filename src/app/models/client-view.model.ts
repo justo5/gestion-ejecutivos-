@@ -35,6 +35,8 @@ export interface ClientCardView {
   notifications: ClientNotification[];
   importantNotification: ClientNotification | null;
   paymentSeries: number[];
+  // Precio del plan que regía en cada mes de paymentSeries (mismo orden).
+  planAmountSeries: number[];
   stats: StatTile[];
   monthsPaid: number;
   monthsPending: number;

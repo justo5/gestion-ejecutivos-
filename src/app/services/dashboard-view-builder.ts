@@ -178,12 +178,14 @@ export class DashboardViewBuilder {
       const idx = 11 - i; // mismo orden que view.paymentSeries (más viejo → más nuevo)
 
       const paidRows = rows.filter(r => r.view.paymentSeries[idx] === 1);
-      const monthRevenue = paidRows.reduce((sum, r) => sum + r.view.monthlyAmount, 0);
+      // Precio del plan que regía ese mes, no el actual: un cambio de plan no
+      // reescribe la facturación de meses anteriores.
+      const monthRevenue = paidRows.reduce((sum, r) => sum + r.view.planAmountSeries[idx], 0);
       revenueSeries.push(monthRevenue);
       revenueMonthDetails.push({
         valueLabel: money(monthRevenue),
         clients: paidRows
-          .map(r => this.toRow(r, `${money(r.view.monthlyAmount)}/mes`))
+          .map(r => this.toRow(r, `${money(r.view.planAmountSeries[idx])}/mes`))
           .sort((a, b) => a.name.localeCompare(b.name)),
       });
 

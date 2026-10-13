@@ -6,6 +6,7 @@ import { ConfigService } from '../../services/config';
 import { CobrosService, CollectedBy } from '../../services/cobros';
 import { AuthService } from '../../services/auth';
 import { clientDisplayName } from '../../utils/client-display-name';
+import { planForMonth, planPriceForMonth } from '../../utils/client-plan';
 
 export interface MonthDue {
   month: string;
@@ -177,18 +178,10 @@ export class Cobros implements OnInit, OnDestroy {
               (contactDate.getFullYear() === selYear && contactDate.getMonth() >= selMonth)
             ) continue;
 
-            const planText = this.normalizePlanText(client.plan ?? '');
-            // El texto del cliente suele ser "<nombre del plan configurado> + sufijos"
-            // (precio, moneda, iva, etc.), así que matcheamos por prefijo en vez de
-            // igualdad exacta. Se prioriza el nombre más largo que matchee para no
-            // confundir "Plan ejecución" con "Plan ejecución + Bot".
-            const planConfig = plans
-              .filter(p => planText.startsWith(this.normalizePlanText(p.name)))
-              .sort((a, b) => b.name.length - a.name.length)[0];
-            // Number() explícito: si el precio llega como string (columna
-            // `numeric`), los acumuladores de buildTotals concatenan en vez de
-            // sumar y el pipe `number` corta el render con un error.
-            const planPrice = Number(planConfig?.price ?? 0) || 0;
+            // El plan puede haber cambiado: cada mes se cobra con el plan que
+            // regía en ese mes (ver utils/client-plan.ts), no con el actual.
+            const priceFor = (month: string) => planPriceForMonth(client, month, plans);
+            const planPrice = priceFor(selectedYearMonth);
 
             const rawCobro = client.cobro;
             const gastosByMonth = rawCobro?.gastosByMonth ?? {};
@@ -218,8 +211,8 @@ export class Cobros implements OnInit, OnDestroy {
               return collectedIn ? collectedIn === selectedYearMonth : m === selectedYearMonth;
             });
             const isPaid = owedMonths.length === 0;
-            const pendingAmount = owedMonths.length * planPrice;
-            const collectedAmount = collectedThisMonth.length * planPrice;
+            const pendingAmount = owedMonths.reduce((sum, m) => sum + priceFor(m), 0);
+            const collectedAmount = collectedThisMonth.reduce((sum, m) => sum + priceFor(m), 0);
 
             const entry: HistorialEntry = {
               clientId: client.id,
@@ -227,7 +220,7 @@ export class Cobros implements OnInit, OnDestroy {
               clientName: client.name,
               fanpage: client.fanpage,
               country: client.country,
-              plan: client.plan,
+              plan: planForMonth(client, selectedYearMonth),
               dayNum,
               collectedBy: this.normalizeCollectedBy(client.collectedBy),
               paid: isPaid,
@@ -236,7 +229,7 @@ export class Cobros implements OnInit, OnDestroy {
               monthBreakdown: owedMonths.map(month => ({
                 month,
                 label: this.monthLabel(month),
-                monto: planPrice,
+                monto: priceFor(month),
               })),
               collectedInMonth,
               // Resguardo: si por algún borde ya está todo pagado pero nada
@@ -505,14 +498,6 @@ export class Cobros implements OnInit, OnDestroy {
       cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
     }
     return months;
-  }
-
-  private normalizePlanText(value: string): string {
-    return value
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .trim()
-      .toLowerCase();
   }
 
   private normalizeCollectedBy(value: string | null | undefined): CollectedBy | null {

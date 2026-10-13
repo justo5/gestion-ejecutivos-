@@ -4,6 +4,7 @@ import { PlanConfig } from './config';
 import { ClientExtrasService } from './client-extras';
 import { ClientCardView, ClientNotification, ClientStatus, ClientTimelineEntry, StatTile } from '../models/client-view.model';
 import { clientDisplayName } from '../utils/client-display-name';
+import { planPriceForMonth, resolvePlanPrice } from '../utils/client-plan';
 
 // Arma la vista "rica" de un cliente a partir de datos reales (cobro, plan,
 // antigüedad) y completa con contenido derivado/mock estable (avatar,
@@ -16,16 +17,6 @@ const AVATAR_HUES = [8, 24, 42, 160, 190, 210, 260, 300, 330];
 // Días antes del vencimiento en que se hace el "corte" de información: se le
 // pide al cliente que confirme sus datos para poder facturar/cobrar a tiempo.
 const CUTOFF_DAYS_BEFORE = 15;
-
-const DIACRITICS_RE = new RegExp('[\\u0300-\\u036f]', 'g');
-
-function normalizeText(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(DIACRITICS_RE, '')
-    .trim()
-    .toLowerCase();
-}
 
 function hashString(value: string): number {
   let hash = 0;
@@ -70,28 +61,38 @@ export class ClientViewBuilder {
     const paidMonths = client.cobro?.paidMonths ?? [];
     const paidSet = new Set(paidMonths);
 
-    const monthlyAmount = this.resolvePlanPrice(client.plan, plans);
+    // Plan vigente hoy. Los montos de meses puntuales (deuda, cobros del
+    // historial) usan el plan que regía en cada mes: ver planPriceForMonth.
+    const monthlyAmount = resolvePlanPrice(client.plan, plans);
     const monthsActive = contactDate ? monthsBetween(contactDate, now) : 0;
 
     // Meses vencidos (desde el mes siguiente al de inicio hasta el actual) que
     // todavía no figuran como pagados: la "deuda" real del cliente.
     let monthsPending = 0;
+    let pendingAmount = 0;
     if (contactDate) {
       let cursor = new Date(contactDate.getFullYear(), contactDate.getMonth() + 1, 1);
       const limit = new Date(now.getFullYear(), now.getMonth(), 1);
       while (cursor <= limit) {
-        if (!paidSet.has(formatYearMonth(cursor))) monthsPending++;
+        const ym = formatYearMonth(cursor);
+        if (!paidSet.has(ym)) {
+          monthsPending++;
+          pendingAmount += planPriceForMonth(client, ym, plans);
+        }
         cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
       }
     }
-    const pendingAmount = monthsPending * monthlyAmount;
 
     // Serie de los últimos 12 meses: 1 si estaba pagado, 0 si no. Es dato real
     // (viene de client.cobro.paidMonths), no inventado.
+    // planAmountSeries acompaña a paymentSeries con el precio del plan que
+    // regía en cada uno de esos meses.
     const paymentSeries: number[] = [];
+    const planAmountSeries: number[] = [];
     for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      paymentSeries.push(paidSet.has(formatYearMonth(d)) ? 1 : 0);
+      const ym = formatYearMonth(new Date(now.getFullYear(), now.getMonth() - i, 1));
+      paymentSeries.push(paidSet.has(ym) ? 1 : 0);
+      planAmountSeries.push(planPriceForMonth(client, ym, plans));
     }
 
     const last6Paid = paymentSeries.slice(-6).reduce((a, b) => a + b, 0);
@@ -125,6 +126,7 @@ export class ClientViewBuilder {
       notifications,
       importantNotification,
       paymentSeries,
+      planAmountSeries,
       monthsPaid: paidMonths.length,
       monthsPending,
       pendingAmount,
@@ -152,7 +154,6 @@ export class ClientViewBuilder {
 
     const paidMonths = client.cobro?.paidMonths ?? [];
     const paidSet = new Set(paidMonths);
-    const amount = this.resolvePlanPrice(client.plan, plans);
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -168,17 +169,21 @@ export class ClientViewBuilder {
     }
 
     let dueDate: Date;
+    let dueMonth: string;
     let monthsOverdue = 0;
 
     if (owedMonths.length > 0) {
-      const [y, m] = owedMonths[0].split('-').map(Number);
+      dueMonth = owedMonths[0];
+      const [y, m] = dueMonth.split('-').map(Number);
       dueDate = dateForDay(y, m - 1, dayNum);
       monthsOverdue = owedMonths.length;
     } else {
       // Al día: el próximo vencimiento cae el día de cobro del mes siguiente.
       const nextMonth = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth() + 1, 1);
+      dueMonth = formatYearMonth(nextMonth);
       dueDate = dateForDay(nextMonth.getFullYear(), nextMonth.getMonth(), dayNum);
     }
+    const amount = planPriceForMonth(client, dueMonth, plans);
 
     // El más viejo adeudado puede ser el mes en curso, cuyo día de cobro
     // todavía no llegó: en ese caso no está vencido, es el próximo.
@@ -228,15 +233,6 @@ export class ClientViewBuilder {
     }
 
     return entries;
-  }
-
-  private resolvePlanPrice(planText: string | null, plans: PlanConfig[]): number {
-    if (!planText) return 0;
-    const normalized = normalizeText(planText);
-    const match = plans
-      .filter(p => normalized.startsWith(normalizeText(p.name)))
-      .sort((a, b) => b.name.length - a.name.length)[0];
-    return Number(match?.price ?? 0) || 0;
   }
 
   private buildNotifications(

@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ExecutivesService } from '../../services/executives';
 import { clientDisplayName } from '../../utils/client-display-name';
+import { planForMonth } from '../../utils/client-plan';
 
 export interface PendingCobro {
   clientId: string;
@@ -90,7 +91,7 @@ export class DailyCollections implements OnInit {
               executiveName: exec.name,
               contactDay: client.contactDay,
               dayNum,
-              plan: client.plan,
+              plan: planForMonth(client, selectedYearMonth),
               paid: (client.cobro?.paidMonths ?? []).includes(selectedYearMonth),
             };
 
