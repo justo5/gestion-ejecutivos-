@@ -97,10 +97,22 @@
           </div>
         </dl>
 
-        <!-- Notas -->
-        <ng-container *ngIf="editingNotesId !== lead.id">
+        <!-- Notas + acciones -->
+        <div class="lead-footer" *ngIf="editingNotesId !== lead.id">
           <p class="lead-notes" *ngIf="lead.notes">{{ lead.notes }}</p>
-        </ng-container>
+          <div class="lead-actions">
+            <select *ngIf="lead.status !== 'convertido'" class="row-select" [ngModel]="lead.status"
+              (ngModelChange)="onStatusChange(lead, $event)" [disabled]="savingId === lead.id" aria-label="Estado">
+              <option *ngFor="let status of editableStatuses" [value]="status">{{ statusLabels[status] }}</option>
+            </select>
+            <button type="button" class="edit-btn" (click)="startNotes(lead)">
+              {{ lead.notes ? 'Editar notas' : 'Agregar nota' }}
+            </button>
+            <button *ngIf="isAdmin && lead.status !== 'convertido'" type="button" class="convert-btn" (click)="openConvert(lead)">
+              Convertir en cliente
+            </button>
+          </div>
+        </div>
         <div class="notes-edit" *ngIf="editingNotesId === lead.id">
           <textarea class="notes-input" rows="3" maxlength="5000" [(ngModel)]="notesDraft"
             [disabled]="savingId === lead.id" placeholder="Ej. le escribí por WhatsApp, quiere arrancar el mes que viene…"></textarea>
@@ -110,19 +122,6 @@
             </button>
             <button type="button" class="cancel-btn" (click)="cancelNotes()" [disabled]="savingId === lead.id">Cancelar</button>
           </div>
-        </div>
-
-        <div class="lead-actions" *ngIf="editingNotesId !== lead.id">
-          <select *ngIf="lead.status !== 'convertido'" class="row-select" [ngModel]="lead.status"
-            (ngModelChange)="onStatusChange(lead, $event)" [disabled]="savingId === lead.id" aria-label="Estado">
-            <option *ngFor="let status of editableStatuses" [value]="status">{{ statusLabels[status] }}</option>
-          </select>
-          <button type="button" class="edit-btn" (click)="startNotes(lead)">
-            {{ lead.notes ? 'Editar notas' : 'Agregar nota' }}
-          </button>
-          <button *ngIf="isAdmin && lead.status !== 'convertido'" type="button" class="convert-btn" (click)="openConvert(lead)">
-            Convertir en cliente
-          </button>
         </div>
 
         <p class="row-error" *ngIf="rowErrors[lead.id]">{{ rowErrors[lead.id] }}</p>
