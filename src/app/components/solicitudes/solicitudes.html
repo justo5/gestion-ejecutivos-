@@ -37,7 +37,7 @@
               <span *ngIf="!whatsappHref(lead)">{{ lead.whatsapp }}</span>
             </dd>
           </div>
-          <div class="lead-field">
+          <div class="lead-field" *ngIf="showContacto(lead)">
             <dt>Contacto</dt>
             <dd>
               <a *ngIf="contactoHref(lead) as href" [href]="href" target="_blank" rel="noopener noreferrer">{{ lead.contacto }}</a>

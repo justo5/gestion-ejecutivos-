@@ -115,6 +115,17 @@ export class Solicitudes implements OnInit {
     return contactoLink(lead.contacto);
   }
 
+  // Muchos completan "contacto" con el mismo teléfono que el WhatsApp; en ese
+  // caso no se repite. Se comparan solo dígitos y por sufijo, así "+54 9 11…"
+  // y "11…" cuentan como el mismo número.
+  showContacto(lead: Lead): boolean {
+    const contacto = lead.contacto.trim();
+    if (!/^[\d\s()+.-]+$/.test(contacto)) return true;
+    const c = contacto.replace(/\D/g, '');
+    const w = lead.whatsapp.replace(/\D/g, '');
+    return !(c && w && (c.endsWith(w) || w.endsWith(c)));
+  }
+
   redesItems(lead: Lead): { text: string; href: string | null }[] {
     return redesLinks(lead.redes);
   }
