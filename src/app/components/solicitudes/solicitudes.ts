@@ -12,6 +12,7 @@ import {
   LeadStatus,
   LeadsService,
   contactoLink,
+  redesLinks,
   whatsappLink,
 } from '../../services/leads';
 import { ExecutivesService } from '../../services/executives';
@@ -44,6 +45,8 @@ export class Solicitudes implements OnInit {
   // guardado no pisa lo que se está haciendo en otra fila.
   editingNotesId: string | null = null;
   notesDraft = '';
+  editingRedesId: string | null = null;
+  redesDraft = '';
   savingId: string | null = null;
   rowErrors: Record<string, string> = {};
 
@@ -112,6 +115,10 @@ export class Solicitudes implements OnInit {
     return contactoLink(lead.contacto);
   }
 
+  redesItems(lead: Lead): { text: string; href: string | null }[] {
+    return redesLinks(lead.redes);
+  }
+
   // --- Edición en línea ---
 
   onStatusChange(lead: Lead, status: LeadStatus): void {
@@ -134,6 +141,20 @@ export class Solicitudes implements OnInit {
 
   saveNotes(lead: Lead): void {
     this.save(lead, { notes: this.notesDraft.trim() || null }, () => (this.editingNotesId = null));
+  }
+
+  startRedes(lead: Lead): void {
+    this.editingRedesId = lead.id;
+    this.redesDraft = lead.redes ?? '';
+    delete this.rowErrors[lead.id];
+  }
+
+  cancelRedes(): void {
+    this.editingRedesId = null;
+  }
+
+  saveRedes(lead: Lead): void {
+    this.save(lead, { redes: this.redesDraft.trim() || null }, () => (this.editingRedesId = null));
   }
 
   private save(lead: Lead, patch: LeadPatch, onDone?: () => void): void {

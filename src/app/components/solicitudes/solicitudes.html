@@ -44,6 +44,28 @@
               <span *ngIf="!contactoHref(lead)">{{ lead.contacto }}</span>
             </dd>
           </div>
+          <div class="lead-field lead-field-wide">
+            <dt>Redes sociales</dt>
+            <dd *ngIf="editingRedesId !== lead.id">
+              <span class="redes-list" *ngIf="lead.redes; else sinRedes">
+                <ng-container *ngFor="let item of redesItems(lead)">
+                  <a *ngIf="item.href" [href]="item.href" target="_blank" rel="noopener noreferrer">{{ item.text }}</a>
+                  <span *ngIf="!item.href">{{ item.text }}</span>
+                </ng-container>
+              </span>
+              <ng-template #sinRedes><span class="lead-muted">Sin dato</span></ng-template>
+              <button type="button" class="link-btn" (click)="startRedes(lead)">{{ lead.redes ? 'Editar' : 'Agregar' }}</button>
+            </dd>
+            <dd class="redes-edit" *ngIf="editingRedesId === lead.id">
+              <input type="text" class="redes-input" maxlength="500" [(ngModel)]="redesDraft"
+                [disabled]="savingId === lead.id" (keydown.enter)="saveRedes(lead)" (keydown.escape)="cancelRedes()"
+                placeholder="Ej. @negocio facebook.com/negocio tiktok.com/@negocio" aria-label="Redes sociales" />
+              <button type="button" class="save-btn" (click)="saveRedes(lead)" [disabled]="savingId === lead.id">
+                {{ savingId === lead.id ? 'Guardando…' : 'Guardar' }}
+              </button>
+              <button type="button" class="cancel-btn" (click)="cancelRedes()" [disabled]="savingId === lead.id">Cancelar</button>
+            </dd>
+          </div>
           <div class="lead-field">
             <dt>Rubro</dt>
             <dd>{{ lead.rubro }}</dd>

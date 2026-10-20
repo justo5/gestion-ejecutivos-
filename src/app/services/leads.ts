@@ -36,6 +36,7 @@ export interface Lead {
   apellido: string;
   contacto: string;
   whatsapp: string;
+  redes: string | null;
   rubro: string;
   inversion: LeadInversion;
   planName: string;
@@ -65,6 +66,7 @@ export interface LeadFilters {
 export interface LeadPatch {
   status?: LeadStatus;
   notes?: string | null;
+  redes?: string | null;
   executiveId?: string | null;
   planId?: number | null;
 }
@@ -132,4 +134,14 @@ export function contactoLink(contacto: string): string | null {
   if (handle) return `https://instagram.com/${handle[1]}`;
   if (/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(value)) return `https://${value}`;
   return null;
+}
+
+// Redes sociales: texto libre con uno o varios perfiles separados por
+// espacios, comas o saltos de línea. Cada parte se linkea con contactoLink
+// (mismas reglas) y lo que no se reconoce queda como texto.
+export function redesLinks(redes: string | null): { text: string; href: string | null }[] {
+  return (redes ?? '')
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map(text => ({ text, href: contactoLink(text) }));
 }
