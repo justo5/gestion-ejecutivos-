@@ -58,6 +58,13 @@ export interface ExecutiveOption {
   name: string;
 }
 
+// Solicitudes asignadas a un ejecutivo (todas) y cuántas siguen en "nuevo".
+export interface ExecutiveLeadCount {
+  executiveId: string;
+  total: number;
+  nuevo: number;
+}
+
 export interface LeadFilters {
   status?: LeadStatus | '';
   executiveId?: string;
@@ -108,6 +115,11 @@ export class LeadsService {
     this.http
       .get<{ count: number }>('/api/leads/count-new')
       .subscribe(({ count }) => this.newCountSubject.next(count));
+  }
+
+  // Solo admin (el endpoint responde 403 a los ejecutivos).
+  countByExecutive(): Observable<ExecutiveLeadCount[]> {
+    return this.http.get<ExecutiveLeadCount[]>('/api/leads/count-by-executive');
   }
 
   update(leadId: string, patch: LeadPatch): Observable<Lead> {

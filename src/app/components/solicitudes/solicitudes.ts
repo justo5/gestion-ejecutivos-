@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, combineLatest, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import {
   EDITABLE_LEAD_STATUSES,
   LEAD_INVERSION_LABELS,
@@ -9,6 +9,7 @@ import {
   Lead,
   LeadPatch,
   ExecutiveOption,
+  ExecutiveLeadCount,
   LeadStatus,
   LeadsService,
   contactoLink,
@@ -19,6 +20,15 @@ import { ExecutivesService } from '../../services/executives';
 import { ConfigService } from '../../services/config';
 import { AuthService } from '../../services/auth';
 import { httpErrorMessage } from '../../utils/http-error';
+
+// Tarjeta de la franja de ejecutivos que ve el admin arriba de la lista.
+interface ExecutiveSummary {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  total: number;
+  nuevo: number;
+}
 
 // Sección "Solicitudes": lo que entra por el formulario de la landing de
 // Vamos Bien. Todos ven y editan estado/notas de sus solicitudes; el admin
@@ -32,6 +42,7 @@ import { httpErrorMessage } from '../../utils/http-error';
 export class Solicitudes implements OnInit {
   leads$!: Observable<Lead[]>;
   executives$!: Observable<ExecutiveOption[]>;
+  executiveSummary$!: Observable<ExecutiveSummary[]>;
 
   readonly statusLabels = LEAD_STATUS_LABELS;
   readonly editableStatuses = EDITABLE_LEAD_STATUSES;
@@ -72,6 +83,28 @@ export class Solicitudes implements OnInit {
       ),
     );
 
+    if (this.isAdmin) {
+      // Los contadores se vuelven a pedir cada vez que cambia la lista (filtro,
+      // asignación, conversión), así quedan al día sin otro refresh aparte.
+      const counts$ = this.leads$.pipe(
+        switchMap(() => this.leadsService.countByExecutive().pipe(catchError(() => of([] as ExecutiveLeadCount[])))),
+      );
+      this.executiveSummary$ = combineLatest([this.executivesService.executives$, counts$]).pipe(
+        map(([executives, counts]) => {
+          const byId = new Map(counts.map(c => [c.executiveId, c]));
+          return executives
+            .map(e => ({
+              id: e.id,
+              name: e.name,
+              imageUrl: e.imageUrl || null,
+              total: byId.get(e.id)?.total ?? 0,
+              nuevo: byId.get(e.id)?.nuevo ?? 0,
+            }))
+            .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'es'));
+        }),
+      );
+    }
+
     this.applyFilters();
     if (this.isAdmin) {
       // Para los desplegables de ejecutivo, plan y rubro (asignar / convertir).
@@ -84,6 +117,24 @@ export class Solicitudes implements OnInit {
     if (this.statusFilter === status) return;
     this.statusFilter = status;
     this.applyFilters();
+  }
+
+  // Click en una tarjeta de la franja: filtra por ese ejecutivo (otro click lo quita).
+  toggleExecutiveFilter(executiveId: string): void {
+    this.executiveFilter = this.executiveFilter === executiveId ? '' : executiveId;
+    this.applyFilters();
+  }
+
+  initials(name: string): string {
+    return name
+      .split(' ')
+      .slice(0, 2)
+      .map(w => w[0]?.toUpperCase() ?? '')
+      .join('');
+  }
+
+  trackByExecutive(_: number, exec: ExecutiveSummary): string {
+    return exec.id;
   }
 
   applyFilters(): void {

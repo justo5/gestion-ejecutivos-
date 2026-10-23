@@ -10,6 +10,22 @@
     </div>
   </div>
 
+  <ul class="exec-strip" *ngIf="isAdmin && (executiveSummary$ | async) as summary" aria-label="Solicitudes por ejecutivo">
+    <li *ngFor="let exec of summary; trackBy: trackByExecutive">
+      <button type="button" class="exec-chip" [class.active]="executiveFilter === exec.id"
+        [attr.aria-pressed]="executiveFilter === exec.id" (click)="toggleExecutiveFilter(exec.id)"
+        [title]="'Ver solicitudes de ' + exec.name">
+        <span class="exec-avatar">
+          <img *ngIf="exec.imageUrl" [src]="exec.imageUrl" alt="" loading="lazy" />
+          <span *ngIf="!exec.imageUrl">{{ initials(exec.name) }}</span>
+          <span class="exec-count" [class.empty]="exec.total === 0">{{ exec.total }}</span>
+        </span>
+        <span class="exec-name">{{ exec.name }}</span>
+        <span class="exec-new" *ngIf="exec.nuevo > 0">{{ exec.nuevo }} {{ exec.nuevo === 1 ? 'nueva' : 'nuevas' }}</span>
+      </button>
+    </li>
+  </ul>
+
   <div class="status-tabs" role="tablist" aria-label="Filtrar por estado">
     <button *ngFor="let status of allStatuses" type="button" class="status-tab" role="tab"
       [class.active]="statusFilter === status" [attr.aria-selected]="statusFilter === status"
