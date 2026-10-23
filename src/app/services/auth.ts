@@ -68,19 +68,7 @@ export class AuthService {
     );
   }
 
-  loginWithFacebook(facebookAccessToken: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>('/api/auth/facebook', { accessToken: facebookAccessToken }).pipe(
-      tap(({ accessToken, user }) => {
-        localStorage.setItem(TOKEN_KEY, accessToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        this.userSubject.next(user);
-      })
-    );
-  }
-
-  // Conecta (o renueva) el acceso a Meta Ads del usuario logueado. No tiene
-  // que ver con cómo inició sesión en VBcobros: sirve igual si entró con
-  // email/password.
+  // Conecta (o renueva) el acceso a Meta Ads del usuario logueado.
   connectMetaAds(facebookAccessToken: string): Observable<MetaAdsStatus> {
     return this.http.post<MetaAdsStatus>('/api/auth/meta-ads/connect', { accessToken: facebookAccessToken });
   }
