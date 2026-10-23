@@ -68,6 +68,8 @@
 
   &:hover { border-color: var(--primary); }
 
+  &.next { border-color: var(--verde); }
+
   &.active {
     border-color: var(--primary);
     background: var(--primary-light);
@@ -126,9 +128,18 @@
   overflow-wrap: anywhere;
 }
 
-.exec-new {
+.exec-total {
   font-size: 0.68rem;
-  color: var(--primary);
+  color: var(--text-muted);
+}
+
+.exec-next {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--verde-bg);
+  color: var(--verde);
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 .status-tabs {

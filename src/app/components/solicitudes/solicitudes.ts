@@ -27,7 +27,8 @@ interface ExecutiveSummary {
   name: string;
   imageUrl: string | null;
   total: number;
-  nuevo: number;
+  // El que tiene menos solicitudes asignadas: a quien le toca la próxima.
+  next: boolean;
 }
 
 // Sección "Solicitudes": lo que entra por el formulario de la landing de
@@ -84,6 +85,8 @@ export class Solicitudes implements OnInit {
     );
 
     if (this.isAdmin) {
+      // Orden de menos a más asignadas: el primero es a quien le toca la
+      // próxima solicitud (empate: por nombre).
       // Los contadores se vuelven a pedir cada vez que cambia la lista (filtro,
       // asignación, conversión), así quedan al día sin otro refresh aparte.
       const counts$ = this.leads$.pipe(
@@ -92,15 +95,17 @@ export class Solicitudes implements OnInit {
       this.executiveSummary$ = combineLatest([this.executivesService.executives$, counts$]).pipe(
         map(([executives, counts]) => {
           const byId = new Map(counts.map(c => [c.executiveId, c]));
-          return executives
+          const summary = executives
             .map(e => ({
               id: e.id,
               name: e.name,
               imageUrl: e.imageUrl || null,
               total: byId.get(e.id)?.total ?? 0,
-              nuevo: byId.get(e.id)?.nuevo ?? 0,
+              next: false,
             }))
-            .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'es'));
+            .sort((a, b) => a.total - b.total || a.name.localeCompare(b.name, 'es'));
+          if (summary.length > 0) summary[0].next = true;
+          return summary;
         }),
       );
     }

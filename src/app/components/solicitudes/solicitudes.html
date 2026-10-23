@@ -14,14 +14,15 @@
     <li *ngFor="let exec of summary; trackBy: trackByExecutive">
       <button type="button" class="exec-chip" [class.active]="executiveFilter === exec.id"
         [attr.aria-pressed]="executiveFilter === exec.id" (click)="toggleExecutiveFilter(exec.id)"
-        [title]="'Ver solicitudes de ' + exec.name">
+        [class.next]="exec.next" [title]="'Ver solicitudes de ' + exec.name">
         <span class="exec-avatar">
           <img *ngIf="exec.imageUrl" [src]="exec.imageUrl" alt="" loading="lazy" />
           <span *ngIf="!exec.imageUrl">{{ initials(exec.name) }}</span>
           <span class="exec-count" [class.empty]="exec.total === 0">{{ exec.total }}</span>
         </span>
         <span class="exec-name">{{ exec.name }}</span>
-        <span class="exec-new" *ngIf="exec.nuevo > 0">{{ exec.nuevo }} {{ exec.nuevo === 1 ? 'nueva' : 'nuevas' }}</span>
+        <span class="exec-total">{{ exec.total }} {{ exec.total === 1 ? 'asignada' : 'asignadas' }}</span>
+        <span class="exec-next" *ngIf="exec.next">Le toca</span>
       </button>
     </li>
   </ul>
