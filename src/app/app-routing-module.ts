@@ -5,7 +5,6 @@ import { Cobros } from './components/cobros/cobros';
 import { Clientes } from './components/clientes/clientes';
 import { Bajas } from './components/bajas/bajas';
 import { Solicitudes } from './components/solicitudes/solicitudes';
-import { DashboardPage } from './components/dashboard/dashboard';
 import { ConfigPage } from './components/config-page/config-page';
 import { Perfil } from './components/perfil/perfil';
 import { Login } from './components/login/login';
@@ -15,7 +14,11 @@ const routes: Routes = [
   { path: 'login', component: Login },
   { path: '', redirectTo: 'ejecutivos', pathMatch: 'full' },
   { path: 'ejecutivos', component: EjecutivosPage, canActivate: [ejecutivosGuard] },
-  { path: 'dashboard', component: DashboardPage, canActivate: [authGuard] },
+  {
+    path: 'dashboard',
+    loadChildren: () => import('./components/dashboard/dashboard-module').then((m) => m.DashboardModule),
+    canActivate: [authGuard],
+  },
   { path: 'cobros', component: Cobros, canActivate: [authGuard] },
   { path: 'clientes', component: Clientes, canActivate: [authGuard] },
   { path: 'bajas', component: Bajas, canActivate: [authGuard] },

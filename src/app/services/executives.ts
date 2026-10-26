@@ -1,10 +1,13 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import * as XLSX from 'xlsx';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { CollectedBy } from './cobros';
 import { ClientStatus } from '../models/client-view.model';
+
+// xlsx pesa varios cientos de kB y solo se usa al importar una planilla: se
+// carga recién ahí con import() dinámico, fuera del bundle inicial.
+type XlsxLib = typeof import('xlsx');
 
 const IMAGES_SHEET_URL =
   'https://docs.google.com/spreadsheets/d/1DgsNhUycGp_-sZBioKlBOP9gZ-RZ_Efwxz-T7nc0f0A/export?format=csv';
@@ -243,7 +246,7 @@ export class ExecutivesService {
     return previous;
   }
 
-  private loadImagesMap() {
+  private loadImagesMap(XLSX: XlsxLib) {
     return this.http.get(IMAGES_SHEET_URL, { responseType: 'text' }).pipe(
       map(csvText => {
         const wb = XLSX.read(csvText, { type: 'string' });
@@ -364,7 +367,8 @@ export class ExecutivesService {
 
   parseFile(file: File): void {
     const reader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
+    reader.onload = async (e: ProgressEvent<FileReader>) => {
+      const XLSX = await import('xlsx');
       this.zone.run(() => {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
@@ -380,14 +384,15 @@ export class ExecutivesService {
 
   importFromFile(file: File, nameColumn: string): void {
     const reader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
+    reader.onload = async (e: ProgressEvent<FileReader>) => {
+      const XLSX = await import('xlsx');
       const data = new Uint8Array(e.target!.result as ArrayBuffer);
       const workbook = XLSX.read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows: any[] = XLSX.utils.sheet_to_json(sheet);
       const executives = this.groupRows(rows, nameColumn);
 
-      this.loadImagesMap().subscribe(images => {
+      this.loadImagesMap(XLSX).subscribe(images => {
         const withImages = executives.map(exec => ({
           ...exec,
           imageUrl: this.resolveImage(exec.name, images),
