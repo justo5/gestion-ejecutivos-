@@ -5,6 +5,25 @@
     <span class="group-chevron" [class.is-open]="expandedIndex === i">›</span>
   </button>
   <div class="group-detail" *ngIf="expandedIndex === i">
-    <app-dashboard-client-rows [list]="details[i].clients" [emptyText]="emptyText"></app-dashboard-client-rows>
+    <!-- Con desglose (p. ej. por ejecutivo): un segundo nivel de acordeón con
+         los clientes dentro de cada grupo. Sin desglose: clientes directo. -->
+    <ng-container *ngIf="details[i].groups as groups; else plainClients">
+      <div class="group-accordion" *ngFor="let g of groups">
+        <button type="button" class="group-row" (click)="toggleGroup(g.label)">
+          <span class="bar-dot" [style.background]="g.color"></span>
+          <span class="group-label">{{ g.label }}</span>
+          <span class="bar-track"><span class="bar-fill" [style.width.%]="g.pct" [style.background]="g.color"></span></span>
+          <span class="group-secondary">{{ g.secondary }}</span>
+          <span class="group-chevron" [class.is-open]="expandedGroupLabel === g.label">›</span>
+        </button>
+        <div class="group-detail" *ngIf="expandedGroupLabel === g.label">
+          <app-dashboard-client-rows [list]="g.clients" [emptyText]="emptyText"></app-dashboard-client-rows>
+        </div>
+      </div>
+      <p class="bars-empty" *ngIf="!groups.length">{{ emptyText }}</p>
+    </ng-container>
+    <ng-template #plainClients>
+      <app-dashboard-client-rows [list]="details[i].clients" [emptyText]="emptyText"></app-dashboard-client-rows>
+    </ng-template>
   </div>
 </div>

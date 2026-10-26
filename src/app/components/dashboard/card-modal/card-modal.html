@@ -53,8 +53,9 @@
 
     <!-- Porcentaje de bajas -->
     <ng-container *ngSwitchCase="'churnPct'">
-      <!-- Desglose mensual (mes actual arriba): % de bajas de cada mes
-           sobre los clientes que había al arrancar ese mes. -->
+      <!-- Desglose mensual (mes actual arriba): % de bajas de cada mes,
+           desplegable por ejecutivo y luego por cliente. Cada %
+           es sobre los clientes que había al arrancar ese mes. -->
       <div class="detail-modal-section">
         <div class="detail-modal-section-title">Porcentaje de bajas por mes</div>
         <app-dashboard-month-accordion [monthLabels]="vm.monthLabels" [details]="vm.churnPctMonthDetails"

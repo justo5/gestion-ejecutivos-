@@ -1,3 +1,16 @@
 @use '../shared' as s;
 
 @include s.accordion;
+@include s.bar-dot;
+@include s.bar-track;
+
+// Segundo nivel (desglose del mes por grupo): menos sangría que el primero
+// para no comerse el ancho del modal.
+.group-detail .group-detail {
+  padding-left: 16px;
+}
+
+.bars-empty {
+  color: var(--text-faint);
+  font-size: 0.8rem;
+}

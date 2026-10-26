@@ -49,10 +49,13 @@ export type BarsDimension =
   | 'churnExecutive';
 
 // Un mes de uno de los gráficos de tendencia, con el detalle de clientes que
-// lo explican (quién pagó ese mes / quién arrancó ese mes).
+// lo explican (quién pagó ese mes / quién arrancó ese mes). Si trae
+// `groups`, el acordeón muestra primero ese desglose (p. ej. por ejecutivo) y
+// los clientes quedan dentro de cada grupo en vez de listarse directo.
 export interface MonthDetail {
   valueLabel: string;
   clients: ClientDetailRow[];
+  groups?: GroupDetail[];
 }
 
 // Gráficos de tendencia que se pueden abrir.
@@ -146,6 +149,8 @@ export interface DashboardViewModel {
   newClientsMonthDetails: MonthDetail[];
   churnMonthDetails: MonthDetail[];
   // Porcentaje de bajas de cada mes (bajas del mes / clientes que había al
-  // arrancar ese mes), para el desglose mensual de la tarjeta KPI.
+  // arrancar ese mes), para el desglose mensual de la tarjeta KPI. Cada mes
+  // trae además el mismo porcentaje por ejecutivo (`groups`), con sus bajas
+  // de ese mes adentro.
   churnPctMonthDetails: MonthDetail[];
 }

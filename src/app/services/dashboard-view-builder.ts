@@ -161,6 +161,12 @@ export class DashboardViewBuilder {
       ? Math.round(lifeRows.reduce((sum, lr) => sum + lr.days, 0) / lifeRows.length)
       : 0;
 
+    // Se arma antes del loop de meses para reusar su color por ejecutivo en
+    // el desglose mensual del porcentaje de bajas: así cada ejecutivo tiene
+    // el mismo tono en todos los meses y en el panel "por ejecutivo".
+    const churnExecutiveGroups = this.buildChurnGroupDetail(rows, churnRows);
+    const churnColorByExec = new Map(churnExecutiveGroups.map(g => [g.label, g.color]));
+
     const monthLabels: string[] = [];
     const monthYms: string[] = [];
     const revenueSeries: number[] = [];
@@ -204,11 +210,12 @@ export class DashboardViewBuilder {
       // (dados de alta antes de ese mes, o sin contactDay, y que no se habían
       // dado de baja todavía). Mismo criterio de "ya estaba" que el
       // crecimiento por ejecutivo.
-      const clientsAtStart = [...rows, ...churnRows].filter(r => {
+      const startRows = [...rows, ...churnRows].filter(r => {
         const startYm = (r.client.contactDay ?? '').slice(0, 7);
         if (startYm && startYm >= ym) return false;
         return !r.client.deletedAt || formatYearMonth(new Date(r.client.deletedAt)) >= ym;
-      }).length;
+      });
+      const clientsAtStart = startRows.length;
       const monthChurnPct = clientsAtStart ? (churnedRows.length / clientsAtStart) * 100 : null;
       const monthChurnPctLabel = monthChurnPct === null
         ? '—'
@@ -223,6 +230,7 @@ export class DashboardViewBuilder {
       churnPctMonthDetails.push({
         valueLabel: `${monthChurnPctLabel} · ${churnedRows.length}/${clientsAtStart} cliente${clientsAtStart === 1 ? '' : 's'}`,
         clients: churnedClientRows,
+        groups: this.buildChurnMonthGroups(startRows, churnedRows, churnColorByExec),
       });
     }
 
@@ -231,7 +239,6 @@ export class DashboardViewBuilder {
     const everClients = rows.length + churnRows.length;
     const churnPct = everClients ? Math.round((churnRows.length / everClients) * 100) : 0;
     const churnExecutiveBars = this.buildChurnBars(rows, churnRows);
-    const churnExecutiveGroups = this.buildChurnGroupDetail(rows, churnRows);
 
     const executiveGrowth = this.buildExecutiveGrowth(rows, monthYms);
     const executiveGoal = this.buildChartGoal(goal);
@@ -555,6 +562,44 @@ export class DashboardViewBuilder {
   // el template: un getter/método llamado desde el binding devolvería un
   // objeto nuevo en cada ciclo de detección de cambios y, al ser `goal` un
   // @Input de un componente hijo, eso dispara NG0103 (loop infinito).
+  // Porcentaje de bajas de un mes por ejecutivo: bajas de ese ejecutivo en
+  // el mes / clientes que tenía al arrancar el mes (mismo criterio que el %
+  // mensual general). Aparecen todos los ejecutivos con clientes al arrancar
+  // el mes, aunque no hayan tenido bajas, para poder compararlos. La barra es
+  // relativa al peor ejecutivo del mes (mismo criterio que buildBars), porque
+  // los porcentajes mensuales suelen ser chicos y no se verían.
+  private buildChurnMonthGroups(startRows: Row[], churnedRows: Row[], colorByExec: Map<string, string>): GroupDetail[] {
+    const execKey = (r: Row) => (r.view.executiveName ?? '').trim() || 'Sin dato';
+    const totalByExec = new Map<string, number>();
+    const churnedRowsByExec = new Map<string, Row[]>();
+    startRows.forEach(r => {
+      const key = execKey(r);
+      totalByExec.set(key, (totalByExec.get(key) ?? 0) + 1);
+    });
+    churnedRows.forEach(r => {
+      const key = execKey(r);
+      if (!churnedRowsByExec.has(key)) churnedRowsByExec.set(key, []);
+      churnedRowsByExec.get(key)!.push(r);
+    });
+
+    const entries = [...totalByExec.entries()].map(([key, total]) => {
+      const churnedList = churnedRowsByExec.get(key) ?? [];
+      return { key, total, churnedList, churnPct: (churnedList.length / total) * 100 };
+    });
+    entries.sort((a, b) => b.churnPct - a.churnPct || a.key.localeCompare(b.key));
+    const max = Math.max(...entries.map(e => e.churnPct), 0);
+
+    return entries.map((e, i) => ({
+      label: e.key,
+      secondary: `${e.churnPct.toLocaleString('es-AR', { maximumFractionDigits: 1 })}% · ${e.churnedList.length}/${e.total} cliente${e.total === 1 ? '' : 's'}`,
+      pct: max ? Math.round((e.churnPct / max) * 100) : 0,
+      color: colorByExec.get(e.key) ?? SERIES_COLORS[i % SERIES_COLORS.length],
+      clients: e.churnedList
+        .map(r => this.toRow(r, this.formatChurnDate(r.client.deletedAt!)))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+  }
+
   private buildChartGoal(goal: DashboardGoal | null, executivesCount = 1): ChartGoal | null {
     if (!goal) return null;
     return {
