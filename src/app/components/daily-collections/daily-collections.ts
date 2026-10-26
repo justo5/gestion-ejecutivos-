@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ExecutivesService } from '../../services/executives';
+import { ConfigService } from '../../services/config';
 import { clientDisplayName } from '../../utils/client-display-name';
-import { planForMonth } from '../../utils/client-plan';
+import { firstDueMonth, planForMonth } from '../../utils/client-plan';
 
 export interface PendingCobro {
   clientId: string;
@@ -35,14 +36,15 @@ export class DailyCollections implements OnInit {
   private selectedDate$ = new BehaviorSubject<Date>(new Date());
   collections$!: Observable<CollectionsData>;
 
-  constructor(private executivesService: ExecutivesService) {}
+  constructor(private executivesService: ExecutivesService, private configService: ConfigService) {}
 
   ngOnInit(): void {
     this.collections$ = combineLatest([
       this.executivesService.executives$,
+      this.configService.plans$,
       this.selectedDate$,
     ]).pipe(
-      map(([executives, selectedDate]) => {
+      map(([executives, plans, selectedDate]) => {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const isCurrentMonth =
@@ -71,18 +73,14 @@ export class DailyCollections implements OnInit {
 
             // contactDay is a recurring day-of-month stored as YYYY-MM-DD.
             // The stored year-month reflects when the client was activated.
-            // Cobramos a mes vencido: si el cliente se activó el mes seleccionado
-            // o después, todavía no corresponde cobrarle ese mes.
+            // Cobramos a mes vencido (salvo planes por anticipado, ver
+            // firstDueMonth): si el primer mes a cobrarle es posterior al
+            // seleccionado, todavía no corresponde cobrarle.
             const contactDate = new Date(client.contactDay + 'T00:00:00');
             const dayNum = contactDate.getDate();
             if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
 
-            const selYear = selectedDate.getFullYear();
-            const selMonth = selectedDate.getMonth();
-            if (
-              contactDate.getFullYear() > selYear ||
-              (contactDate.getFullYear() === selYear && contactDate.getMonth() >= selMonth)
-            ) continue;
+            if (firstDueMonth(client, client.contactDay, plans) > selectedYearMonth) continue;
 
             const cobro: PendingCobro = {
               clientId: client.id,
@@ -113,6 +111,7 @@ export class DailyCollections implements OnInit {
     );
 
     this.executivesService.refresh();
+    this.configService.refresh();
   }
 
   prevMonth(): void {

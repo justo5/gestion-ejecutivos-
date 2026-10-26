@@ -8,7 +8,10 @@
       <!-- Vista normal -->
       <ng-container *ngIf="!row.editing && !row.confirmDelete">
         <div class="plan-info">
-          <span class="plan-name">{{ row.data.name }}</span>
+          <span class="plan-name">
+            {{ row.data.name }}
+            <span class="plan-badge" *ngIf="row.data.prepaid">Por anticipado</span>
+          </span>
           <span class="plan-price">$ {{ row.data.price | number:'1.2-2' }}</span>
         </div>
         <div class="plan-actions">
@@ -46,6 +49,14 @@
             [(ngModel)]="row.editPrice"
           />
         </div>
+        <label class="plan-prepaid">
+          <input type="checkbox" [(ngModel)]="row.editPrepaid" />
+          Se cobra por anticipado
+        </label>
+        <p class="plan-prepaid-warning" *ngIf="row.editPrepaid !== row.data.prepaid">
+          Cambia el primer mes a cobrar de los clientes que ya tienen este plan:
+          {{ row.editPrepaid ? 'el mes del alta pasa a figurar como adeudado.' : 'el mes del alta deja de cobrarse.' }}
+        </p>
         <div class="plan-actions">
           <button type="button" class="save-btn" (click)="saveEdit(row)" [disabled]="row.saving">
             {{ row.saving ? 'Guardando…' : 'Guardar' }}
@@ -82,6 +93,14 @@
       {{ addingPlan ? 'Agregando…' : 'Agregar' }}
     </button>
   </div>
+  <label class="plan-prepaid">
+    <input type="checkbox" [(ngModel)]="newPlanPrepaid" />
+    Se cobra por anticipado
+  </label>
+  <p class="config-hint plan-prepaid-hint">
+    Por defecto los planes se cobran a mes vencido (el primer cobro es el mes siguiente al alta).
+    Por anticipado, el primer cobro es el mismo mes del alta.
+  </p>
   <p class="row-error" *ngIf="addError">{{ addError }}</p>
 
   <hr class="config-divider" />

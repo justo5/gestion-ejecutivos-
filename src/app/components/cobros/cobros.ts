@@ -6,7 +6,7 @@ import { ConfigService } from '../../services/config';
 import { CobrosService, CollectedBy } from '../../services/cobros';
 import { AuthService } from '../../services/auth';
 import { clientDisplayName } from '../../utils/client-display-name';
-import { planForMonth, planPriceForMonth } from '../../utils/client-plan';
+import { firstDueMonth, planForMonth, planPriceForMonth } from '../../utils/client-plan';
 
 export interface MonthDue {
   month: string;
@@ -169,14 +169,11 @@ export class Cobros implements OnInit, OnDestroy {
             const dayNum = contactDate.getDate();
             if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
 
-            // Cobramos a mes vencido: si el cliente se activó (contactDay) en el
-            // mes seleccionado o después, todavía no corresponde cobrarle ese mes.
-            const selYear = selectedDate.getFullYear();
-            const selMonth = selectedDate.getMonth();
-            if (
-              contactDate.getFullYear() > selYear ||
-              (contactDate.getFullYear() === selYear && contactDate.getMonth() >= selMonth)
-            ) continue;
+            // Cobramos a mes vencido (salvo planes por anticipado, ver
+            // firstDueMonth): si el primer mes a cobrarle al cliente es
+            // posterior al seleccionado, todavía no corresponde cobrarle.
+            const firstDue = firstDueMonth(client, client.contactDay, plans);
+            if (firstDue > selectedYearMonth) continue;
 
             // El plan puede haber cambiado: cada mes se cobra con el plan que
             // regía en ese mes (ver utils/client-plan.ts), no con el actual.
@@ -188,11 +185,11 @@ export class Cobros implements OnInit, OnDestroy {
             const paidMonths = rawCobro?.paidMonths ?? [];
             const collectedInMonth = rawCobro?.collectedInMonth ?? {};
 
-            // Meses que le corresponden a este cliente desde que se activó
-            // hasta el mes seleccionado (cobramos a mes vencido). Si viene
+            // Meses que le corresponden a este cliente desde el primero a
+            // cobrar hasta el mes seleccionado. Si viene
             // arrastrando meses sin pagar de atrás, quedan todos acá para
             // que el pendiente se acumule en vez de perderse al cambiar de mes.
-            const dueMonths = this.monthsUpTo(client.contactDay, selectedYearMonth);
+            const dueMonths = this.monthsUpTo(firstDue, selectedYearMonth);
             const owedMonths = dueMonths.filter(m => !paidMonths.includes(m));
             // Meses que efectivamente se cobraron mientras se miraba este mes
             // puntual: pueden ser de antes (si acá se saldó julio+agosto
@@ -483,16 +480,16 @@ export class Cobros implements OnInit, OnDestroy {
     return `${y}-${m}`;
   }
 
-  // Lista de yearMonth ("2026-08") desde el mes siguiente a la activación del
-  // cliente (contactDay) hasta el mes seleccionado, ambos inclusive. Es la
+  // Lista de yearMonth ("2026-08") desde el primer mes a cobrarle al cliente
+  // (ver firstDueMonth) hasta el mes seleccionado, ambos inclusive. Es la
   // base para saber cuántos meses arrastra sin pagar un cliente.
-  private monthsUpTo(contactDay: string, selectedYearMonth: string): string[] {
-    const contactDate = new Date(contactDay + 'T00:00:00');
+  private monthsUpTo(firstDue: string, selectedYearMonth: string): string[] {
+    const [firstYear, firstMonth] = firstDue.split('-').map(Number);
     const [selYear, selMonth] = selectedYearMonth.split('-').map(Number);
     const selCursor = new Date(selYear, selMonth - 1, 1);
 
     const months: string[] = [];
-    let cursor = new Date(contactDate.getFullYear(), contactDate.getMonth() + 1, 1);
+    let cursor = new Date(firstYear, firstMonth - 1, 1);
     while (cursor <= selCursor) {
       months.push(this.formatYearMonth(cursor));
       cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);

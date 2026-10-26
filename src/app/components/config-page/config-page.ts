@@ -6,6 +6,7 @@ interface PlanRow {
   editing: boolean;
   editName: string;
   editPrice: number;
+  editPrepaid: boolean;
   saving: boolean;
   error: string;
   confirmDelete: boolean;
@@ -22,6 +23,7 @@ export class ConfigPage implements OnInit {
 
   newPlanName = '';
   newPlanPrice: number | null = null;
+  newPlanPrepaid = false;
   addingPlan = false;
   addError = '';
 
@@ -43,13 +45,14 @@ export class ConfigPage implements OnInit {
   }
 
   private toRow(p: PlanConfig): PlanRow {
-    return { data: p, editing: false, editName: p.name, editPrice: +p.price, saving: false, error: '', confirmDelete: false };
+    return { data: p, editing: false, editName: p.name, editPrice: +p.price, editPrepaid: p.prepaid, saving: false, error: '', confirmDelete: false };
   }
 
   startEdit(row: PlanRow): void {
     row.editing = true;
     row.editName = row.data.name;
     row.editPrice = row.data.price;
+    row.editPrepaid = row.data.prepaid;
     row.error = '';
   }
 
@@ -63,7 +66,7 @@ export class ConfigPage implements OnInit {
     if (!name) { row.error = 'El nombre es obligatorio.'; return; }
     row.saving = true;
     row.error = '';
-    this.configService.updatePlan(row.data.id, name, row.editPrice ?? 0).subscribe({
+    this.configService.updatePlan(row.data.id, name, row.editPrice ?? 0, row.editPrepaid).subscribe({
       next: () => { row.saving = false; row.editing = false; },
       error: () => { row.saving = false; row.error = 'No se pudo guardar.'; },
     });
@@ -90,11 +93,12 @@ export class ConfigPage implements OnInit {
     if (!name) { this.addError = 'El nombre es obligatorio.'; return; }
     this.addingPlan = true;
     this.addError = '';
-    this.configService.createPlan(name, this.newPlanPrice ?? 0).subscribe({
+    this.configService.createPlan(name, this.newPlanPrice ?? 0, this.newPlanPrepaid).subscribe({
       next: () => {
         this.addingPlan = false;
         this.newPlanName = '';
         this.newPlanPrice = null;
+        this.newPlanPrepaid = false;
       },
       error: () => {
         this.addingPlan = false;

@@ -7,6 +7,9 @@ export interface PlanConfig {
   id: number;
   name: string;
   price: number;
+  // Se cobra por anticipado (el mes del alta ya se cobra) en vez de a mes
+  // vencido. Ver firstDueMonth en utils/client-plan.ts.
+  prepaid: boolean;
 }
 
 export interface RubroConfig {
@@ -59,7 +62,7 @@ export class ConfigService {
   // pasar el string, cualquier suma de montos concatena en vez de sumar y el
   // pipe `number` explota, cortando el render a mitad de camino.
   private normalizePlan(plan: PlanConfig): PlanConfig {
-    return { ...plan, price: Number(plan.price) || 0 };
+    return { ...plan, price: Number(plan.price) || 0, prepaid: !!plan.prepaid };
   }
 
   refresh(): void {
@@ -86,15 +89,15 @@ export class ConfigService {
     return this.rubrosSubject.value;
   }
 
-  createPlan(name: string, price: number) {
+  createPlan(name: string, price: number, prepaid: boolean) {
     return this.http
-      .post<PlanConfig>('/api/plans', { name, price })
+      .post<PlanConfig>('/api/plans', { name, price, prepaid })
       .pipe(tap(plan => this.plansSubject.next([...this.plansSubject.value, this.normalizePlan(plan)])));
   }
 
-  updatePlan(id: number, name: string, price: number) {
+  updatePlan(id: number, name: string, price: number, prepaid: boolean) {
     return this.http
-      .put<PlanConfig>(`/api/plans/${id}`, { name, price })
+      .put<PlanConfig>(`/api/plans/${id}`, { name, price, prepaid })
       .pipe(
         tap(updated =>
           this.plansSubject.next(
@@ -116,7 +119,7 @@ export class ConfigService {
 
   savePlans(plans: PlanConfig[]) {
     const requests = plans.map(p =>
-      this.http.put(`/api/plans/${p.id}`, { name: p.name, price: p.price })
+      this.http.put(`/api/plans/${p.id}`, { name: p.name, price: p.price, prepaid: p.prepaid })
     );
     return forkJoin(requests).pipe(
       tap(() => this.plansSubject.next(plans.map(p => this.normalizePlan(p)))),

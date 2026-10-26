@@ -29,15 +29,32 @@ export function planForMonth(client: ClientPlanLike, yearMonth: string): string 
 // igualdad exacta. Se prioriza el nombre más largo que matchee para no
 // confundir "Plan ejecución" con "Plan ejecución + Bot". Number() explícito:
 // si el precio llega como string (columna `numeric`), las sumas concatenan.
-export function resolvePlanPrice(planText: string | null, plans: PlanConfig[]): number {
-  if (!planText) return 0;
+export function resolvePlan(planText: string | null, plans: PlanConfig[]): PlanConfig | null {
+  if (!planText) return null;
   const normalized = normalizePlanText(planText);
-  const match = plans
-    .filter(p => normalized.startsWith(normalizePlanText(p.name)))
-    .sort((a, b) => b.name.length - a.name.length)[0];
-  return Number(match?.price ?? 0) || 0;
+  return (
+    plans
+      .filter(p => normalized.startsWith(normalizePlanText(p.name)))
+      .sort((a, b) => b.name.length - a.name.length)[0] ?? null
+  );
+}
+
+export function resolvePlanPrice(planText: string | null, plans: PlanConfig[]): number {
+  return Number(resolvePlan(planText, plans)?.price ?? 0) || 0;
 }
 
 export function planPriceForMonth(client: ClientPlanLike, yearMonth: string, plans: PlanConfig[]): number {
   return resolvePlanPrice(planForMonth(client, yearMonth), plans);
+}
+
+// Primer mes (yearMonth) que se le cobra a un cliente dado de alta en
+// `contactDay` ("2026-08-15"). Por defecto cobramos a mes vencido: el mes
+// siguiente al alta. Si el plan con el que arrancó se cobra por anticipado,
+// ya se cobra el mismo mes del alta. Se mira el plan del mes del alta (y no
+// el actual) para que un cambio de plan posterior no agregue ni saque meses.
+export function firstDueMonth(client: ClientPlanLike, contactDay: string, plans: PlanConfig[]): string {
+  const [y, m] = contactDay.split('-').map(Number);
+  const startMonth = `${y}-${String(m).padStart(2, '0')}`;
+  if (resolvePlan(planForMonth(client, startMonth), plans)?.prepaid) return startMonth;
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
 }

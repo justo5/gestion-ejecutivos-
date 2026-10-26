@@ -40,6 +40,37 @@
   color: var(--text);
 }
 
+.plan-badge {
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.plan-prepaid {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.config-hint.plan-prepaid-hint {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.plan-prepaid-warning {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--rojo);
+}
+
 .plan-price {
   font-size: 0.95rem;
   color: var(--text-muted);

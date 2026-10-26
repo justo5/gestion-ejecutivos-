@@ -4,7 +4,7 @@ import { PlanConfig } from './config';
 import { ClientExtrasService } from './client-extras';
 import { ClientCardView, ClientNotification, ClientStatus, ClientTimelineEntry, StatTile } from '../models/client-view.model';
 import { clientDisplayName } from '../utils/client-display-name';
-import { planPriceForMonth, resolvePlanPrice } from '../utils/client-plan';
+import { firstDueMonth, planPriceForMonth, resolvePlanPrice } from '../utils/client-plan';
 
 // Arma la vista "rica" de un cliente a partir de datos reales (cobro, plan,
 // antigüedad) y completa con contenido derivado/mock estable (avatar,
@@ -66,12 +66,13 @@ export class ClientViewBuilder {
     const monthlyAmount = resolvePlanPrice(client.plan, plans);
     const monthsActive = contactDate ? monthsBetween(contactDate, now) : 0;
 
-    // Meses vencidos (desde el mes siguiente al de inicio hasta el actual) que
-    // todavía no figuran como pagados: la "deuda" real del cliente.
+    // Meses a cobrar (desde el primero, ver firstDueMonth, hasta el actual)
+    // que todavía no figuran como pagados: la "deuda" real del cliente.
     let monthsPending = 0;
     let pendingAmount = 0;
-    if (contactDate) {
-      let cursor = new Date(contactDate.getFullYear(), contactDate.getMonth() + 1, 1);
+    if (contactDate && client.contactDay) {
+      const [firstYear, firstMonth] = firstDueMonth(client, client.contactDay, plans).split('-').map(Number);
+      let cursor = new Date(firstYear, firstMonth - 1, 1);
       const limit = new Date(now.getFullYear(), now.getMonth(), 1);
       while (cursor <= limit) {
         const ym = formatYearMonth(cursor);
@@ -138,7 +139,8 @@ export class ClientViewBuilder {
   // Punto de la línea de tiempo de vencimientos para un cliente puntual.
   // Misma lógica de "mes vencido" que usa Cobros (services/cobros.ts): el
   // cobro de un mes se considera vencido recién al llegar el día de cobro
-  // (mismo día del mes que contactDay) del mes siguiente. Si hay meses
+  // (mismo día del mes que contactDay) del mes siguiente, o del mismo mes del
+  // alta en los planes por anticipado (ver firstDueMonth). Si hay meses
   // atrasados, se muestra el más viejo sin pagar (el vencimiento real más
   // urgente); si está al día, se muestra el próximo vencimiento.
   buildTimelineEntry(
@@ -159,10 +161,11 @@ export class ClientViewBuilder {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Meses desde el siguiente al alta hasta el actual (inclusive) que
+    // Meses desde el primero a cobrar hasta el actual (inclusive) que
     // todavía no figuran pagados.
     const owedMonths: string[] = [];
-    let cursor = new Date(contactDate.getFullYear(), contactDate.getMonth() + 1, 1);
+    const [firstYear, firstMonth] = firstDueMonth(client, client.contactDay, plans).split('-').map(Number);
+    let cursor = new Date(firstYear, firstMonth - 1, 1);
     while (cursor <= currentMonthStart) {
       if (!paidSet.has(formatYearMonth(cursor))) owedMonths.push(formatYearMonth(cursor));
       cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
